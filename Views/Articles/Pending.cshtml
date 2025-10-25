@@ -1,0 +1,117 @@
+﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Article>
+    @{
+    bool isAdminOrAuthor = User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Author"));
+    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin"); // Riêng cho nút Xóa
+
+    // Layout
+    if (!isAdminOrAuthor) { Layout = "_Layout"; }
+
+    ViewData["Title"] = isAdminOrAuthor ? "Quản lý Bài viết" : "Tất cả Bài viết";
+}
+    @* LƯỚI HIỂN THỊ CÁC BÀI VIẾT DẠNG THẺ *@
+    <div class="row g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 article-card @(!item.IsApproved && isAdminOrAuthor ? "border-warning border-2" : "")">
+                    @* Thêm viền vàng cho bài chờ duyệt *@
+
+                @* HÌNH ẢNH ĐẠI DIỆN *@
+                @{
+                    var imageUrl = !string.IsNullOrEmpty(item.ThumbnailUrl)
+                    ? item.ThumbnailUrl
+                    : "/uploads/articles/default-thumbnail.jpg";
+                }
+                <a asp-action="Details" asp-route-id="@item.Id">
+                    <img src="@imageUrl"
+                         class="card-img-top"
+                         alt="Thumbnail for @item.Title"
+                         style="height: 200px; object-fit: cover;"
+                         onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+                </a>
+
+                    @* THÂN THẺ *@
+                    <div class="card-body d-flex flex-column">
+                        @* Trạng thái duyệt (Làm nổi bật hơn nếu cần) *@
+                        @if (item.IsApproved)
+                        {
+                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill align-self-start mb-2">
+                                <i class="bi bi-check-circle-fill me-1"></i> Đã duyệt
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill align-self-start mb-2 fs-6">
+                                @* Tăng cỡ chữ badge chờ duyệt *@
+                                <i class="bi bi-hourglass-split me-1"></i> Chờ duyệt
+                            </span>
+                        }
+
+                        @* Tiêu đề (Xóa stretched-link) *@
+                        <h5 class="card-title">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none text-dark">
+                                @* Xóa stretched-link *@
+                                @item.Title
+                            </a>
+                        </h5>
+
+                        @* Tóm tắt và Thông tin tác giả/danh mục *@
+                    <div class="d-flex justify-content-between text-muted small mt-2">
+                        <span><i class="bi bi-person me-1"></i> @(item.Author?.FullName ?? "N/A")</span>
+                        <span><i class="bi bi-folder me-1"></i> @(item.Category?.Name ?? "N/A")</span>
+                    </div>
+                    </div>
+
+                    @* CHÂN THẺ - CẬP NHẬT CHO ADMIN/AUTHOR *@
+                    @if (isAdminOrAuthor) // Chỉ hiển thị footer cho Admin/Author
+                    {
+                        <div class="card-footer bg-white border-0 pt-0 pb-3 d-flex justify-content-end align-items-center gap-2">
+
+                            @* NÚT DUYỆT NHANH (Chỉ hiện khi bài chưa duyệt) *@
+                            @if (!item.IsApproved && isAdmin)
+                            {
+                                <form asp-action="Approve" asp-controller="Articles" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success" title="Duyệt ngay">
+                                        <i class="bi bi-check-lg"></i> Duyệt
+                                    </button>
+                                </form>
+                            }
+
+                            @* Nút Sửa (Luôn hiện cho Admin/Author) *@
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                <i class="bi bi-pencil-fill"></i>
+                            </a>
+
+                            @* Nút Chi tiết (Luôn hiện) *@
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Xem chi tiết">
+                                <i class="bi bi-eye-fill"></i>
+                            </a>
+
+                            @* Nút Xóa (Chỉ hiện cho Admin) *@
+                            @if (isAdmin)
+                            {
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+                            }
+                        </div>
+                    }
+                </div> @* End card *@
+            </div> @* End col *@
+        }
+    </div> @* End row *@
+
+    @* CSS để thêm hiệu ứng Hover cho Card *@
+    @section Scripts {
+    <style>
+        .article-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .article-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+    </style>
+    }

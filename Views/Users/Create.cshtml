@@ -1,0 +1,126 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.UserCreateViewModel 
+@{
+    ViewData["Title"] = "Tạo người dùng mới";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h2 class="mb-0 h4 text-primary">
+                    <i class="bi bi-person-plus-fill me-2"></i>Tạo người dùng mới
+                </h2>
+            </div>
+            <div class="card-body p-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-bold"></label>
+                        <input asp-for="Email" class="form-control" placeholder="example@domain.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label fw-bold"></label>
+                            <input asp-for="Password" class="form-control" type="password" />
+                            <span asp-validation-for="Password" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label fw-bold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-bold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AvatarFile" class="form-label fw-bold"></label>
+                        <input asp-for="AvatarFile" class="form-control" type="file" id="avatarFile" accept="image/*" />
+                        <span asp-validation-for="AvatarFile" class="text-danger"></span>
+                        <div class="mt-2 text-center">
+                            <img id="avatarPreview" src="/uploads/avatars/default-avatar.png" alt="Xem trước Avatar" class="img-thumbnail" style="max-height: 150px; max-width: 150px; object-fit: cover;"
+                                 onerror="this.onerror=null; this.src='/uploads/avatars/default-avatar.png';" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedRole" class="form-label fw-bold"></label>
+                        <select asp-for="SelectedRole" class="form-select" asp-items="ViewBag.RolesList">
+                            <option value="">-- Không gán vai trò --</option>
+                        </select>
+                        <span asp-validation-for="SelectedRole" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" asp-for="IsApproved" />
+                        <label class="form-check-label" asp-for="IsApproved"></label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle-fill me-1"></i> Tạo người dùng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    @* SCRIPT XEM TRƯỚC AVATAR *@
+    <script>
+        const avatarFileInput = document.getElementById('avatarFile');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const defaultAvatar = '/uploads/avatars/default-avatar.png'; // Lưu đường dẫn mặc định
+
+        avatarFileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                // Kiểm tra loại file (tùy chọn nhưng nên có)
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        avatarPreview.src = e.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                } else {
+                    // Nếu không phải ảnh, reset về mặc định và báo lỗi (tùy chọn)
+                    this.value = ''; // Xóa file đã chọn
+                    avatarPreview.src = defaultAvatar;
+                    alert('Vui lòng chọn một file ảnh hợp lệ.');
+                }
+            } else {
+                // Nếu người dùng hủy chọn file, quay về ảnh mặc định
+                avatarPreview.src = defaultAvatar;
+            }
+        });
+
+        // Đảm bảo ảnh mặc định hiển thị nếu ảnh gốc bị lỗi
+        avatarPreview.onerror = function () {
+            this.onerror = null; // Ngăn lặp vô hạn nếu ảnh mặc định cũng lỗi
+            this.src = defaultAvatar;
+        };
+    </script>
+}

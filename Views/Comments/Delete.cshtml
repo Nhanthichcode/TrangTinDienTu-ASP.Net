@@ -1,0 +1,80 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.Comment
+
+@{
+    ViewData["Title"] = "Xác nhận Xóa Bình luận";
+    int replyCount = (int)(ViewData["ReplyCount"] ?? 0); // Lấy số lượng trả lời từ ViewData
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@* Hiển thị cảnh báo nếu có lỗi (ví dụ: bình luận đang được dùng?) *@
+@if (ViewData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @ViewData["ErrorMessage"]
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle me-1"></i> Quay lại danh sách</a>
+    </div>
+}
+else
+{
+    @* Cảnh báo nếu xóa bình luận cha sẽ xóa cả con *@
+    @if (replyCount > 0)
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <strong>Cảnh báo:</strong> Xóa bình luận này cũng sẽ xóa <strong>@replyCount</strong> bình luận trả lời con.
+        </div>
+    }
+    else
+    {
+        <h3 class="text-danger">Bạn có chắc chắn muốn xóa bình luận này không?</h3>
+    }
+
+
+    <div>
+        <hr />
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Content)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Content)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.User)
+            </dt>
+            <dd class="col-sm-10">
+                @(Model.User?.UserName ?? "N/A") @* Hiển thị UserName *@
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Article)
+            </dt>
+            <dd class="col-sm-10">
+                <a asp-controller="Articles" asp-action="Details" asp-route-id="@Model.ArticleId" target="_blank">
+                    @(Model.Article?.Title ?? $"ID: {Model.ArticleId}") @* Hiển thị Title bài viết *@
+                </a>
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.CreatedAt)
+            </dt>
+            <dd class="col-sm-10">
+                @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm") @* Định dạng ngày *@
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.IsApproved)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.IsApproved)
+            </dd>
+        </dl>
+
+        <form asp-action="Delete">
+            @* Form sẽ POST đến action DeleteConfirmed nhờ asp-action="Delete" *@
+            <input type="hidden" asp-for="Id" /> @* Gửi ID của bình luận cần xóa *@
+            <button type="submit" class="btn btn-danger me-2"><i class="bi bi-trash-fill me-1"></i> Xóa Vĩnh viễn</button>
+            <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-x-circle me-1"></i> Hủy</a>
+        </form>
+    </div>
+}

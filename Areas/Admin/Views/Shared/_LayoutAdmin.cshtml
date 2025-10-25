@@ -1,0 +1,86 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<Trang_tin_điện_tử_mvc.Models.ApplicationUser> UserManager
+@inject SignInManager<Trang_tin_điện_tử_mvc.Models.ApplicationUser> SignInManager
+
+@{
+    // HÀM HỖ TRỢ XÁC ĐỊNH LINK ACTIVE
+    string IsActive(string controller, string action = "Index", string area = "")
+    {
+        var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+        var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+        var currentArea = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+
+        // So sánh không phân biệt chữ hoa/thường để tăng độ chính xác
+        return string.Equals(controller, currentController, StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(action, currentAction, StringComparison.OrdinalIgnoreCase) &&
+               string.Equals(area, currentArea, StringComparison.OrdinalIgnoreCase)
+               ? "active" : "";
+    }
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - E-News Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
+    @* Link tới file CSS riêng cho trang quản trị *@
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    @* SIDEBAR *@
+    <div class="sidebar d-flex flex-column p-3">
+        <a asp-area="" asp-action="Index" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+             <i class="bi bi-broadcast fs-4 me-2"></i>
+             <span class="fs-4">E-News Panel</span>
+        </a>
+        <hr>
+        <ul class="nav nav-pills flex-column mb-auto">
+            @if (SignInManager.IsSignedIn(User))
+            {
+                @* LOGIC MENU ĐÃ TỐI ƯU (IF / ELSE IF) *@
+                if (User.IsInRole("Admin"))
+                {
+                    <li class="nav-item"><a class="nav-link @IsActive("AdminDashboard", area: "Admin")" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Trang quản trị</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Users")" asp-controller="Users" asp-area="" asp-action="Index"><i class="bi bi-people me-2"></i>Người dùng</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Articles")" asp-controller="Articles" asp-area="" asp-action="Index"><i class="bi bi-newspaper me-2"></i>Bài viết</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Comments")" asp-controller="Comments" asp-area="" asp-action="Index"><i class="bi  bi-chat-dots-fill me-2"></i>Bình luận</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Categories")" asp-controller="Categories" asp-area="" asp-action="Index"><i class="bi bi-tags me-2"></i>Danh mục</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Tags")" asp-controller="Tags" asp-area="" asp-action="Index"><i class="bi bi-hash me-2"></i>Thẻ</a></li>                   
+ 
+                }
+                else if (User.IsInRole("Author"))
+                {
+                    <li class="nav-item"><a class="nav-link @IsActive("Articles", "Index")" asp-area="" asp-controller="Articles" asp-action="Index"><i class="bi bi-pencil-square me-2"></i>Bài viết của tôi</a></li>
+                    <li class="nav-item"><a class="nav-link @IsActive("Articles", "Create")" asp-controller="Articles" asp-area="" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>Tạo bài mới</a></li>
+                }
+            }
+        </ul>
+        <hr>
+        @* Tách phần thông tin người dùng ra Partial View *@
+        <partial name="_AdminLoginPartial" />
+    </div>
+
+    @* NỘI DUNG CHÍNH *@
+    <div class="main-content">
+        @if (TempData["Message"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                @TempData["Message"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        <main role="main" class="p-4">
+             @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

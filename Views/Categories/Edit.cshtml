@@ -1,0 +1,65 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.Category
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Danh mục";
+}
+
+<h1>@ViewData["Title"]: @Model.Name</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        @* Tăng độ rộng cột *@
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="Id" /> @* Input ẩn cho ID *@
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label fw-bold"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Slug" class="form-label fw-bold"></label>
+                <input asp-for="Slug" class="form-control" />
+                <span asp-validation-for="Slug" class="text-danger"></span>
+                <div class="form-text">Slug dùng cho URL (viết liền, không dấu, ví dụ: the-thao).</div>
+            </div>
+            <div class="mb-3">
+                <label asp-for="Description" class="form-label fw-bold"></label>
+                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="mb-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i> Lưu thay đổi</button>
+                <a asp-action="Index" class="btn btn-secondary ms-2"><i class="bi bi-x-circle me-1"></i> Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        // Basic slug generation (requires a function like stringToSlug)
+        function stringToSlug(str) {
+            str = str.toLowerCase();
+            str = str.normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // Remove accents
+            str = str.replace(/đ/g, 'd');
+            str = str.replace(/[^a-z0-9\s-]/g, ''); // Remove invalid chars
+            str = str.replace(/\s+/g, '-'); // Collapse whitespace and replace by -
+            str = str.replace(/-+/g, '-'); // Collapse dashes
+            str = str.trim();
+            return str;
+        }
+
+        $(document).ready(function () {
+            $('#Name').on('keyup blur', function () {
+                var nameVal = $(this).val();
+                $('#Slug').val(stringToSlug(nameVal));
+            });
+        });
+    </script>
+}

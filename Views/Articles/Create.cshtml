@@ -1,0 +1,77 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.ArticleCreateViewModel
+
+@{
+    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Author");
+
+    // áp dụng layout dựa trên vai trò người dùng, mặc đinh là layout quản trị nếu là Admin hoặc Author
+    if (!isAdmin) { Layout = "_Layout"; }
+
+
+    ViewData["Title"] = "Tạo bài viết mới";
+}
+
+<h2 class="mb-4 text-primary">📝 Tạo bài viết mới</h2>
+<div asp-validation-summary="All" class="text-danger"></div>
+<form asp-action="Create" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" placeholder="Nhập tiêu đề bài viết..." />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Summary" class="form-label"></label>
+        <textarea asp-for="Summary" class="form-control" rows="2" placeholder="Tóm tắt ngắn gọn..."></textarea>
+        <span asp-validation-for="Summary" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Content" class="form-label"></label>
+        <textarea asp-for="Content" class="form-control" rows="6" placeholder="Nội dung chi tiết..."></textarea>
+        <span asp-validation-for="Content" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label class="form-label">Ảnh đại diện</label>
+
+        @* Quan trọng: Thêm id="thumbnailFile" vào đây *@
+        <input type="file" id="thumbnailFile" name="thumbnailFile" class="form-control" accept="image/*" />
+        <small class="form-text text-muted">Chọn ảnh minh họa cho bài viết (tùy chọn, tối đa 2MB)</small>
+
+        @* QUAN TRỌNG: Bổ sung các thẻ div, img, p mà JavaScript cần *@
+        <div id="previewContainer" class="mt-2" style="display:none;">
+            <img id="imgPreview" src="#" alt="Preview" class="img-thumbnail" style="max-height:200px;" />
+            <p id="fileInfo" class="mt-1"></p>
+        </div>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryId" class="form-label">Danh mục</label>
+        <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.CategoryId">
+            <option value="">-- Chọn danh mục --</option>
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-4">
+        <label class="form-label">Thẻ (Tags)</label>
+        <div class="border rounded p-2" style="max-height:180px; overflow-y:auto;">
+            @foreach (var tag in (IEnumerable<Trang_tin_điện_tử_mvc.Models.Tag>)ViewBag.Tags)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="SelectedTagIds" value="@tag.Id" id="tag_@tag.Id" />
+                    <label class="form-check-label" for="tag_@tag.Id">@tag.Name</label>
+                </div>
+            }
+        </div>
+        <small class="form-text text-muted">Chọn một hoặc nhiều thẻ phù hợp với bài viết.</small>
+    </div>
+
+    <button type="submit" class="btn btn-success px-4">
+        <i class="bi bi-check-circle"></i> Lưu bài viết
+    </button>
+    <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
+</form>
+

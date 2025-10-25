@@ -1,0 +1,96 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.Comment
+
+@{
+    ViewData["Title"] = "Chi tiết Bình luận";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Content)
+        </dt>
+        <dd class="col-sm-10">
+            <pre style="white-space: pre-wrap; word-break: break-word;">@Html.DisplayFor(model => model.Content)</pre>
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.User)
+        </dt>
+        <dd class="col-sm-10">
+            @(Model.User?.UserName ?? "N/A")
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Article)
+        </dt>
+        <dd class="col-sm-10">
+            <a asp-controller="Articles" asp-action="Details" asp-route-id="@Model.ArticleId" target="_blank">
+                @(Model.Article?.Title ?? $"ID: {Model.ArticleId}")
+            </a>
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.CreatedAt)
+        </dt>
+        <dd class="col-sm-10">
+            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
+        </dd>
+        @* Hiển thị ParentCommentId nếu là reply *@
+        @if (Model.ParentCommentId.HasValue)
+        {
+            <dt class="col-sm-2">
+                Trả lời cho
+            </dt>
+            <dd class="col-sm-10">
+                <a asp-action="Details" asp-route-id="@Model.ParentCommentId">Bình luận ID: @Model.ParentCommentId.</a>
+            </dd>
+        }
+    </dl>
+</div>
+
+@* --- KHU VỰC HIỂN THỊ CÁC BÌNH LUẬN TRẢ LỜI --- *@
+@if (Model.Replies != null && Model.Replies.Any())
+{
+    <hr class="my-4" />
+    <h4 class="mb-3"><i class="bi bi-chat-right-dots-fill text-muted me-2"></i>Các bình luận trả lời (@Model.Replies.Count)</h4>
+
+    <div class="list-group">
+        @foreach (var reply in Model.Replies)
+        {
+            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded shadow-sm">
+                <div class="d-flex w-100 justify-content-between mb-1">
+                    <h6 class="mb-1 fw-bold text-primary">
+                        <i class="bi bi-person-circle me-1"></i>@(reply.User?.UserName ?? "N/A")
+                    </h6>
+                    <small class="text-muted">@reply.CreatedAt.ToString("dd/MM/yy HH:mm")</small>
+                </div>
+                <p class="mb-1">@reply.Content</p>
+                <small class="text-muted">
+                    @if (reply.IsApproved)
+                    {
+                        <span class="badge bg-success small">Đã duyệt</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark small">Chờ duyệt</span>
+                    }
+                    - <a asp-action="Delete" asp-route-id="@reply.Id" class="text-danger small">Xóa trả lời này</a>
+                    @* Thêm link Edit nếu muốn *@
+                    @* - <a asp-action="Edit" asp-route-id="@reply.Id" class="text-primary small">Sửa</a> *@
+                </small>
+            </div>
+        }
+    </div>
+}
+else if (!Model.ParentCommentId.HasValue)
+{
+    <hr class="my-4" />
+    <p class="text-muted fst-italic">Chưa có bình luận trả lời nào cho bình luận này.</p>
+}
+
+
+<div class="mt-4">
+    @* Di chuyển nút xuống dưới cùng *@
+    <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-warning me-2"><i class="bi bi-pencil-square me-1"></i> Xóa bình luận này</a>
+    <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle me-1"></i> Quay lại Danh sách</a>
+</div>

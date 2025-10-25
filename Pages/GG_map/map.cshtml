@@ -1,0 +1,33 @@
+﻿@page
+@model Trang_tin_điện_tử_mvc.Pages.GG_map.mapModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Bản đồ";
+}
+
+<style>
+    /* CSS đã được điều chỉnh để phù hợp với layout */
+    .map-container {
+        width: 100%;
+        /* Đặt chiều cao cụ thể.
+          Ví dụ: 75vh (75% chiều cao màn hình) hoặc 600px
+        */
+        height: 75vh;
+    }
+
+    .map-container iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+</style>
+
+<h1 class="mb-4">@ViewData["Title"]</h1>
+<p>Vị trí của chúng tôi trên bản đồ.</p>
+
+<div class="map-container shadow rounded">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d5283.938311636624!2d105.42976397618925!3d10.3716557897536!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310a731e7546fd7b%3A0x953539cd7673d9e5!2zVHLGsOG7nW5nIMSQ4bqhaSBI4buNYyBBbiBHaWFuZyAtIMSQ4bqhaSBI4buNYyBRdeG7kWMgR2lhIFRow6BuaCBQaOG7kSBI4buTIENow60gTWluaA!5e1!3m2!1svi!2sus!4v1761016514747!5m2!1svi!2sus"
+    width="600" height="450" style="border:0;"
+    allowfullscreen="" loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>

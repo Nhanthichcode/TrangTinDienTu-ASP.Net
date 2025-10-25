@@ -1,0 +1,367 @@
+﻿@using Microsoft.AspNetCore.Identity
+@model Trang_tin_điện_tử_mvc.Models.Article
+@inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+
+@{
+    ViewData["Title"] = Model.Title;
+
+    var relatedArticles = ViewBag.RelatedArticles as List<Article> ?? new List<Article>();
+
+    // Lấy ID người dùng hiện tại (sẽ dùng cho cả bình luận và bài viết)
+    var currentUserId = UserManager.GetUserId(User);
+
+    // 1. Quyền Admin: Admin có toàn quyền
+    bool isUserAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin");
+
+    // 2. Quyền Tác giả: CHỈ KHI là Author VÀ là chủ bài viết
+    bool isUserTheAuthor = User.Identity.IsAuthenticated &&
+                           User.IsInRole("Author") &&
+                           Model.AuthorId == currentUserId;
+    var defaultImageUrl = "/uploads/articles/default-thumbnail.jpg"; // Đảm bảo biến này tồn tại
+    // 3. Logic chọn Layout: Dùng layout admin nếu là Admin HOẶC (là Author, bất kể bài của ai)
+    bool isAdminOrAuthorRole = isUserAdmin || (User.Identity.IsAuthenticated && User.IsInRole("Author"));
+    ViewData["CurrentUserId"] = currentUserId;
+    ViewData["IsUserAdmin"] = isUserAdmin;
+    if (!isAdminOrAuthorRole)
+    {
+        Layout = "_Layout";
+    }
+}
+
+<div class="container-fluid mt-4">
+    <div class="row g-4">
+        <main class="col-lg-8">
+            <article class="card shadow-sm border-0">
+                @* Ảnh đại diện nổi bật *@
+                @{
+                    var imageUrl = !string.IsNullOrEmpty(Model.ThumbnailUrl)
+                    ? Model.ThumbnailUrl
+                    : "/uploads/articles/default-thumbnail.jpg"; // Đường dẫn ảnh mặc định
+                }
+                <img src="@imageUrl"
+                     class="card-img-top"
+                     alt="Ảnh đại diện bài viết: @Model.Title"
+                     style="object-fit: cover; max-height: 450px;"
+                     onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+
+                <div class="card-body p-4">
+                    <h1 class="card-title display-5 mb-3">@Model.Title</h1>
+                    <p class="lead text-muted fst-italic">@Model.Summary</p>
+                    <hr class="my-4" />
+                    <div class="article-content">@Html.Raw(Model.Content)</div>
+                </div>
+            </article>
+
+            @* --- KHU VỰC BÌNH LUẬN --- *@
+            <div class="card shadow-sm border-0 mt-4" id="comment-section">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-chat-left-text-fill text-primary me-2"></i>Bình luận (@(Model.Comments?.Count ?? 0))</h5>
+                </div>
+                <div class="card-body p-4">
+                    @* Form gửi bình luận GỐC (Parent) *@
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        var currentUser = await UserManager.GetUserAsync(User);
+                        var userAvatarUrl = currentUser?.AvatarUrl ?? "/uploads/avatars/default-images.png";
+
+                        <form asp-action="AddComment" asp-controller="Articles" method="post" class="mb-4 comment-form">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="ArticleId" value="@Model.Id" />
+                            <input type="hidden" name="ParentCommentId" value="" /> 
+                            <div class="d-flex align-items-start">
+                                <img src="@userAvatarUrl" alt="Avatar của bạn" class="rounded-circle me-3" width="40" height="40"
+                                     onerror="this.onerror=null; this.src='/uploads/avatars/default-images.png';" />
+                                <div class="w-100">
+                                    <textarea name="Content" class="form-control focus-ring focus-ring-primary" rows="3" placeholder="Viết bình luận của bạn..." required></textarea>
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <button type="submit" class="btn btn-primary"><i class="bi bi-send-fill me-1"></i> Gửi bình luận</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info text-center">
+                            <i class="bi bi-box-arrow-in-right me-2"></i> Vui lòng <a asp-area="Identity" asp-page="/Account/Login" class="alert-link fw-bold">đăng nhập</a> để gửi bình luận.
+                        </div>
+                    }
+
+                    @* Hiển thị thông báo thành công/lỗi *@
+                    @if (TempData["CommentSuccess"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-2"></i> @TempData["CommentSuccess"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+                    @if (TempData["CommentError"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["CommentError"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+
+                    @* Danh sách bình luận (Đã cấu trúc lại) *@
+                    <hr class="my-4" />
+
+                    @if (Model.Comments != null && Model.Comments.Any())
+                    {
+                        <h6 class="mb-3 text-muted">Tất cả bình luận:</h6>
+                        <ul class="list-unstyled">
+                            @foreach (var comment in Model.Comments.Where(c => c.ParentCommentId == null).OrderByDescending(c => c.CreatedAt))
+                            {
+                                <partial name="_CommentPartial" model="comment" view-data="ViewData" />
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-center text-muted fst-italic">Chưa có bình luận nào. Hãy là người đầu tiên!</p>
+                    }
+                </div>
+            </div>
+        </main>
+
+        @* --- SIDEBAR --- *@
+        <aside class="col-lg-4">
+            <div class="sticky-top" style="top: 2rem;">
+
+                @* Card thông tin bài viết - GIỮ LẠI PHIÊN BẢN NÀY *@
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-info-circle-fill text-primary me-2"></i>Thông tin</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2">
+                                <strong class="d-inline-block" style="width: 140px;"><i class="bi bi-person-fill me-2"></i>Tác giả:</strong>
+                                <span>@(Model.Author?.UserName ?? "N/A")</span>
+                            </li>
+                            <li class="mb-2">
+                                <strong class="d-inline-block" style="width: 140px;"><i class="bi bi-folder-fill me-2"></i>Danh mục:</strong>
+                                <a asp-action="Index" asp-controller="Articles" asp-route-categoryId="@Model.CategoryId" class="text-decoration-none text-danger">@(Model.Category?.Name ?? "N/A")</a> @* Đổi màu link *@
+                            </li>
+                            <li class="mb-2">
+                                <strong class="d-inline-block" style="width: 140px;"><i class="bi bi-calendar-event-fill me-2"></i>Ngày đăng:</strong>
+                                <span>@Model.CreatedAt.ToString("dd/MM/yyyy")</span>
+                            </li>
+                            <li>
+                                <strong class="d-inline-block" style="width: 140px;"><i class="bi bi-eye-fill me-2"></i>Lượt xem:</strong>
+                                <span>@Model.ViewCount</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                @* Card Thẻ (Tags) *@
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0"><i class="bi bi-tags-fill text-primary me-2"></i>Thẻ (Tags)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.ArticleTags != null && Model.ArticleTags.Any())
+                        {
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var at in Model.ArticleTags)
+                                {
+                                    <a asp-action="Index" asp-controller="Articles" asp-route-tag="@at.Tag?.Name" class="badge bg-secondary text-decoration-none fw-normal">@at.Tag?.Name</a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Chưa có thẻ.</span>
+                        }
+                    </div>
+                </div>
+
+                @* Card Hành động *@
+                @if (isUserAdmin || isUserTheAuthor)
+                {
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="bi bi-gear-fill text-primary me-2"></i>Hành động</h5>
+                        </div>
+                        <div class="card-body d-grid gap-2">
+                            <a asp-action="Edit" asp-controller="Articles" asp-route-id="@Model.Id" class="btn btn-warning"><i class="bi bi-pencil-square me-2"></i> Sửa bài viết</a>
+                            <form asp-action="Delete" asp-controller="Articles" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bạn có chắc muốn xóa bài viết này?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-danger w-100"><i class="bi bi-trash-fill me-2"></i> Xóa bài viết</button>
+                            </form>
+                            <hr class="my-1" />
+                            <a asp-action="Index" asp-controller="Articles" class="btn btn-secondary"><i class="bi bi-arrow-left-circle-fill me-2"></i> Quay lại danh sách</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </aside>
+    </div>
+</div>
+
+@* (Tùy chọn) Thêm CSS cho hiệu ứng focus *@
+@if (relatedArticles.Any())
+{
+    <hr class="my-5" /> @* Đường kẻ phân cách *@
+    <h2 class="mb-4 text-center text-primary fw-bold">Có thể bạn quan tâm</h2>
+
+    <div class="related-articles-scroll-container mb-5">
+        @foreach (var relatedArticle in relatedArticles)
+        {
+            <div class="related-article-card"> @* Dùng class riêng thay vì card mặc định *@
+                <a asp-controller="Articles" asp-action="Details" asp-route-id="@relatedArticle.Id" class="text-decoration-none text-dark">
+                     <img src="@imageUrl" class="related-article-img" alt="@relatedArticle.Title"                        
+                         onerror="this.onerror=null; this.src='@defaultImageUrl';" />
+                     <div class="related-article-body">
+                         <h6 class="related-article-title">@relatedArticle.Title</h6>
+                         <p class="related-article-meta text-muted small">
+                              <i class="bi bi-clock"></i> @relatedArticle.CreatedAt.ToString("dd/MM/yyyy")
+                         </p>
+                     </div>
+                 </a>
+            </div>
+        }
+    </div>
+}
+@section Scripts {
+    <style>
+        .comment-form textarea:focus {
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        /* Thêm style cho bình luận con để phân cấp */
+        .comment-item .comment-item {
+             border-bottom: 0 !important; /* Bỏ gạch chân cho bình luận con */
+             padding-bottom: 0 !important;
+             margin-bottom: 1rem !important;
+        }
+
+        .related-articles-scroll-container {
+            overflow-x: auto; /* Cho phép cuộn ngang */
+            white-space: nowrap; /* Ngăn các card xuống dòng */
+            padding-bottom: 15px; /* Tạo khoảng trống cho thanh cuộn */
+            scrollbar-width: thin; /* Làm thanh cuộn mỏng hơn (Firefox) */
+            scrollbar-color: #ced4da #f8f9fa; /* Màu thanh cuộn (Firefox) */
+        }
+
+            .related-articles-scroll-container::-webkit-scrollbar {
+                height: 8px; /* Chiều cao thanh cuộn ngang */
+            }
+
+            .related-articles-scroll-container::-webkit-scrollbar-track {
+                background: #f8f9fa; /* Màu nền rãnh cuộn */
+                border-radius: 4px;
+            }
+
+            .related-articles-scroll-container::-webkit-scrollbar-thumb {
+                background-color: #ced4da; /* Màu con trượt */
+                border-radius: 4px;
+                border: 2px solid #f8f9fa; /* Tạo viền nhỏ quanh con trượt */
+            }
+
+                .related-articles-scroll-container::-webkit-scrollbar-thumb:hover {
+                    background-color: #adb5bd; /* Màu khi di chuột vào */
+                }
+
+        .related-article-card {
+            display: inline-block; /* Hiển thị các card trên cùng một hàng */
+            width: 280px; /* Độ rộng cố định cho mỗi card (điều chỉnh nếu cần) */
+            vertical-align: top; /* Căn các card theo đỉnh */
+            margin-right: 1.5rem; /* Khoảng cách giữa các card */
+            background-color: #fff; /* Màu nền card */
+            border-radius: 0.375rem; /* Bo góc */
+            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Đổ bóng nhẹ */
+            transition: transform 0.2s ease-in-out; /* Hiệu ứng khi hover */
+            white-space: normal; /* Cho phép chữ bên trong xuống dòng */
+        }
+
+            .related-article-card:hover {
+                transform: translateY(-5px); /* Nhấc card lên khi hover */
+                box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
+            }
+
+            .related-article-card:last-child {
+                margin-right: 0; /* Bỏ margin cho card cuối cùng */
+            }
+
+        .related-article-img {
+            width: 100%;
+            height: 160px; /* Chiều cao cố định cho ảnh */
+            object-fit: cover; /* Đảm bảo ảnh fill khung mà không bị méo */
+            border-top-left-radius: 0.375rem;
+            border-top-right-radius: 0.375rem;
+        }
+
+        .related-article-body {
+            padding: 1rem;
+        }
+
+        .related-article-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            /* Giới hạn số dòng và thêm dấu ... */
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Số dòng tối đa */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            min-height: 2.5em; /* Đảm bảo chiều cao tối thiểu cho 2 dòng */
+        }
+
+        .related-article-meta {
+            font-size: 0.8rem;
+        }
+    </style>
+    
+    <script>
+        $(document).ready(function () {
+
+            $(document).on('submit', '.comment-form', function () {
+                var $form = $(this);
+                var $submitButton = $form.find('button[type="submit"]');
+
+                // Vô hiệu hóa nút ngay lập tức
+                $submitButton.prop('disabled', true);
+                $submitButton.text('Đang gửi...'); // Thông báo cho người dùng
+            });
+
+            // Xử lý khi nhấn nút "Sửa"
+            $(document).on('click', '.btn-edit-comment', function () {
+                var $commentItem = $(this).closest('.comment-item');
+                
+                // Ẩn nội dung gốc và các nút, hiện form chỉnh sửa (chỉ tìm trong item đó)
+                $commentItem.find('.comment-content-display:first').hide();
+                $commentItem.find('.comment-actions:first').hide();
+                $commentItem.find('.comment-content-edit:first').show();
+            });
+
+            // Xử lý khi nhấn nút "Hủy" trong form Sửa
+            $(document).on('click', '.btn-cancel-edit', function () {
+                var $commentItem = $(this).closest('.comment-item');
+                
+                // Hiện lại nội dung gốc, ẩn form (chỉ tìm trong item đó)
+                $commentItem.find('.comment-content-display:first').show();
+                $commentItem.find('.comment-actions:first').show();
+                $commentItem.find('.comment-content-edit:first').hide();
+            });
+
+            // --- XỬ LÝ TRẢ LỜI BÌNH LUẬN ---
+            
+            // Xử lý khi nhấn nút "Trả lời"
+            $(document).on('click', '.btn-toggle-reply', function () {
+                // Tìm form trả lời GẦN NHẤT trong cùng 1 comment-item và bật/tắt nó
+                $(this).closest('.comment-item').find('.reply-form-container:first').toggle();
+            });
+
+            // Xử lý khi nhấn nút "Hủy" trong form Trả lời
+            $(document).on('click', '.btn-cancel-reply', function () {
+                // Tìm form trả lời cha và ẩn nó đi
+                $(this).closest('.reply-form-container').hide();
+            });
+
+        });
+    </script>
+}

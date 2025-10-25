@@ -1,0 +1,64 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
+    <div class="card shadow-lg p-4" style="width: 28rem; border-radius: 1rem;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold">@ViewData["Title"]</h2>
+            <p class="text-muted">Tạo tài khoản mới để bắt đầu</p>
+        </div>
+
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Email" class="form-control rounded-3" autocomplete="username" placeholder="name@example.com" />
+                <label asp-for="Input.Email">Email</label>
+                <span asp-validation-for="Input.Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" type="password" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••" />
+                <label asp-for="Input.Password">Mật khẩu</label>
+                <span asp-validation-for="Input.Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.ConfirmPassword" type="password" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••" />
+                <label asp-for="Input.ConfirmPassword">Xác nhận mật khẩu</label>
+                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+            </div>
+
+            <!-- Lựa chọn loại tài khoản -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Loại tài khoản</label>
+                <select asp-for="Input.Role" class="form-select">
+                    <option value="User">Độc giả</option>
+                    <option value="Author">Tác giả</option>
+                </select>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary rounded-3 mb-3">Đăng ký</button>
+        </form>
+        <div class="text-center text-muted mb-3">hoặc</div>
+
+        <!-- Đăng ký với Google -->
+        <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-center">
+            <button type="submit" class="btn btn-outline-danger w-100 rounded-3" name="provider" value="Google">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                     alt="Google" width="20" height="20" /> Đăng ký với Google
+            </button>
+        </form>
+
+        <div class="text-center mt-4">
+            <small>Bạn đã có tài khoản? <a asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a></small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

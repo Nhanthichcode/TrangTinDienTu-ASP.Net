@@ -1,0 +1,88 @@
+﻿@page
+@model LoginModel
+@{
+    ViewData["Title"] = "Đăng nhập";
+    Layout = "_Layout";
+}
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-warning text-center">
+        @TempData["Message"]
+    </div>
+}
+<div class="d-flex justify-content-center align-items-center min-vh-100 bg-light">
+    <div class="card shadow-lg p-4 rounded-4" style="width: 28rem; border-radius: 1rem;">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold text-primary">@ViewData["Title"]</h2>
+            <p class="text-muted">Đăng nhập vào tài khoản của bạn</p>
+        </div>
+
+        <form id="account" method="post" class="mb-3">
+            <div asp-validation-summary="ModelOnly" class="text-danger text-center mb-3"></div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.UserNameOrEmail" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <label asp-for="Input.UserNameOrEmail">Email hoặc Tên đăng nhập</label>
+                <span asp-validation-for="Input.UserNameOrEmail" class="text-danger small"></span>
+            </div>
+
+            <div class="form-floating mb-3">
+                <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password">Mật khẩu</label>
+                <span asp-validation-for="Input.Password" class="text-danger small"></span>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="form-check">
+                    <input class="form-check-input" asp-for="Input.RememberMe" />
+                    <label class="form-check-label" asp-for="Input.RememberMe">
+                        Ghi nhớ đăng nhập
+                    </label>
+                </div>
+                <a asp-page="./ForgotPassword" class="small text-decoration-none text-primary">Quên mật khẩu?</a>
+            </div>
+
+            <button id="login-submit" type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Đăng nhập</button>
+        </form>
+
+        <div class="text-center text-muted mb-3">hoặc</div>
+
+        <!-- Đăng nhập bằng Google -->
+        @if ((Model.ExternalLogins?.Count ?? 0) > 0)
+        {
+            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                @foreach (var provider in Model.ExternalLogins!)
+                {
+                    if (provider.Name == "Google")
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-outline-danger w-100 py-2 mb-2 fw-semibold d-flex align-items-center justify-content-center gap-2"
+                                title="Đăng nhập bằng Google">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                 alt="Google" width="20" height="20" />
+                            Đăng nhập với Google
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="submit" name="provider" value="@provider.Name"
+                                class="btn btn-outline-secondary w-100 py-2 mb-2 fw-semibold">
+                            Đăng nhập bằng @provider.DisplayName
+                        </button>
+                    }
+                }
+            </form>
+        }
+
+        <div class="text-center mt-3">
+            <span class="text-muted">Chưa có tài khoản?</span>
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-decoration-none fw-semibold text-primary">
+                Đăng ký ngay
+            </a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

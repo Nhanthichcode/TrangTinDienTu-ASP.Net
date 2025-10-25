@@ -1,0 +1,19 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Xóa người dùng";
+}
+
+<h2>Xóa người dùng</h2>
+<hr />
+
+<h4>Bạn có chắc muốn xóa tài khoản này?</h4>
+<div class="mb-3">
+    <strong>Email:</strong> @Model.Email <br />
+    <strong>Họ tên:</strong> @Model.FullName
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" name="id" value="@Model.Id" />
+    <button type="submit" class="btn btn-danger">Xóa</button>
+    <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+</form>

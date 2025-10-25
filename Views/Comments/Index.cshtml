@@ -1,0 +1,107 @@
+﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Comment>
+
+@{
+    ViewData["Title"] = "Quản lý Bình luận";
+    var commentOrderMap = ViewBag.CommentOrderMap as Dictionary<int, int> ?? new Dictionary<int, int>(); 
+    int currentRow = 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2 text-primary fw-bold mb-0">
+        <i class="bi bi-chat-left-dots-fill me-2"></i>@ViewData["Title"] @ViewData["FilterTitle"]
+    </h1>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["WarningMessage"] != null) // Thêm xử lý cho WarningMessage
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["WarningMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+        <table class="table table-striped table-hover mb-0 align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th style="width: 30%;">Nội dung</th>
+                    <th>Người dùng</th>
+                    <th>Bài viết</th>
+                    <th>Ngày tạo</th>
+                    <th>Trả lời cho STT</th>
+                    <th style="width: 130px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">Chưa có bình luận nào.</td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    currentRow++;
+                    var isReply = item.ParentCommentId.HasValue;
+                    <tr>
+                        <td class="text-center">@currentRow</td>
+                        <td>
+                            <span title="@item.Content">
+                                @(item.Content.Length > 100 ? item.Content.Substring(0, 100) + "..." : item.Content)
+                            </span>
+                        </td>
+                        <td>
+                            @(item.User?.UserName ?? "N/A")
+                        </td>
+                        <td>
+                            <a asp-controller="Articles" asp-action="Details" asp-route-id="@item.ArticleId" target="_blank" style="text-decoration: none" title="Xem bài viết">
+                                @(item.Article?.Title != null && item.Article.Title.Length > 30 ? item.Article.Title.Substring(0, 30) + "..." : (item.Article?.Title ?? $"ID: {item.ArticleId}"))
+                            </a>
+                        </td>
+                        <td>
+                            @item.CreatedAt.ToString("dd/MM/yy HH:mm")
+                        </td>
+                        <td class="text-center">
+                            @* <-- CỘT TRẢ LỜI CHO STT *@
+                            @if (isReply && item.ParentCommentId.HasValue)
+                            {
+                                // Tìm STT của comment cha trong map
+                                if (commentOrderMap.TryGetValue(item.ParentCommentId.Value, out int parentOrder))
+                                {
+                                   @parentOrder
+                                }
+                                else
+                                {
+                                    <span class="text-muted" title="Bình luận cha có thể đã bị xóa hoặc không nằm trong danh sách hiện tại">?</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">                                
+                                <a asp-action="Details" asp-controller="Comments" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Chi tiết"><i class="bi bi-info-circle"></i></a> @* Sửa controller *@
+                                <a asp-action="Delete" asp-controller="Comments" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Xóa"><i class="bi bi-trash"></i></a> @* Sửa controller *@
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

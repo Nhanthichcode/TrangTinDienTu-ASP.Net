@@ -1,0 +1,205 @@
+﻿@model X.PagedList.IPagedList<Trang_tin_điện_tử_mvc.Models.Article>
+@using X.PagedList.Mvc.Core;
+@using X.PagedList;
+@{
+    ViewData["Title"] = "Trang chủ";
+    var featuredArticles = ViewBag.Featured as List<Article> ?? new List<Article>();
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    var categoryCounts = ViewBag.CategoryCounts as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var tags = ViewBag.Tags as List<Tag> ?? new List<Tag>();
+    var defaultImageUrl = "/uploads/articles/default-thumbnail.jpg";
+}
+
+@* --- CONTAINER FULL WIDTH --- *@
+<div class="container-fluid mt-4">
+    <div class="row g-4"> @* Thêm khoảng cách giữa các cột (gutters) *@
+
+        @* --- CỘT NỘI DUNG CHÍNH (9 CỘT) --- *@
+        <main class="col-lg-9">
+
+            @* --- CAROUSEL / BÀI VIẾT NỔI BẬT --- *@
+            @if (featuredArticles.Any())
+            {
+                <div id="featuredCarousel" class="carousel slide shadow-sm mb-4" data-bs-ride="carousel">
+                    <div class="carousel-indicators">
+                        @for (int i = 0; i < featuredArticles.Count; i++)
+                        {
+                            <button type="button" data-bs-target="#featuredCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")" aria-current="@(i == 0 ? "true" : "false")" aria-label="Slide @(i + 1)"></button>
+                        }
+                    </div>
+                    <div class="carousel-inner rounded">
+                        @for (int i = 0; i < featuredArticles.Count; i++)
+                        {
+                            var article = featuredArticles[i];
+                            var imageUrl = !string.IsNullOrEmpty(article.ThumbnailUrl) ? article.ThumbnailUrl : defaultImageUrl;
+                            <div class="carousel-item @(i == 0 ? "active" : "")">
+                                <img src="@imageUrl" class="d-block w-100" alt="@article.Title" style="max-height: 450px; object-fit: cover;"
+                                     onerror="this.onerror=null; this.src='@defaultImageUrl';" />
+                                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                                    <h5><a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id" class="text-white text-decoration-none">@article.Title</a></h5>
+                                    <p>@article.Summary</p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#featuredCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#featuredCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            }
+
+            @* --- TIN MỚI NHẤT --- *@
+            <h2 class="mb-3 border-bottom pb-2"><i class="bi bi-newspaper me-2"></i>Tin mới nhất</h2>
+
+            @* CONTAINER LƯỚI BÀI VIẾT *@
+            <div id="articleListContainer" class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                @* Hiển thị trang đầu tiên bằng Partial View *@
+                @* Sửa lỗi: Cần kiểm tra Model null trước khi dùng *@
+                @if (Model != null)
+                {
+                    <partial name="_ArticleListPartial" model="Model" />
+                }
+            </div>
+
+            @* --- NÚT XEM THÊM --- *@
+            <div class="text-center mt-4 mb-5">
+                @* Sửa lỗi: Cần kiểm tra Model null trước khi dùng thuộc tính của nó *@
+                @if (Model != null && Model.HasNextPage)
+                {
+                    <button id="loadMoreBtn" class="btn btn-outline-primary btn-lg" data-next-page="@(Model.PageNumber + 1)">
+                        <i class="bi bi-arrow-down-circle me-1"></i> Xem thêm bài viết
+                    </button>
+                    <div id="loadingIndicator" style="display: none;" class="mt-2">
+                         <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <span>Đang tải...</span>
+                    </div>
+                }
+                else if (Model == null || !Model.Any()) // Kiểm tra cả Model null hoặc không có bài nào
+                {
+                    <p class="text-muted">Chưa có bài viết nào.</p>
+                }
+                @* Không cần hiển thị gì nếu Model có bài nhưng không có trang tiếp theo *@
+            </div>
+
+        </main>
+
+        @* --- SIDEBAR (3 CỘT) --- *@
+        <aside class="col-lg-3">
+            <div class="sticky-top" style="top: 2rem;"> @* Giữ sidebar khi cuộn *@
+
+                @* --- CHUYÊN MỤC --- *@
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-folder-fill me-2"></i>Chuyên mục</h5>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach (var cat in categories)
+                        {
+                            categoryCounts.TryGetValue(cat.Id, out int articleCount); // Lấy số lượng bài viết
+                            <a asp-controller="Articles" asp-action="Index" asp-route-categoryId="@cat.Id"
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center border-0 px-3 py-2">
+                                <span><i class="bi bi-chevron-right me-2 small"></i>@cat.Name</span>
+                                @if (articleCount > 0)
+                                {
+                                    <span class="badge bg-primary rounded-pill">@articleCount</span>
+                                }
+                            </a>
+                        }
+                        @if (!categories.Any()) {
+                             <span class="list-group-item text-muted">Chưa có chuyên mục.</span>
+                        }
+                    </div>
+                </div>
+
+                @* --- THẺ TAG --- *@
+                <div class="card shadow-sm border-0 mb-4">
+                     <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-tags-fill me-2"></i>Thẻ Tag</h5>
+                    </div>
+                    <div class="card-body">
+                         @if (tags.Any())
+                         {
+                             <div class="d-flex flex-wrap gap-2">
+                                @foreach (var tag in tags)
+                                {
+                                    string[] badgeColors = { "bg-secondary", "bg-success", "bg-danger", "bg-warning text-dark", "bg-info text-dark", "bg-dark" };
+                                    // Cải thiện random: Tạo Random() một lần bên ngoài vòng lặp nếu cần hiệu năng tốt hơn trên trang rất lớn
+                                    var randomColor = badgeColors[new Random().Next(badgeColors.Length)];
+
+                                    <a asp-controller="Articles" asp-action="Index" asp-route-tag="@tag.Name"
+                                       class="badge @randomColor text-decoration-none tag-badge">
+                                        @tag.Name
+                                    </a>
+                                }
+                            </div>
+                         }
+                         else
+                         {
+                              <span class="text-muted">Chưa có thẻ tag nào.</span>
+                         }
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+</div>
+
+<<<<<<< HEAD
+=======
+@* Script đã bao gồm trong các câu trả lời trước, đảm bảo nó nằm ở đây *@
+>>>>>>> 8babf2df03871f7ae4a9c8d4a717472637b632e5
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+             $('#loadMoreBtn').on('click', function () {
+                var button = $(this);
+                var nextPage = button.data('next-page');
+                var loadingIndicator = $('#loadingIndicator');
+                button.prop('disabled', true);
+                loadingIndicator.show();
+
+                $.ajax({
+                    url: '@Url.Action("Index", "Home")',
+                    type: 'GET',
+                    data: { pageNumber: nextPage },
+                    success: function (result) {
+                        $('#articleListContainer').append(result);
+
+                        // Cần cách kiểm tra đáng tin cậy hơn là chỉ xem nội dung HTML
+                        // Ví dụ: Kiểm tra header đặc biệt hoặc cấu trúc JSON trả về
+                        var tempDiv = $('<div>').html(result); // Tạo div tạm để kiểm tra
+                        var hasMoreItems = tempDiv.find('.article-item').length > 0; // Kiểm tra xem có item nào trong kết quả không
+
+
+                        if (hasMoreItems) {
+                             button.data('next-page', nextPage + 1);
+                             button.prop('disabled', false);
+                        } else {
+                             button.hide(); // Ẩn nút nếu không còn bài viết
+                             // Có thể hiển thị thông báo "Đã tải hết"
+                             // loadingIndicator.text("Đã tải hết bài viết.");
+                             // loadingIndicator.show(); // Hiển thị lại nếu muốn báo hết
+                        }
+                    },
+                    error: function () {
+                        alert("Đã xảy ra lỗi khi tải thêm bài viết.");
+                        button.prop('disabled', false);
+                    },
+                    complete: function() {
+                        // Chỉ ẩn nếu nút vẫn còn hiển thị (tức là chưa tải hết)
+                        if ($('#loadMoreBtn').is(':visible')) {
+                           loadingIndicator.hide();
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

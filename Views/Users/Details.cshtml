@@ -1,0 +1,31 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.ApplicationUser
+@{
+    ViewData["Title"] = "Chi tiết người dùng";
+}
+
+<h2>Chi tiết người dùng</h2>
+<hr />
+<dl class="row">
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">@Model.Email</dd>
+
+    <dt class="col-sm-3">Họ tên</dt>
+    <dd class="col-sm-9">@Model.FullName</dd>
+
+    <dt class="col-sm-3">Trạng thái duyệt</dt>
+    <dd class="col-sm-9">@(Model.IsApproved ? "Đã duyệt" : "Chờ duyệt")</dd>
+
+    <dt class="col-sm-3">Ngày tạo</dt>
+    <dd class="col-sm-9">@Model.Id.Substring(0, 8)</dd>
+
+    <dt class="col-sm-3">Vai trò</dt>
+    <dd class="col-sm-9">
+        @foreach (var role in ViewBag.Roles)
+        {
+            <span class="badge bg-info">@role</span>
+        }
+    </dd>
+</dl>
+
+<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
+<a asp-action="Index" class="btn btn-secondary">Quay lại</a>

@@ -1,0 +1,70 @@
+﻿@model Trang_tin_điện_tử_mvc.Models.Article
+
+@{
+    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Author");
+
+    // áp dụng layout dựa trên vai trò người dùng, mặc đinh là layout quản trị nếu là Admin hoặc Author
+    if (!isAdmin) { Layout = "_Layout"; }
+
+    ViewData["Title"] = "Xác nhận Xóa";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+
+        <div class="card shadow-lg border-danger">
+
+            @* TIÊU ĐỀ CẢNH BÁO *@
+            <div class="card-header bg-danger text-white">
+                <h2 class="mb-0 h4">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Xác nhận Xóa Bài viết
+                </h2>
+            </div>
+
+            @* THÂN THẺ - THÔNG TIN XÁC NHẬN *@
+            <div class="card-body p-4">
+                <p class="lead">Bạn có chắc chắn muốn xóa vĩnh viễn bài viết này không?</p>
+                <p class="text-muted">Hành động này không thể hoàn tác.</p>
+
+                <hr class="my-3" />
+
+                @* Hiển thị tóm tắt bài viết sẽ bị xóa *@
+                <div class="d-flex align-items-center bg-light p-3 rounded border">
+                    @{
+                        var imageUrl = !string.IsNullOrEmpty(Model.ThumbnailUrl)
+                        ? Model.ThumbnailUrl
+                        : "/uploads/articles/default-thumbnail.jpg";
+                    }
+                    <img src="@imageUrl"
+                         class="me-3 rounded"
+                         style="width: 100px; height: 75px; object-fit: cover;"
+                         alt="Thumbnail"
+                         onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+
+                    <div>
+                        <h5 class="mb-1">@Model.Title</h5>
+                        <small class="text-muted">
+                            Tác giả: @(Model.Author?.UserName ?? "N/A") | Danh mục: @(Model.Category?.Name ?? "N/A")
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            @* CHÂN THẺ - CÁC NÚT HÀNH ĐỘNG *@
+            <div class="card-footer text-end bg-white border-0 pt-0 pb-3">
+                <form asp-action="Delete">
+                    <input type="hidden" asp-for="Id" />
+
+                    <a asp-action="Index" class="btn btn-secondary me-2">
+                        <i class="bi bi-x-circle me-1"></i> Hủy
+                    </a>
+
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-trash3-fill me-1"></i> Vâng, Xóa vĩnh viễn
+                    </button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
