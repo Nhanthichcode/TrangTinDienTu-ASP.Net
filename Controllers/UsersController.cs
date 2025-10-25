@@ -15,12 +15,14 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 {
     public class UsersController : Controller
     {
+        private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IWebHostEnvironment webHostEnvironment)
+        public UsersController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IWebHostEnvironment webHostEnvironment, ApplicationDbContext context)
         {
+            _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _webHostEnvironment = webHostEnvironment;
@@ -68,8 +70,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     FullName = model.FullName,
                     DateOfBirth = model.DateOfBirth,
                     IsApproved = model.IsApproved,
-                    EmailConfirmed = true // Usually set true for admin-created accounts
-                                          // Or implement email confirmation flow if needed
+                    EmailConfirmed = true 
                 };
 
                 string? avatarUrl = null; // Biến tạm để lưu đường dẫn
@@ -156,79 +157,162 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
             return View(user);
         }
+
         [Authorize(Policy = "RequireAdminRole")]
         // GET: Users/Edit/{id}
         public async Task<IActionResult> Edit(string id)
         {
+            if (string.IsNullOrEmpty(id)) return NotFound();
+
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null) return NotFound();
+            if (user == null) return NotFound($"Không tìm thấy người dùng với ID '{id}'.");
 
-            var roles = await _roleManager.Roles.ToListAsync();
-            ViewBag.Roles = roles;
-            return View(user);
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var currentUserRole = userRoles.FirstOrDefault();
+            var allRoles = await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
+
+            // Tạo ViewModel và đổ dữ liệu từ user
+            var viewModel = new UserEditViewModel
+            {
+                Id = user.Id,
+                UserName = user.UserName,
+                Email = user.Email,
+                FullName = user.FullName,
+                DateOfBirth = user.DateOfBirth,
+                ExistingAvatarUrl = user.AvatarUrl, // Lấy URL ảnh hiện tại
+                IsApproved = user.IsApproved,
+                SelectedRole = currentUserRole, // Gán vai trò hiện tại
+                                                // Tạo SelectList ngay trong ViewModel (hoặc vẫn dùng ViewBag)
+                RolesList = new SelectList(allRoles, "Name", "Name", currentUserRole)
+            };
+
+            return View(viewModel); // Trả về View với ViewModel        }
         }
-
+         
         [Authorize(Policy = "RequireAdminRole")]
         // POST: Users/Edit/{id}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, string fullName, string role, bool isApproved)
+        public async Task<IActionResult> Edit(UserEditViewModel viewModel)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return BadRequest("Id không được để trống.");
-            }
-
-            var user = await _userManager.FindByIdAsync(id);
+            var user = await _userManager.FindByIdAsync(viewModel.Id);
             if (user == null)
             {
-                return NotFound("Người dùng không tồn tại.");
+                return NotFound($"Không tìm thấy người dùng với ID '{viewModel.Id}'.");
             }
 
-            // Cập nhật thông tin cơ bản
-            user.FullName = fullName;
-            user.IsApproved = isApproved;
+            // Cập nhật RolesList để hiển thị lại form nếu có lỗi validation
+            var allRoles = await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
+            viewModel.RolesList = new SelectList(allRoles, "Name", "Name", viewModel.SelectedRole);
+            // Giữ lại ảnh hiện tại để hiển thị lại nếu lỗi
+            viewModel.ExistingAvatarUrl = user.AvatarUrl;
 
-            var updateResult = await _userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
+
+            if (ModelState.IsValid)
             {
-                foreach (var error in updateResult.Errors)
+                bool hasChanges = false; // Cờ kiểm tra xem có thay đổi gì không
+
+                // Cập nhật thông tin cơ bản
+                if (user.FullName != viewModel.FullName) { user.FullName = viewModel.FullName; hasChanges = true; }
+                if (user.DateOfBirth != viewModel.DateOfBirth) { user.DateOfBirth = viewModel.DateOfBirth; hasChanges = true; }
+                if (user.IsApproved != viewModel.IsApproved) { user.IsApproved = viewModel.IsApproved; hasChanges = true; }
+                // Cập nhật Email (nếu cho phép và có thay đổi) - Cần xử lý xác thực email mới nếu cần
+                if (user.Email != viewModel.Email)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    var setEmailResult = await _userManager.SetEmailAsync(user, viewModel.Email);
+                    if (!setEmailResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi cập nhật Email."); return View(viewModel); }
+                    // Có thể cần SetuserName trùng Email nếu bạn dùng Email làm username
+                    var setuserNameResult = await _userManager.SetUserNameAsync(user, viewModel.Email);
+                    if (!setuserNameResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi cập nhật userName."); return View(viewModel); }
+                    hasChanges = true;
                 }
-                ViewBag.Roles = await _roleManager.Roles.ToListAsync();
-                return View(user);
-            }
 
-            // Cập nhật role nếu có thay đổi
-            var currentRoles = await _userManager.GetRolesAsync(user);
 
-            if (!string.IsNullOrEmpty(role))
-            {
-                // Nếu role mới khác với role hiện tại
-                if (!currentRoles.Contains(role))
+                // Xử lý Upload Ảnh đại diện mới
+                if (viewModel.AvatarFile != null && viewModel.AvatarFile.Length > 0)
                 {
-                    // Xóa tất cả role cũ và thêm role mới
-                    await _userManager.RemoveFromRolesAsync(user, currentRoles);
-
-                    if (!await _roleManager.RoleExistsAsync(role))
+                    // Xóa ảnh cũ (nếu có và không phải ảnh mặc định)
+                    if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.AvatarUrl.EndsWith("default-images.png")) // Thay tên ảnh mặc định nếu khác
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(role));
+                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
+                        {
+                            try { System.IO.File.Delete(oldImagePath); }
+                            catch (IOException ex) { } // Cần inject ILogger
+                        }
                     }
 
-                    await _userManager.AddToRoleAsync(user, role);
+                    // Lưu ảnh mới
+                    string wwwRootPath = _webHostEnvironment.WebRootPath;
+                    string uploadsFolder = Path.Combine(wwwRootPath, "uploads", "avatars"); // Thư mục lưu avatars
+                    Directory.CreateDirectory(uploadsFolder); // Tạo thư mục nếu chưa có
+                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(viewModel.AvatarFile.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    try
+                    {
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await viewModel.AvatarFile.CopyToAsync(fileStream);
+                        }
+                        user.AvatarUrl = "/uploads/avatars/" + uniqueFileName; // Lưu đường dẫn tương đối
+                        hasChanges = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("AvatarFile", "Không thể lưu ảnh đại diện.");
+                        return View(viewModel);
+                    }
                 }
-            }
-            else
-            {
-                // Nếu không chọn role, xóa hết role cũ
-                await _userManager.RemoveFromRolesAsync(user, currentRoles);
-            }
 
-            TempData["Message"] = "Cập nhật người dùng thành công!";
-            return RedirectToAction(nameof(Index));
+                // Xử lý thay đổi Vai trò
+                var currentRoles = await _userManager.GetRolesAsync(user);
+                var currentRole = currentRoles.FirstOrDefault();
+                if (currentRole != viewModel.SelectedRole)
+                {
+                    if (!string.IsNullOrEmpty(currentRole)) // Xóa vai trò cũ nếu có
+                    {
+                        var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
+                        if (!removeResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi xóa vai trò cũ."); return View(viewModel); }
+                    }
+                    if (!string.IsNullOrEmpty(viewModel.SelectedRole)) // Thêm vai trò mới nếu có chọn
+                    {
+                        var addResult = await _userManager.AddToRoleAsync(user, viewModel.SelectedRole);
+                        if (!addResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", $"Lỗi khi thêm vai trò '{viewModel.SelectedRole}'."); return View(viewModel); }
+                    }
+                    hasChanges = true;
+                }
+
+
+                // Chỉ gọi UpdateAsync nếu thực sự có thay đổi
+                if (hasChanges)
+                {
+                    var updateResult = await _userManager.UpdateAsync(user);
+                    if (updateResult.Succeeded)
+                    {
+                        TempData["SuccessMessage"] = $"Đã cập nhật thông tin người dùng '{user.UserName}' thành công!";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    else
+                    {
+                        // Thêm lỗi vào ModelState nếu Update thất bại
+                        foreach (var error in updateResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                    }
+                }
+                else
+                {
+                    TempData["InfoMessage"] = "Không có thay đổi nào được thực hiện.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+            } // Kết thúc if (ModelState.IsValid)
+
+            // Nếu ModelState không hợp lệ, hiển thị lại form với lỗi và dữ liệu đã nhập
+            return View(viewModel);
         }
-
         [Authorize(Policy = "RequireAdminRole")]
         // POST: Users/Approve/{id}
         [HttpPost]
@@ -241,7 +325,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             user.IsApproved = true;
             await _userManager.UpdateAsync(user);
 
-            TempData["Message"] = $"Đã mở khóa tài khoản tác giả: {user.Email}";
+            TempData["Message"] = $"Đã mở khóa tài khoản: {user.Email}";
             return RedirectToAction(nameof(Index));
         }
 
@@ -256,7 +340,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             user.IsApproved = false;
             await _userManager.UpdateAsync(user);
 
-            TempData["Message"] = $"Đã khóa tài khoản tác giả: {user.Email}";
+            TempData["Message"] = $"Đã khóa tài khoản: {user.Email}";
             return RedirectToAction(nameof(Index));
         }
 

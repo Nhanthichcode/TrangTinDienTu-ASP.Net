@@ -1,39 +1,123 @@
-﻿@model Trang_tin_điện_tử_mvc.Models.ApplicationUser
+﻿@model Trang_tin_điện_tử_mvc.Models.UserEditViewModel
+@using Microsoft.AspNetCore.Identity
+
 @{
     ViewData["Title"] = "Chỉnh sửa người dùng";
+    var defaultAvatar = "/uploads/avatars/default-images.png"; // Ảnh mặc định
 }
 
-<h2>Chỉnh sửa người dùng</h2>
-<hr />
+<div class="row justify-content-center">
+    <div class="col-lg-7 col-md-9">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h2 class="mb-0 h4 text-primary">
+                    <i class="bi bi-pencil-square me-2"></i>Chỉnh sửa người dùng: @Model.UserName
+                </h2>
+            </div>
+            <div class="card-body p-4">
+                @* THÊM enctype CHO FORM *@
+                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" name="id" value="@Model.Id" />
-    <div class="mb-3">
-        <label>Email</label>
-        <input class="form-control" value="@Model.Email" disabled />
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="UserName" /> @* Gửi lại UserName nếu cần thiết *@
+                    <input type="hidden" asp-for="ExistingAvatarUrl" /> @* Giữ lại URL cũ để Controller xóa *@
+
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label fw-bold"></label>
+                        <input asp-for="Email" class="form-control" placeholder="example@domain.com" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label fw-bold"></label>
+                        <input asp-for="FullName" class="form-control" placeholder="Nguyễn Văn A" />
+                        <span asp-validation-for="FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DateOfBirth" class="form-label fw-bold"></label>
+                        <input asp-for="DateOfBirth" class="form-control" type="date" />
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="AvatarFile" class="form-label fw-bold"></label>
+                        <input asp-for="AvatarFile" class="form-control" type="file" id="avatarFile" accept="image/*" />
+                        <span asp-validation-for="AvatarFile" class="text-danger"></span>
+                        <div class="mt-2 text-center">
+                            @* Hiển thị ảnh hiện tại hoặc mặc định *@
+                            <img id="avatarPreview"
+                                 src="@(!string.IsNullOrEmpty(Model.ExistingAvatarUrl) ? Model.ExistingAvatarUrl : defaultAvatar)"
+                                 alt="Xem trước Avatar" class="img-thumbnail"
+                                 style="max-height: 150px; max-width: 150px; object-fit: cover;"
+                                 onerror="this.onerror=null; this.src='@defaultAvatar';" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="SelectedRole" class="form-label fw-bold"></label>
+                        @* asp-items lấy từ ViewModel thay vì ViewBag *@
+                        <select asp-for="SelectedRole" class="form-select" asp-items="Model.RolesList">
+                            <option value="">-- Không gán vai trò --</option>
+                        </select>
+                        <span asp-validation-for="SelectedRole" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" asp-for="IsApproved" />
+                        <label class="form-check-label" asp-for="IsApproved"></label>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại danh sách
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            @* Đổi màu nút *@
+                            <i class="bi bi-save me-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="mb-3">
-        <label>Họ tên</label>
-        <input name="fullName" class="form-control" value="@Model.FullName" />
-    </div>
 
-    <div class="mb-3">
-        <label>Vai trò</label>
-        <select name="role" class="form-select">
-            @foreach (var role in (IEnumerable<Microsoft.AspNetCore.Identity.IdentityRole>)ViewBag.Roles)
-            {
-                <option value="@role.Name">@role.Name</option>
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @* SCRIPT XEM TRƯỚC AVATAR (Giống trang Create) *@
+    <script>
+        const avatarFileInput = document.getElementById('avatarFile');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const defaultAvatar = '@defaultAvatar'; // Lấy đường dẫn mặc định từ C#
+
+        avatarFileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) { avatarPreview.src = e.target.result; }
+                    reader.readAsDataURL(file);
+                } else {
+                    this.value = '';
+                    avatarPreview.src = defaultAvatar;
+                    alert('Vui lòng chọn một file ảnh hợp lệ.');
+                }
+            } else {
+                // Nếu hủy chọn, hiển thị lại ảnh GỐC (lấy từ ViewModel) hoặc mặc định
+                avatarPreview.src = '@(!string.IsNullOrEmpty(Model.ExistingAvatarUrl) ? Model.ExistingAvatarUrl : defaultAvatar)';
             }
-        </select>
-    </div>
+        });
 
-    <div class="form-check mb-3">
-        <input name="isApproved" class="form-check-input" type="checkbox" value="true" @(Model.IsApproved ? "checked" : "") />
-        <label class="form-check-label">Đã duyệt</label>
-    </div>
-
-    <button type="submit" class="btn btn-success">Lưu thay đổi</button>
-    <a asp-action="Index" class="btn btn-secondary">Trở lại</a>
-</form>
+        avatarPreview.onerror = function () {
+            this.onerror = null;
+            this.src = defaultAvatar;
+        };
+    </script>
+}

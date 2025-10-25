@@ -226,7 +226,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     topLevelComments.Add(comment);
                 }
             }
-
+            article.ViewCount++;
+            await _context.SaveChangesAsync();
             _logger.LogInformation($"--- Xây dựng cây bình luận xong. Số bình luận gốc: {topLevelComments.Count}"); // Log kết thúc
 
             // --- Phần còn lại của action Details ---
