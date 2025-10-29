@@ -1072,6 +1072,22 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\articles\42097882-afe2-4d46-8430-e0d60df5c779_m3.jpg))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\articles\54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png))">
+      <SourceType>Package</SourceType>
+      <SourceId>Trang tin điện tử mvc</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/Trang tin điện tử mvc</BasePath>
+      <RelativePath>uploads/articles/54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\articles\54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath($(MSBuildThisFileDirectory)..\staticwebassets\uploads\articles\5fffaee4-f7c3-4cde-8ad9-ba3fb46e52c7_v6.jpg))">
       <SourceType>Package</SourceType>
       <SourceId>Trang tin điện tử mvc</SourceId>

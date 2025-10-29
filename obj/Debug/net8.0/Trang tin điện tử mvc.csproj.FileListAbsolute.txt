@@ -282,6 +282,7 @@ D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.MvcApplicationPartsAssemblyInfo.cache
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.RazorAssemblyInfo.cache
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.RazorAssemblyInfo.cs
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.sourcelink.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\staticwebassets.build.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\staticwebassets.development.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\staticwebassets\msbuild.Trang tin điện tử mvc.Microsoft.AspNetCore.StaticWebAssets.props
@@ -298,4 +299,3 @@ D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.pdb
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.genruntimeconfig.cache
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\ref\Trang tin điện tử mvc.dll
-D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Debug\net8.0\Trang tin điện tử mvc.sourcelink.json

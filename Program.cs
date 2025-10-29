@@ -27,6 +27,9 @@ namespace Trang_tin_điện_tử_mvc
 
                 // Chính sách yêu cầu người dùng phải có vai trò "Admin" HOẶC "Editor"
                 options.AddPolicy("ElevatedRights", policy => policy.RequireRole("Admin", "Author"));
+
+                // Chính sách yêu cầu người dùng phải có vai trò "Admin" HOẶC "Editor" Hoặc "User"
+                options.AddPolicy("Freedom", policy => policy.RequireRole("Admin", "Author", "User"));
             });
 
             // Cấu hình Google login            

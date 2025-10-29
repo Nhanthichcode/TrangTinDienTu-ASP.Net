@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "BiGDbXWkdiFZ8kJh+Fr/NHrPp1P7/1AOJMbtIfhOO2Q=",
+  "Hash": "uoBqBxPQ7RvMJvJXeIlnjs9rVolKZUxQ8IFxfNTv8To=",
   "Source": "Trang tin điện tử mvc",
   "BasePath": "_content/Trang tin điện tử mvc",
   "Mode": "Default",
@@ -2447,6 +2447,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\articles\\42097882-afe2-4d46-8430-e0d60df5c779_m3.jpg"
+    },
+    {
+      "Identity": "D:\\ASP .Net\\Đồ án cá nhân E_news\\Trang tin điện tử mvc\\wwwroot\\uploads\\articles\\54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png",
+      "SourceId": "Trang tin điện tử mvc",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\ASP .Net\\Đồ án cá nhân E_news\\Trang tin điện tử mvc\\wwwroot\\",
+      "BasePath": "_content/Trang tin điện tử mvc",
+      "RelativePath": "uploads/articles/54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\articles\\54ebc81c-a920-49f3-8480-45dbb5dda9ab_Ảnh chụp màn hình 2025-10-03 122904.png"
     },
     {
       "Identity": "D:\\ASP .Net\\Đồ án cá nhân E_news\\Trang tin điện tử mvc\\wwwroot\\uploads\\articles\\5fffaee4-f7c3-4cde-8ad9-ba3fb46e52c7_v6.jpg",

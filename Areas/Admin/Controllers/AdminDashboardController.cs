@@ -59,7 +59,6 @@ public class AdminDashboardController : Controller
             .Include(a => a.Author)
             .Where(a => !a.IsApproved)
             .OrderByDescending(a => a.CreatedAt)
-            .Take(5)
             .ToListAsync();
 
 

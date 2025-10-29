@@ -1,14 +1,9 @@
 ﻿@page
 @model IndexModel
 @inject UserManager<ApplicationUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
 @{
     ViewData["Title"] = "Thông tin cá nhân";
-    // 1. Quyền Admin và Author
-    bool isAdminOrAuthorRole = User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Author");
-    if (!isAdminOrAuthorRole)
-    {
-        Layout = "_Layout";
-    }
     ViewData["ActivePage"] = ManageNavPages.Index;
 }
 

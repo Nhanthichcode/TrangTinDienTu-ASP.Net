@@ -1,0 +1,45 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using Trang_tin_điện_tử_mvc.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    // --- ĐÂY LÀ NƠI ĐẶT LOGIC CHỌN LAYOUT ---
+    bool isAdminOrAuthorRole = false;
+    if (SignInManager.IsSignedIn(User))
+    {
+        isAdminOrAuthorRole = User.IsInRole("Admin") || User.IsInRole("Author");
+    }
+
+    if (isAdminOrAuthorRole)
+    {
+        // Nếu là Admin hoặc Author, dùng Layout Admin
+        Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    }
+    else
+    {
+        // Nếu là User thường, dùng Layout chung
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    // ------------------------------------------
+}
+
+<h2>Quản lý tài khoản</h2>
+
+<div>
+    <h4>Thay đổi cài đặt tài khoản của bạn</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            @* Render menu điều hướng (Bước 2) *@
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            @* Render nội dung (từ Bước 1) *@
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}
