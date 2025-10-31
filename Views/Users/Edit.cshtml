@@ -10,7 +10,7 @@
     // --- LOGIC PHÂN QUYỀN ---
     var currentUser = await UserManager.GetUserAsync(User); 
     bool isAdmin = currentUser != null && await UserManager.IsInRoleAsync(currentUser, "Admin");
-    // bool isOwner = currentUser != null && currentUser.Id == Model.Id;
+    bool isOwner = currentUser != null && currentUser.Id == Model.Id;
 }
 
 <div class="row justify-content-center">
@@ -69,7 +69,22 @@
                                 <input asp-for="DateOfBirth" class="form-control" type="date" />
                                 <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                             </div>
-
+                            @if (isOwner) @* Chỉ chủ sở hữu mới thấy *@
+                            {
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Bảo mật</label>
+                                    <div class="list-group">
+                                        <a asp-area="Identity" asp-page="/Account/Manage/ChangePassword" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                            <span>
+                                                <i class="bi bi-key-fill me-2"></i> Đổi mật khẩu
+                                            </span>
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                        @* Thêm link đến 2FA nếu cần *@
+                                        @* <a asp-area="Identity" asp-page="/Account/Manage/TwoFactorAuthentication" class="list-group-item list-group-item-action">...</a> *@
+                                    </div>
+                                </div>
+                            }
                             @* --- KHU VỰC CHỈ ADMIN MỚI THẤY --- *@
                             @if (isAdmin)
                             {

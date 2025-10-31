@@ -45,10 +45,10 @@
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Articles" asp-action="Index">Tin tức</a>
+                            <a class="nav-link" asp-area="" asp-controller="Articles" asp-action="Index">Tin tức</a>
                         </li>
 
                         @* --- DROPDOWN CHUYÊN MỤC --- *@
@@ -62,7 +62,7 @@
                                     @foreach (var cat in allCategories)
                                     {
                                         <li>
-                                            <a class="dropdown-item" asp-controller="Articles" asp-action="Index" asp-route-categoryId="@cat.Id">
+                                            <a class="dropdown-item" asp-area="" asp-controller="Articles" asp-action="Index" asp-route-categoryId="@cat.Id">
                                                 @cat.Name
                                             </a>
                                         </li>
@@ -86,7 +86,7 @@
                                     @foreach (var tag in allTags)
                                     {
                                         <li>
-                                            <a class="dropdown-item" asp-controller="Articles" asp-action="Index" asp-route-tag="@tag.Name">
+                                            <a class="dropdown-item" asp-area="" asp-controller="Articles" asp-action="Index" asp-route-tag="@tag.Name">
                                                 @tag.Name
                                             </a>
                                         </li>
@@ -100,19 +100,19 @@
                         </li>
 
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Terms">Giới thiệu</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Terms">Giới thiệu</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Contact">Liên hệ</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Contact">Liên hệ</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" asp-controller="GG_map" asp-action="map">Bản đồ</a>
+                            <a class="nav-link" asp-area="" asp-controller="GG_map" asp-action="map">Bản đồ</a>
                         </li>
                     </ul>
 
                     @* --- FORM TÌM KIẾM VÀ KHU VỰC USER --- *@
                     <div class="d-flex align-items-center">
-                        <form class="d-flex me-3" asp-controller="Articles" asp-action="Search" method="get">
+                        <form class="d-flex me-3" asp-area="" asp-controller="Articles" asp-action="Search" method="get">
                             <input class="form-control me-2" type="search" name="query" placeholder="Tìm kiếm...">
                             <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button> @* Đổi màu nút và thêm icon *@
                         </form>
@@ -151,7 +151,7 @@
                                         <li><hr class="dropdown-divider"></li>
                                     }                                                                           
                                         <li>
-                                        <a class="dropdown-item" asp-controller="Users" asp-area="" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)">
+                                        <a class="dropdown-item" asp-area="" asp-controller="Users" asp-area="" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)">
                                                 <i class="bi bi-person-gear me-2"></i> Thông tin cá nhân
                                             </a>
                                         </li>
@@ -194,8 +194,8 @@
         <div class="container">
             <p>&copy; @DateTime.Now.Year - <strong>E-News</strong>. Mọi quyền được bảo lưu.</p>
             <p>
-                <a asp-controller="Home" asp-action="Privacy">Chính sách bảo mật</a> |
-                <a asp-controller="Home" asp-action="Terms">Điều khoản sử dụng</a>
+                <a asp-controller="Home" asp-area="" asp-action="Privacy">Chính sách bảo mật</a> |
+                <a asp-controller="Home" asp-area="" asp-action="Terms">Điều khoản sử dụng</a>
             </p>
         </div>
     </footer>

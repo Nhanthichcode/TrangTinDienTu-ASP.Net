@@ -76,7 +76,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     FullName = model.FullName,
                     DateOfBirth = model.DateOfBirth,
                     IsApproved = model.IsApproved,
-                    EmailConfirmed = true 
+                    EmailConfirmed = true,                    
                 };
 
                 string? avatarUrl = null; // Biến tạm để lưu đường dẫn
@@ -349,7 +349,6 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     }
                     else
                     {
-                        // ... (Xử lý lỗi Concurrency và lỗi khác như cũ) ...
                         if (updateResult.Errors.Any(e => e.Code == "ConcurrencyFailure"))
                         {
                             ModelState.AddModelError(string.Empty, "Lỗi: Thông tin người dùng này vừa được cập nhật bởi người khác. Vui lòng tải lại trang và thử lại.");
@@ -370,11 +369,10 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-            } // Kết thúc if (ModelState.IsValid)
-
-            // Nếu ModelState không hợp lệ
+            }
             return View(viewModel);
         }
+
         [Authorize(Policy = "RequireAdminRole")]
         // POST: Users/Approve/{id}
         [HttpPost]
