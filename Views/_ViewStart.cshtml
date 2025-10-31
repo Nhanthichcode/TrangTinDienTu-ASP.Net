@@ -1,3 +1,20 @@
-﻿@{
-    Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@{
+    bool isAdminOrAuthorRole = false;
+    if (SignInManager.IsSignedIn(User))
+    {
+        isAdminOrAuthorRole = User.IsInRole("Admin") || User.IsInRole("Author");
+    }
+
+    if (isAdminOrAuthorRole)
+    {
+        // Nếu là Admin hoặc Author, dùng Layout Admin
+        Layout = "~/Areas/Admin/Views/Shared/_LayoutAdmin.cshtml";
+    }
+    else
+    {
+        // Nếu là User thường, dùng Layout chung
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }   
 }

@@ -43,3 +43,32 @@
     display: flex;
     flex-direction: column;
 }
+
+.table-container {
+    max-height: 550px; /* Đặt chiều cao tối đa bạn muốn, ví dụ 500px */
+    overflow-y: auto; /* Tự động hiển thị thanh cuộn dọc khi nội dung vượt quá max-height */
+    position: relative; /* Cần thiết để sticky-top hoạt động */
+}
+
+    /* Tùy chọn: Tùy chỉnh thanh cuộn cho đẹp hơn (WebKit) */
+    .table-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #adb5bd;
+        border-radius: 4px;
+    }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+/* Tùy chọn: Tùy chỉnh thanh cuộn (Firefox) */
+.table-container {
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f1f1f1;

@@ -1,31 +1,117 @@
 ﻿@model Trang_tin_điện_tử_mvc.Models.ApplicationUser
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<ApplicationUser> UserManager 
+
 @{
     ViewData["Title"] = "Chi tiết người dùng";
+    var defaultAvatar = "/uploads/avatars/default-images.png";
+    var userRole = ViewBag.UserRole as string;
+
+    // --- LOGIC PHÂN QUYỀN ---
+    var currentUser = await UserManager.GetUserAsync(User);
+    bool isUserLoggedIn = currentUser != null;
+    bool isAdmin = isUserLoggedIn && await UserManager.IsInRoleAsync(currentUser, "Admin");
+    bool isOwner = isUserLoggedIn && currentUser.Id == Model.Id;
 }
 
-<h2>Chi tiết người dùng</h2>
-<hr />
-<dl class="row">
-    <dt class="col-sm-3">Email</dt>
-    <dd class="col-sm-9">@Model.Email</dd>
+<div class="row justify-content-center">
+    <div class="col-lg-10 col-md-12">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light">
+                <h2 class="mb-0 h4 text-primary">
+                    <i class="bi bi-person-badge-fill me-2"></i>Chi tiết người dùng: @Model.UserName
+                </h2>
+            </div>
 
-    <dt class="col-sm-3">Họ tên</dt>
-    <dd class="col-sm-9">@Model.FullName</dd>
+            <div class="card-body p-4">
+                <div class="row g-4">
 
-    <dt class="col-sm-3">Trạng thái duyệt</dt>
-    <dd class="col-sm-9">@(Model.IsApproved ? "Đã duyệt" : "Chờ duyệt")</dd>
+                    @* --- CỘT BÊN TRÁI (AVATAR) --- *@
+                    <div class="col-md-4 text-center">
+                        <label class="form-label fw-bold d-block">Ảnh đại diện</label>
+                        
+                        <img id="avatarPreview"
+                             src="@(!string.IsNullOrEmpty(Model.AvatarUrl) ? Model.AvatarUrl : defaultAvatar)"
+                             alt="Avatar" class="img-thumbnail rounded-circle mb-2"
+                             style="width: 150px; height: 150px; object-fit: cover;"
+                             onerror="this.onerror=null; this.src='@defaultAvatar';" />
+                    </div>
 
-    <dt class="col-sm-3">Ngày tạo</dt>
-    <dd class="col-sm-9">@Model.Id.Substring(0, 8)</dd>
+                    @* --- CỘT BÊN PHẢI (THÔNG TIN) --- *@
+                    <div class="col-md-8">
+                        <dl class="row">
+                            <dt class="col-sm-4 fw-bold">Email:</dt>
+                            <dd class="col-sm-8">@Html.DisplayFor(model => model.Email)</dd>
 
-    <dt class="col-sm-3">Vai trò</dt>
-    <dd class="col-sm-9">
-        @foreach (var role in ViewBag.Roles)
-        {
-            <span class="badge bg-info">@role</span>
-        }
-    </dd>
-</dl>
+                            <dt class="col-sm-4 fw-bold">Họ và Tên:</dt>
+                            <dd class="col-sm-8">@Html.DisplayFor(model => model.FullName)</dd>
 
-<a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Chỉnh sửa</a>
-<a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                            <dt class="col-sm-4 fw-bold">Ngày sinh:</dt>
+                            <dd class="col-sm-8">
+                                @if (Model.DateOfBirth.HasValue)
+                                {
+                                    @Model.DateOfBirth.Value.ToString("dd/MM/yyyy")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Chưa cập nhật</span>
+                                }
+                            </dd>
+                            
+                            @* Chỉ Admin mới thấy Vai trò và Trạng thái *@
+                            @if (isAdmin)
+                            {
+                                <dt class="col-sm-4 fw-bold">Vai trò:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge bg-info text-dark">@userRole</span>
+                                </dd>
+
+                                <dt class="col-sm-4 fw-bold">Trạng thái:</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.IsApproved)
+                                    {
+                                        <span class="badge bg-success">Đã kích hoạt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Đã khóa</span>
+                                    }
+                                </dd>
+                            }
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            @* --- FOOTER CỦA CARD (NÚT BẤM) --- *@
+            <div class="card-footer bg-light border-0 p-3">
+                <div class="d-flex justify-content-between">
+                    
+                    @* Nút Quay lại: Admin về trang Quản lý Users, User thường về Trang chủ *@
+                    @if (isAdmin)
+                    {
+                        <a asp-action="Index" asp-controller="Users" class="btn btn-outline-secondary"> @* <-- Trỏ về Users/Index *@
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại Danh sách người dùng
+                        </a>
+                    }
+                    else
+                    {
+                         <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary"> @* <-- Trỏ về Home/Index *@
+                            <i class="bi bi-arrow-left me-1"></i> Quay lại Trang chủ
+                        </a>
+                    }
+
+                    @* Nút Chỉnh sửa: Chỉ Admin hoặc chủ sở hữu mới thấy *@
+                    @if (isAdmin || isOwner)
+                    {
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">
+                            <i class="bi bi-pencil-square me-1"></i> Chỉnh sửa
+                        </a>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

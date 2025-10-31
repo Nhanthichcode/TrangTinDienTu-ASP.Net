@@ -9,7 +9,7 @@
     ViewData["Title"] = isAdminOrAuthor ? "Quản lý Bài viết" : "Tất cả Bài viết";
 }
     @* LƯỚI HIỂN THỊ CÁC BÀI VIẾT DẠNG THẺ *@
-    <div class="row g-4">
+<div class="row g-4" style="overflow-y: auto;">
         @foreach (var item in Model)
         {
             <div class="col-md-6 col-lg-4">

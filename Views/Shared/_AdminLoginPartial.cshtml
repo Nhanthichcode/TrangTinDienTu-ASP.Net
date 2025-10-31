@@ -7,7 +7,7 @@
         <strong>@UserManager.GetUserName(User)</strong>
     </a>
     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser">
-        <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index"><i class="bi bi-person-gear me-2"></i>Thông tin cá nhân</a></li>
+        <li><a class="dropdown-item" asp-controller="Users" asp-area="" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)"><i class="bi bi-person-gear me-2"></i>Thông tin cá nhân</a></li>
         <li><hr class="dropdown-divider"></li>
         <li>
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">

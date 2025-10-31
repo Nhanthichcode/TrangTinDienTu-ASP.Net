@@ -1,5 +1,51 @@
-﻿html {
-  font-size: 14px;
+﻿
+body {
+    background-color: #f8f9fa;
+    padding-top: 70px; /* Thêm padding nếu navbar fixed-top */
+}
+
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #ddd;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    color: #dc3545 !important;
+    font-size: 1.3rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    color: #343a40 !important;
+}
+
+    .nav-link:hover, .nav-link.active {
+        color: #dc3545 !important;
+    }
+
+.dropdown-menu { /* Đảm bảo dropdown menu đủ rộng */
+    min-width: 200px;
+}
+
+footer {
+    background: #212529;
+    color: #ccc;
+    padding: 30px 0;
+    text-align: center;
+    margin-top: 50px; /* Giữ margin-top */
+}
+
+    footer a {
+        color: #f8d7da;
+        text-decoration: none;
+    }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+html {
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
@@ -35,3 +81,32 @@ body {
     max-height: 300px; /* Chiều cao tối đa trước khi thanh cuộn xuất hiện (điều chỉnh nếu cần) */
     overflow-y: auto; /* Hiển thị thanh cuộn dọc khi nội dung vượt quá max-height */
 }
+
+.table-container {
+    max-height: 300px; /* Đặt chiều cao tối đa bạn muốn, ví dụ 500px */
+    overflow-y: auto; /* Tự động hiển thị thanh cuộn dọc khi nội dung vượt quá max-height */
+    position: relative; /* Cần thiết để sticky-top hoạt động */
+}
+
+    /* Tùy chọn: Tùy chỉnh thanh cuộn cho đẹp hơn (WebKit) */
+    .table-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #adb5bd;
+        border-radius: 4px;
+    }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+/* Tùy chọn: Tùy chỉnh thanh cuộn (Firefox) */
+.table-container {
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f1f1f1;
