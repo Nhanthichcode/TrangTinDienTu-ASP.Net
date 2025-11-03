@@ -71,7 +71,7 @@
         </div>
 
         <div class="reply-form-container mt-3" style="display:none;">
-            <form asp-action="ReplyToComment" asp-controller="Articles" method="post" class="comment-form">
+            <form asp-action="Addcomment" asp-controller="Articles" method="post" class="comment-form">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="ArticleId" value="@Model.ArticleId" />
                 <input type="hidden" name="ParentCommentId" value="@Model.Id" />
