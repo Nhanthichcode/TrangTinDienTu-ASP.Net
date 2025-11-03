@@ -4,6 +4,9 @@
 
 **E-News** là một ứng dụng web tin tức được xây dựng bằng ASP.NET Core MVC, cung cấp nền tảng để xuất bản, quản lý và đọc các bài viết một cách hiệu quả và thân thiện. Dự án này là [Mục đích dự án, ví dụ: "báo cáo môn học", "dự án cá nhân để học hỏi"...].
 
+Trang web:
+https://e-news-asp-net-eye4bcg0befvejgc.southeastasia-01.azurewebsites.net/
+
  ---
 
 ## 🔥 Tính Năng Nổi Bật
