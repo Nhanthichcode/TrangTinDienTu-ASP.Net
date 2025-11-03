@@ -1,0 +1,74 @@
+﻿body {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa; /* Màu nền xám nhạt */
+}
+
+.sidebar {
+    min-width: 250px;
+    max-width: 250px;
+    background: #212529; /* Màu nền tối hơn */
+    color: #adb5bd; /* Màu chữ nhạt hơn */
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+    .sidebar .nav-link {
+        color: #adb5bd;
+        padding: 0.75rem 1rem;
+        border-radius: .25rem;
+        transition: all 0.2s ease-in-out;
+    }
+
+        .sidebar .nav-link i {
+            width: 20px; /* Căn chỉnh icon */
+            text-align: center;
+        }
+
+
+        /* TRẠNG THÁI ACTIVE VÀ HOVER */
+        .sidebar .nav-link:hover {
+            background-color: #343a40;
+            color: #fff;
+        }
+
+        .sidebar .nav-link.active {
+            background-color: #0d6efd; /* Màu xanh primary của Bootstrap */
+            color: #fff;
+            font-weight: bold;
+        }
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-container {
+    max-height: 550px; /* Đặt chiều cao tối đa bạn muốn, ví dụ 500px */
+    overflow-y: auto; /* Tự động hiển thị thanh cuộn dọc khi nội dung vượt quá max-height */
+    position: relative; /* Cần thiết để sticky-top hoạt động */
+}
+
+    /* Tùy chọn: Tùy chỉnh thanh cuộn cho đẹp hơn (WebKit) */
+    .table-container::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .table-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+    }
+
+    .table-container::-webkit-scrollbar-thumb {
+        background: #adb5bd;
+        border-radius: 4px;
+    }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+/* Tùy chọn: Tùy chỉnh thanh cuộn (Firefox) */
+.table-container {
+    scrollbar-width: thin;
+    scrollbar-color: #adb5bd #f1f1f1;
