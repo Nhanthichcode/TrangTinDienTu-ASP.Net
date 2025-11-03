@@ -31,7 +31,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         }
 
         // GET: Articles
-        public async Task<IActionResult> Index(int? categoryId, string tag) // Thêm cả tham số tag nếu bạn có lọc theo tag
+        public async Task<IActionResult> Index(int? categoryId, string tag, string query) // Thêm tham số từ lần trước
         {
             var articlesQuery = _context.Articles
                 .Include(a => a.Author)
@@ -40,201 +40,123 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     .ThenInclude(at => at.Tag)
                 .AsQueryable();
 
-            // BƯỚC 2: LỌC THEO categoryId NẾU CÓ
+            // --- LỌC ---
             if (categoryId.HasValue)
             {
                 articlesQuery = articlesQuery.Where(a => a.CategoryId == categoryId.Value);
-
-                // (Tùy chọn) Lấy tên Category để hiển thị tiêu đề lọc
-                var categoryName = await _context.Categories
-                                          .Where(c => c.Id == categoryId.Value)
-                                          .Select(c => c.Name)
-                                          .FirstOrDefaultAsync();
-                ViewData["FilterTitle"] = $"Bài viết thuộc danh mục: {categoryName ?? "Không rõ"}";
-                ViewData["CurrentCategoryId"] = categoryId.Value; // Để highlight menu danh mục (nếu cần)
+                // ... (ViewData cho tiêu đề lọc)
             }
-
-            // (Tùy chọn) Thêm lọc theo tag nếu có
             if (!string.IsNullOrEmpty(tag))
             {
                 articlesQuery = articlesQuery.Where(a => a.ArticleTags.Any(at => at.Tag.Name == tag));
-                ViewData["FilterTitle"] = $"Bài viết có thẻ: {tag}";
-                ViewData["CurrentTag"] = tag;
+                // ... (ViewData cho tiêu đề lọc)
+            }
+            if (!string.IsNullOrEmpty(query)) // Lọc cho Search
+            {
+                articlesQuery = articlesQuery.Where(a => a.Title.Contains(query) || a.Content.Contains(query));
+                ViewData["FilterTitle"] = $"Kết quả tìm kiếm cho: \"{query}\"";
+                ViewData["CurrentFilter"] = query;
             }
 
-
-            // Kiểm tra quyền xem bài viết (Logic cũ của bạn)
+            // --- PHÂN QUYỀN ---
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                if (!User.IsInRole("Admin")) // Admin xem được hết
+                if (User.IsInRole("Admin"))
                 {
-                    if (User.IsInRole("Author"))
-                    {
-                        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                        // Author xem bài của mình (đã lọc category/tag ở trên nếu có) HOẶC bài đã duyệt của người khác
- 
-                        articlesQuery = articlesQuery.Where(a => a.AuthorId == currentUserId);
- 
-                    }
-                    else // User thường chỉ xem bài đã duyệt
-                    {
-                        articlesQuery = articlesQuery.Where(a => a.IsApproved);
-                    }
+                    // Admin xem được hết
                 }
-            }
-            else // Khách chỉ xem bài đã duyệt
-            {
-                articlesQuery = articlesQuery.Where(a => a.IsApproved);
-            }
-
-            // Sắp xếp và lấy dữ liệu
-            var articles = await articlesQuery
-                                 .OrderByDescending(a => a.CreatedAt)
-                                 .ToListAsync();
-
-            // (Tùy chọn) Load lại danh sách Categories/Tags cho sidebar nếu cần
-            ViewBag.Categories = await _context.Categories.ToListAsync(); // Ví dụ
-                                                                          // ViewBag.Tags = await _context.Tags.ToListAsync(); // Ví dụ
-
-            return View(articles);
-        }
-
-        // GET: Articles/Search?query=abc
-        public async Task<IActionResult> Search(string query)
-        {
-            ViewData["CurrentFilter"] = query; // Lưu lại query để hiển thị trên ô tìm kiếm
-            ViewData["FilterTitle"] = $"Kết quả tìm kiếm cho: \"{query}\""; // Tiêu đề trang kết quả
-
-            var articlesQuery = _context.Articles
-                .Include(a => a.Author)
-                .Include(a => a.Category)
-                .AsQueryable(); // Bắt đầu query
-
-            // 1. Lọc theo Query (nếu query không rỗng)
-            if (!String.IsNullOrEmpty(query))
-            {
-                // Tìm kiếm không phân biệt hoa thường trong Title HOẶC Content
-                articlesQuery = articlesQuery.Where(a => a.Title.Contains(query)
-                                                      || a.Content.Contains(query));
-            }
-            else
-            {
-                // Nếu query rỗng, không trả về kết quả nào hoặc trả về trang Index thông thường
-                ViewData["FilterTitle"] = "Vui lòng nhập từ khóa tìm kiếm";
-                // return View("Index", new List<Article>()); // Trả về danh sách rỗng
-                return RedirectToAction(nameof(Index)); // Hoặc quay về trang Index
-            }
-
-            // 2. Áp dụng Logic Quyền (Tương tự như trong Index)
-            // Chỉ hiển thị bài đã duyệt cho khách và user thường
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                if (!User.IsInRole("Admin") && !User.IsInRole("Author")) // User thường
+                else if (User.IsInRole("Author"))
+                {
+                    // Author CHỈ xem bài của mình
+                    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    articlesQuery = articlesQuery.Where(a => a.AuthorId == currentUserId);
+                }
+                else // User thường
                 {
                     articlesQuery = articlesQuery.Where(a => a.IsApproved);
                 }
-                // Admin và Author có thể thấy bài chưa duyệt (nếu muốn)
-                // Author chỉ thấy bài của mình? Logic này phức tạp hơn khi search, cần cân nhắc
             }
             else // Khách
             {
                 articlesQuery = articlesQuery.Where(a => a.IsApproved);
             }
 
-            // 3. Sắp xếp và lấy kết quả
-            var searchResults = await articlesQuery
-                                    .OrderByDescending(a => a.CreatedAt) // Sắp xếp theo ngày mới nhất
-                                    .ToListAsync();
+            var articles = await articlesQuery
+                                 .OrderByDescending(a => a.CreatedAt)
+                                 .ToListAsync();
 
-            // 4. Trả về View "Index" với dữ liệu đã lọc
-            // View Index.cshtml sẽ được tái sử dụng để hiển thị kết quả tìm kiếm
-            return View("Index", searchResults);
+            // Tải lại sidebar (nếu View Index của Article cũng có sidebar)
+            ViewBag.Categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
+            ViewBag.Tags = await _context.Tags.OrderBy(t => t.Name).Take(10).ToListAsync();
+
+            return View(articles);
         }
+        public async Task<IActionResult> Search(string query)
+        {
+            // Chuyển hướng đến Index với tham số query
+            return RedirectToAction(nameof(Index), new { query = query });
+        }
+
 
         // GET: Articles/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            // BƯỚC 1: Tải bài viết (Article) và các thuộc tính liên quan (Author, Category, Tags)
+            var isAdminOrAuthor = User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Author"));
+
             var article = await _context.Articles
                 .Include(a => a.Author)
                 .Include(a => a.Category)
-                .Include(a => a.ArticleTags)
-                    .ThenInclude(at => at.Tag)
+                .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (article == null)
+            if (article == null) return NotFound();
+            if (!isAdminOrAuthor) // Nếu không phải Admin/Author thì mới đếm
             {
-                return NotFound();
-            } 
+                article.ViewCount++; 
+                await _context.SaveChangesAsync(); // 3. PHẢI CÓ 'await'
+            }
+            // Tải và xây dựng cây bình luận (Logic này đã đúng)
             var allComments = await _context.Comments
                 .Where(c => c.ArticleId == id)
-                .Include(c => c.User) // Tải thông tin người dùng (cho Avatar, Tên)
+                .Include(c => c.User)
                 .ToListAsync();
-             
-            var relatedArticles = await _context.Articles
-                .Where(a => a.CategoryId == article.CategoryId // Cùng chuyên mục
-                         && a.Id != article.Id              // Loại trừ bài hiện tại
-                         && a.IsApproved)                   // Chỉ lấy bài đã duyệt
-                .OrderByDescending(a => a.CreatedAt)        // Sắp xếp mới nhất
-                .Take(5)                                    // Lấy 5 bài
-                .Include(a => a.Author) // Include Author nếu cần hiển thị
-                .ToListAsync();
-
-            ViewBag.RelatedArticles = relatedArticles; 
-            _logger.LogInformation($"--- Bắt đầu xây dựng cây bình luận cho Article ID: {id}"); // Log bắt đầu
 
             var commentLookup = allComments.ToDictionary(c => c.Id);
             var topLevelComments = new List<Comment>();
 
             foreach (var comment in allComments)
             {
+                // Đảm bảo Replies được khởi tạo
+                comment.Replies = new List<Comment>();
                 if (comment.ParentCommentId.HasValue)
                 {
-                    // Đây là bình luận con (Reply)
                     if (commentLookup.TryGetValue(comment.ParentCommentId.Value, out var parentComment))
                     {
-                        // === LOG CHI TIẾT ===
-                        _logger.LogDebug($"--- [Kiểm tra] Reply ID: {comment.Id} cho Parent ID: {parentComment.Id}. Số Replies hiện tại của Parent: {parentComment.Replies.Count}");
-
-                        // (Thêm bước kiểm tra này để chắc chắn)
-                        if (parentComment.Replies.Any(r => r.Id == comment.Id))
-                        {
-                            _logger.LogWarning($"--- !!! [CẢNH BÁO] Reply ID: {comment.Id} ĐÃ TỒN TẠI trong Parent ID: {parentComment.Id}. Bỏ qua việc thêm lại.");
-                        }
-                        else
-                        {
-                            // Thêm bình luận con này vào danh sách Replies của cha nó
-                            parentComment.Replies.Add(comment);
-                            _logger.LogDebug($"--- [Thêm thành công] Reply ID: {comment.Id} vào Parent ID: {parentComment.Id}. Số Replies MỚI của Parent: {parentComment.Replies.Count}");
-                        }
-                        // === KẾT THÚC LOG ===
-                    }
-                    else
-                    {
-                        // Log lỗi nếu không tìm thấy cha (như cũ)
-                        _logger.LogError($"--- Lỗi logic: Comment ID {comment.Id} có ParentCommentId={comment.ParentCommentId} không tồn tại!");
+                        parentComment.Replies.Add(comment);
                     }
                 }
                 else
                 {
-                    // Đây là bình luận gốc (không có cha)
                     topLevelComments.Add(comment);
                 }
             }
-            article.ViewCount++;
-            await _context.SaveChangesAsync();
-            _logger.LogInformation($"--- Xây dựng cây bình luận xong. Số bình luận gốc: {topLevelComments.Count}"); // Log kết thúc
 
-            // --- Phần còn lại của action Details ---
             article.Comments = topLevelComments.OrderByDescending(c => c.CreatedAt).ToList();
-            return View(article);
-        }
 
+            // Lấy bài viết liên quan (cho thanh cuộn ở cuối)
+            var relatedArticles = await _context.Articles
+                .Where(a => a.CategoryId == article.CategoryId && a.Id != article.Id && a.IsApproved)
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(5)
+                .Include(a => a.Author)
+                .ToListAsync();
+            ViewBag.RelatedArticles = relatedArticles;
+
+            return View(article);
+        }        
+        
         //Get duyệt bài
         [Authorize(Policy = "ElevatedRights")]
         public async Task<IActionResult> Pending()
@@ -532,6 +454,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 }
             }
         }
+        
         // GET: Articles/Delete/5
         [Authorize(Policy = "ElevatedRights")]
         public async Task<IActionResult> Delete(int? id)
@@ -576,23 +499,18 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         [HttpPost]
         [Authorize]
         [ValidateAntiForgeryToken]
-        // BƯỚC 1: XÓA THAM SỐ ParentCommentId
-        public async Task<IActionResult> AddComment(int ArticleId, string Content)
+        public async Task<IActionResult> AddComment(int ArticleId, string Content, int? ParentCommentId)
         {
             if (string.IsNullOrWhiteSpace(Content))
             {
                 TempData["CommentError"] = "Nội dung bình luận không được để trống.";
-                // SỬA REDIRECT CHO ĐÚNG
-                return RedirectToAction(
-                    actionName: "Details",
-                    routeValues: new { id = ArticleId }
-                );
+                return RedirectToAction("Details", controllerName: "Articles", new { id = ArticleId }, "comment-section");
             }
 
             var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId))
             {
-                return RedirectToAction("Login", "Account"); // Hoặc return Challenge();
+                return Challenge(); // Yêu cầu đăng nhập
             }
 
             var comment = new Comment
@@ -601,201 +519,121 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 Content = Content,
                 UserId = userId,
                 CreatedAt = DateTime.Now,
-                IsApproved = true,
-                // BƯỚC 2: BỎ GÁN ParentCommentId (luôn là null cho bình luận gốc)
-                ParentCommentId = null
+                IsApproved = true, // Tự động duyệt
+                ParentCommentId = ParentCommentId // Sẽ là null (gốc) hoặc ID (trả lời)
             };
 
             _context.Comments.Add(comment);
             await _context.SaveChangesAsync();
 
+            TempData["CommentSuccess"] = "Bình luận của bạn đã được gửi.";
+
+            // Sửa lỗi Redirect: Dùng tham số có tên
             return RedirectToAction(
-   actionName: "Details",
-   controllerName: "Articles",
-   routeValues: new { id = ArticleId }, 
-   fragment: "comment-" + comment.Id
-);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken] // Thêm để chống tấn công CSRF
-        [Authorize] // Bắt buộc người dùng phải đăng nhập
-        public async Task<IActionResult> EditComment(int commentId, int articleId, string content)
-        {
-            // Kiểm tra nội dung
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                TempData["CommentError"] = "Nội dung bình luận không được để trống."; // Đồng bộ TempData
-                return RedirectToAction(
-     actionName: "Details",
-     controllerName: "Articles",
-     routeValues: new { id = articleId },
-     fragment: "comment-" + commentId
- );
-            }
-
-            var comment = await _context.Comments.FindAsync(commentId);
-            if (comment == null)
-            {
-                return NotFound();
-            }
-
-            // --- KIỂM TRA BẢO MẬT PHÍA SERVER ---
-            var currentUserId = _userManager.GetUserId(User);
-            var isAdmin = User.IsInRole("Admin");
-
-            if (comment.UserId != currentUserId && !isAdmin)
-            {
-                return Forbid(); // Trả về lỗi 403 Forbidden nếu không có quyền
-            }
-            // --- Kết thúc kiểm tra bảo mật ---
-
-            // Cập nhật nội dung và lưu
-            comment.Content = content;
-            _context.Comments.Update(comment);
-            await _context.SaveChangesAsync();
-
-            TempData["CommentError"] = "Nội dung bình luận không được để trống."; // Đồng bộ TempData
-            return RedirectToAction(
-             actionName: "Details",
-             controllerName: "Articles",
-             routeValues: new { id = articleId },
-             fragment: "comment-" + commentId
+                actionName: "Details", controllerName: "Articles",
+                routeValues: new { id = ArticleId },
+                fragment: "comment-" + comment.Id
             );
         }
+
+        // --- XÓA ACTION ReplyToComment (Đã gộp vào AddComment) ---
+        // public async Task<IActionResult> ReplyToComment(...) {}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
-        // BƯỚC 1: THÊM THAM SỐ ArticleId
-        public async Task<IActionResult> ReplyToComment(int ParentCommentId, int ArticleId, string Content)
+        public async Task<IActionResult> EditComment(int commentId, int articleId, string content)
         {
-            // Kiểm tra nội dung bình luận
-            if (string.IsNullOrWhiteSpace(Content))
+            if (string.IsNullOrWhiteSpace(content))
             {
-                TempData["CommentError"] = "Nội dung bình luận không được để trống."; // Đồng bộ TempData
-                                                                                      // SỬA REDIRECT CHO ĐÚNG
+                TempData["CommentError"] = "Nội dung bình luận không được để trống.";
                 return RedirectToAction(
-                    actionName: "Details",
-                    controllerName: "Articles",
-                    routeValues: new { id = ArticleId }, // Dùng ArticleId từ form
-                    fragment: "comment-" + ParentCommentId // Trỏ về bình luận cha nếu lỗi
-                );
+                     actionName: "Details", controllerName: "Articles",
+                     routeValues: new { id = articleId },
+                     fragment: "comment-" + commentId
+                 );
             }
 
-            // BƯỚC 2: KIỂM TRA BÀI VIẾT TỒN TẠI (Tùy chọn nhưng nên có)
-            var articleExists = await _context.Articles.AnyAsync(a => a.Id == ArticleId);
-            if (!articleExists)
+            var comment = await _context.Comments.FindAsync(commentId);
+            if (comment == null) return NotFound();
+
+            var currentUserId = _userManager.GetUserId(User);
+            var isAdmin = User.IsInRole("Admin");
+            if (comment.UserId != currentUserId && !isAdmin)
             {
-                return NotFound("Bài viết không tồn tại.");
+                return Forbid();
             }
 
-            // BƯỚC 3: KIỂM TRA BÌNH LUẬN CHA TỒN TẠI
-            var parentCommentExists = await _context.Comments.AnyAsync(c => c.Id == ParentCommentId && c.ArticleId == ArticleId);
-            if (!parentCommentExists)
-            {
-                TempData["CommentError"] = "Không thể trả lời bình luận không tồn tại.";
-                return RedirectToAction("Details", new { id = ArticleId });
-            }
-
-            var userId = _userManager.GetUserId(User);
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Challenge(); // Người dùng phải đăng nhập
-            }
-
-            // Tạo bình luận con
-            var newComment = new Comment
-            {
-                Content = Content,
-                ParentCommentId = ParentCommentId,
-                CreatedAt = DateTime.Now,
-                UserId = userId, // Lấy ID người dùng hiện tại
-                ArticleId = ArticleId, // Lấy từ form
-                IsApproved = true // Giả định trả lời được duyệt ngay
-            };
-
-            // Lưu bình luận vào cơ sở dữ liệu
-            _context.Comments.Add(newComment);
+            comment.Content = content;
+            _context.Comments.Update(comment);
             await _context.SaveChangesAsync();
 
-            TempData["CommentSuccess"] = "Câu trả lời của bạn đã được gửi."; // Đồng bộ TempData
-
-            // BƯỚC 4: SỬA REDIRECT CHO ĐÚNG VÀ THÊM FRAGMENT
+            TempData["CommentSuccess"] = "Đã cập nhật bình luận."; // Đồng bộ TempData
             return RedirectToAction(
-                actionName: "Details",
-                controllerName: "Articles",
-                routeValues: new { id = ArticleId },
-                fragment: "comment-" + newComment.Id // Trỏ đến trả lời vừa tạo
+                 actionName: "Details", controllerName: "Articles",
+                 routeValues: new { id = articleId },
+                 fragment: "comment-" + comment.Id
             );
         }
 
-        // =================================================================
-        // HÀM XÓA BÌNH LUẬN (ĐÃ CHUYỂN SANG MVC)
-        // =================================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> DeleteComment(int commentId, int articleId)
         {
-            var commentToCheck = await _context.Comments.FindAsync(commentId);
-            if (commentToCheck == null)
-            {
-                return NotFound();
-            }
+            var commentToDelete = await _context.Comments.FindAsync(commentId);
+            if (commentToDelete == null) return NotFound();
+
+            // Kiểm tra bảo mật
             var currentUserId = _userManager.GetUserId(User);
             var isAdmin = User.IsInRole("Admin");
-
-            if (commentToCheck.UserId != currentUserId && !isAdmin)
+            if (commentToDelete.UserId != currentUserId && !isAdmin)
             {
                 return Forbid();
-            } 
-            await DeleteCommentAndRepliesAsync(commentId);
- 
-            // --- Kết thúc kiểm tra bảo mật ---
+            }
 
-            // --- GỌI HÀM XÓA ĐỆ QUY ---
-            // Hàm này sẽ xử lý việc xóa commentId và tất cả con cháu của nó
+            // --- SỬA LỖI: DÙNG HÀM XÓA ĐỆ QUY ---
+            // Hàm này sẽ xóa commentId và TẤT CẢ con cháu của nó
             await DeleteCommentAndRepliesAsync(commentId);
-            // -------------------------
 
-            // --- LƯU THAY ĐỔI MỘT LẦN DUY NHẤT ---
-            // SaveChangesAsync sẽ áp dụng tất cả các lệnh Remove đã được gọi
-            // bên trong DeleteCommentAndRepliesAsync 
+            // Lưu thay đổi 1 lần duy nhất
             await _context.SaveChangesAsync();
             // ------------------------------------
 
-            TempData["CommentSuccess"] = "Đã xóa bình luận và các trả lời."; // Đồng bộ TempData
+            TempData["CommentSuccess"] = "Đã xóa bình luận (và các trả lời).";
+
             return RedirectToAction(
-                actionName: "Details",
-                controllerName: "Articles",
+                actionName: "Details", controllerName: "Articles",
                 routeValues: new { id = articleId },
-               fragment: "comment-" + commentId // Chuyển đến khu vực bình luận chung
+                fragment: "comment-section" // Quay về khu vực bình luận
             );
         }
-         
+
+        // --- HÀM TRỢ GIÚP XÓA ĐỆ QUY ---
         private async Task DeleteCommentAndRepliesAsync(int commentId)
         {
-            // Tìm bình luận cần xóa và các con trực tiếp của nó
+            // Tìm bình luận cần xóa VÀ các con trực tiếp của nó
             var commentToDelete = await _context.Comments
                 .Include(c => c.Replies)
                 .FirstOrDefaultAsync(c => c.Id == commentId);
 
             if (commentToDelete != null)
             {
-                // Nếu có con, gọi đệ quy để xóa từng đứa con (và cháu chắt của nó)
+                // Nếu có con, gọi đệ quy để xóa từng đứa con
                 if (commentToDelete.Replies != null && commentToDelete.Replies.Any())
                 {
+                    // Chuyển sang List để tránh lỗi "Collection was modified"
                     var replyIds = commentToDelete.Replies.Select(r => r.Id).ToList();
+                    _logger.LogInformation("Bình luận {CommentId} có {Count} con. Bắt đầu xóa con.", commentId, replyIds.Count);
                     foreach (var replyId in replyIds)
                     {
                         await DeleteCommentAndRepliesAsync(replyId); // Gọi đệ quy
                     }
                 }
 
-                // Sau khi tất cả con cháu đã bị xóa (hoặc không có con), xóa chính nó
+                // Sau khi tất cả con cháu đã bị xóa, xóa chính nó
                 _context.Comments.Remove(commentToDelete);
-                // LƯU Ý: Không gọi SaveChangesAsync() ở đây, để hàm DeleteComment gọi 1 lần duy nhất.
+                _logger.LogInformation("Đã đánh dấu xóa Comment ID: {CommentId}", commentId);
             }
         }
     }

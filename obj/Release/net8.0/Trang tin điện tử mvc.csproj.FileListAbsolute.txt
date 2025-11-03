@@ -305,3 +305,9 @@ D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\ne
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\Trang tin điện tử mvc.deps.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\Trang tin điện tử mvc.runtimeconfig.json
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\web.config
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\appsettings.Development.json
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\appsettings.json
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\Trang tin điện tử mvc.deps.json
+D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Release\net8.0\publish\publish\Trang tin điện tử mvc.runtimeconfig.json

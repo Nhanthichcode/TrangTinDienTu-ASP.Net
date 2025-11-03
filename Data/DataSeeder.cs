@@ -19,13 +19,13 @@ namespace Trang_tin_điện_tử_mvc.Data
             var context = services.GetRequiredService<ApplicationDbContext>();
             var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-            var logger = services.GetRequiredService<ILogger<DataSeeder>>(); // Dùng ILogger<DataSeeder>
+            var logger = services.GetRequiredService<ILogger<DataSeeder>>();
 
             try
             {
                 logger.LogInformation("Bắt đầu Seed dữ liệu...");
 
-                // Đảm bảo DB đã được migrate
+                // Vô hiệu hóa MigrateAsync vì đã chạy Update-Database thủ công
                 await context.Database.MigrateAsync();
 
                 // --- 1. SEED ROLES ---
@@ -41,8 +41,8 @@ namespace Trang_tin_điện_tử_mvc.Data
                 logger.LogInformation("Seed Roles hoàn tất.");
 
                 // --- 2. SEED USERS ---
-                var adminEmail = "admin1@news.com";
-                var adminEmail1 = "sa@news.com";
+                var adminEmail = "admin@news.com";
+                var admin1Email1 = "admin1@news.com";
                 var authorEmail = "author@news.com";
                 var userEmail = "user@news.com";
 
@@ -58,7 +58,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                             EmailConfirmed = true,
                             FullName = fullName,
                             AvatarUrl = "/uploads/avatars/default-images.png",
-                            IsApproved = true // Tự động duyệt user được seed
+                            IsApproved = true
                         };
                         var createResult = await userManager.CreateAsync(user, password);
                         if (createResult.Succeeded)
@@ -75,7 +75,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                 }
 
                 var admin = await EnsureUser(adminEmail, "Admin@123", "Admin", "Quản trị viên");
-                var admin1 = await EnsureUser(adminEmail1, "Admin@123", "Admin", "Super Admin");
+                var admin1 = await EnsureUser(admin1Email1, "Admin@123", "Admin", "Super Admin");
                 var author = await EnsureUser(authorEmail, "Author@123", "Author", "Tác giả Tin tức");
                 var normalUser = await EnsureUser(userEmail, "User@123", "User", "Người dùng thường");
                 logger.LogInformation("Seed Users hoàn tất.");
@@ -93,7 +93,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                         new Category { Name = "Ẩm thực", Slug = "am-thuc", Description = "Công thức, nhà hàng, món ngon" }
                     };
                     await context.Categories.AddRangeAsync(categories);
-                    await context.SaveChangesAsync(); // <-- LƯU CATEGORIES TRƯỚC
+                    await context.SaveChangesAsync();
                     logger.LogInformation("Seed Categories hoàn tất.");
                 }
 
@@ -109,7 +109,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                         new Tag { Name = "Kinh doanh", Slug = "kinh-doanh" }
                     };
                     await context.Tags.AddRangeAsync(tags);
-                    await context.SaveChangesAsync(); // <-- LƯU TAGS TRƯỚC
+                    await context.SaveChangesAsync();
                     logger.LogInformation("Seed Tags hoàn tất.");
                 }
 
@@ -120,24 +120,24 @@ namespace Trang_tin_điện_tử_mvc.Data
 
                     var articleAuthor = await userManager.FindByEmailAsync(authorEmail);
                     var catTech = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "cong-nghe");
-                    var catSports = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "the-thao"); // Đổi tên biến
+                    var catSports = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "the-thao");
                     var catFood = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "am-thuc");
                     var catLife = await context.Categories.FirstOrDefaultAsync(c => c.Slug == "doi-song");
 
                     if (articleAuthor == null)
                     {
                         logger.LogError("Không tìm thấy tác giả 'author@news.com' để gán bài viết.");
-                        return;
+                        return; // Dừng lại nếu thiếu tác giả
                     }
                     if (catTech == null || catSports == null || catFood == null || catLife == null)
                     {
-                        logger.LogError("Một hoặc nhiều danh mục (Công nghệ, Thể thao, Ẩm thực, Đời sống) không tồn tại. Seed Articles thất bại.");
-                        return;
+                        logger.LogError("Một hoặc nhiều danh mục không tồn tại. Seed Articles thất bại.");
+                        return; // Dừng lại nếu thiếu danh mục
                     }
 
                     string authorIdPlaceholder = articleAuthor.Id;
                     int catTechIdPlaceholder = catTech.Id;
-                    int catSportsIdPlaceholder = catSports.Id; // Đổi tên biến
+                    int catSportsIdPlaceholder = catSports.Id;
                     int catFoodIdPlaceholder = catFood.Id;
                     int catLifeIdPlaceholder = catLife.Id;
 
@@ -169,7 +169,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                                 title = $"Tin Thể thao {i}: Tổng hợp";
                                 summary = $"Cập nhật tin tức thể thao nóng hổi, bình luận chuyên sâu, bài viết số {i}.";
                                 content += $"Kết quả các trận đấu bóng đá đỉnh cao vừa kết thúc. Phân tích chiến thuật của các đội bóng hàng đầu. Câu chuyện hậu trường của các vận động viên. Thị trường chuyển nhượng đang nóng lên từng ngày với những bản hợp đồng bom tấn. Bên cạnh bóng đá, các môn thể thao khác như tennis, bóng rổ, đua xe F1 cũng liên tục có những diễn biến hấp dẫn. Hãy cùng chúng tôi theo dõi và cập nhật những thông tin thể thao mới nhất.";
-                                categoryId = catSportsIdPlaceholder; // Sửa
+                                categoryId = catSportsIdPlaceholder;
                                 break;
                             case 2:
                                 title = $"Công thức Nấu ăn {i}: Món ngon tại nhà";
@@ -210,7 +210,7 @@ namespace Trang_tin_điện_tử_mvc.Data
             catch (Exception ex)
             {
                 logger.LogCritical(ex, "Đã xảy ra lỗi nghiêm trọng trong khi chạy DataSeeder.");
-                throw; // Ném lỗi để dừng ứng dụng
+                // throw; // <-- SỬA LỖI: Vô hiệu hóa dòng này để không làm sập app khi deploy
             }
         }
     }

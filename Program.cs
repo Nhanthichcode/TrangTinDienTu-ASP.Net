@@ -97,7 +97,7 @@ namespace Trang_tin_điện_tử_mvc
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");            
             // Gọi hàm seed dữ liệu
-            await DataSeeder.SeedAsync(app.Services);
+           await DataSeeder.SeedAsync(app.Services);
 
             app.MapRazorPages();
             app.MapDefaultControllerRoute();
