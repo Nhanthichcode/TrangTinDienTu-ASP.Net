@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Trang tin điện tử mvc")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+368fc586e7b6ce6c8cb1fa0d66add186d6ba7b1d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3753b16e2790424b9f8370be48a92b771e37315")]
 [assembly: System.Reflection.AssemblyProductAttribute("Trang tin điện tử mvc")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Trang tin điện tử mvc")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

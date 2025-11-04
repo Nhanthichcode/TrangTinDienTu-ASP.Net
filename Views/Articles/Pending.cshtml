@@ -1,19 +1,43 @@
 ﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Article>
-    @{
-    bool isAdminOrAuthor = User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Author"));
-    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin"); // Riêng cho nút Xóa
+@{
+    bool isAuth = User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Author");
+    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin");
 
-    // Layout
-    if (!isAdminOrAuthor) { Layout = "_Layout"; }
+    // áp dụng layout dựa trên vai trò người dùng, mặc đinh là layout quản trị nếu là Admin hoặc Author
+    if (!isAuth) { Layout = "_Layout"; }
 
-    ViewData["Title"] = isAdminOrAuthor ? "Quản lý Bài viết" : "Tất cả Bài viết";
+    ViewData["Title"] = "Quản lý Bài viết";
+}
+
+@* TIÊU ĐỀ VÀ NÚT HÀNH ĐỘNG CHÍNH *@
+@if (isAuth)
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 text-primary fw-bold mb-0">
+            <i class="bi bi-newspaper me-2"></i>Quản lý Bài viết | Chờ duyệt
+        </h1>
+        <a asp-action="Create" class="btn btn-primary shadow-sm">
+            <i class="bi bi-plus-circle-fill me-1"></i> Thêm bài viết mới
+        </a>
+        <a asp-action="Index" class="btn btn-danger shadow-sm">
+            <i class="bi bi-newspaper me-1"></i> Tất cả bài viết
+        </a>
+    </div>
+}
+else
+{
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 text-primary fw-bold mb-0">
+            <i class="bi bi-newspaper me-2"></i>Tất cả Bài viết
+        </h1>
+    </div>
 }
     @* LƯỚI HIỂN THỊ CÁC BÀI VIẾT DẠNG THẺ *@
 <div class="row g-4" style="overflow-y: auto;">
         @foreach (var item in Model)
         {
             <div class="col-md-6 col-lg-4">
-                <div class="card h-100 shadow-sm border-0 article-card @(!item.IsApproved && isAdminOrAuthor ? "border-warning border-2" : "")">
+            <div class="card h-100 shadow-sm border-0 article-card @(!item.IsApproved && isAuth ? "border-warning border-2" : "")">
                     @* Thêm viền vàng cho bài chờ duyệt *@
 
                 @* HÌNH ẢNH ĐẠI DIỆN *@
@@ -63,7 +87,7 @@
                     </div>
 
                     @* CHÂN THẺ - CẬP NHẬT CHO ADMIN/AUTHOR *@
-                    @if (isAdminOrAuthor) // Chỉ hiển thị footer cho Admin/Author
+                @if (isAuth) // Chỉ hiển thị footer cho Admin/Author
                     {
                         <div class="card-footer bg-white border-0 pt-0 pb-3 d-flex justify-content-end align-items-center gap-2">
 
