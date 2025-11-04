@@ -2,7 +2,6 @@ D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\publish\web.config
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\appsettings.Development.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\appsettings.json
-D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\publish\appsettings.Development.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\publish\appsettings.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\bin\Debug\net8.0\publish\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json

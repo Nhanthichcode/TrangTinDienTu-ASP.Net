@@ -1,31 +1,40 @@
 ﻿@model X.PagedList.IPagedList<Trang_tin_điện_tử_mvc.Models.Article>
 
-@* Partial View này chỉ render các card bài viết *@
 @if (Model != null && Model.Any())
 {
-    foreach (var article in Model)
+    @foreach (var article in Model)
     {
         var imageUrl = !string.IsNullOrEmpty(article.ThumbnailUrl) ? article.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
         var defaultImageUrl = "/uploads/articles/default-thumbnail.jpg";
-        <div class="col article-item">
-            @* Thêm class để JS dễ tìm *@
-            <div class="card h-100 shadow-sm border-0">
-                <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
-                    <img src="@imageUrl" class="card-img-top" alt="@article.Title" style="height: 200px; object-fit: cover;"
-                         onerror="this.onerror=null; this.src='@defaultImageUrl';" />
-                </a>
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id" class="text-decoration-none text-dark stretched-link">
-                            @article.Title
-                        </a>
-                    </h5>
-                    <p class="card-text text-muted small">
-                        <i class="bi bi-person-fill"></i> @(article.Author?.UserName ?? "N/A")
-                        <i class="bi bi-clock ms-2"></i> @article.CreatedAt.ToString("dd/MM/yyyy")
+        var summary = (article.Summary?.Length > 100 ? article.Summary.Substring(0, 100) + "..." : article.Summary) ?? "Không có tóm tắt.";
+
+        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id" class="col article-item text-decoration-none">
+            <div class="book">
+
+                @* NỘI DUNG BÊN TRONG (Trang sách) *@
+                <div class="book-details">
+                    <h5 class="book-details-title">@article.Title</h5>
+                    <p class="book-details-summary">@summary</p>
+                    <p class="book-details-meta text-muted small">
+                        <i class="bi bi-person-fill"></i> @(article.Author?.UserName ?? "N/A")<br>
+                        <i class="bi bi-clock"></i> @article.CreatedAt.ToString("dd/MM/yyyy")
                     </p>
                 </div>
+
+                @* BÌA SÁCH (Phần lật) *@
+                <div class="cover">
+                    <img src="@imageUrl" class="cover-img" alt="@article.Title" onerror="this.onerror=null; this.src='@defaultImageUrl';" />
+                    <div class="cover-caption">
+                        <h5 class="cover-title">@article.Title</h5>
+                    </div>
+                </div>
+
             </div>
-        </div>
-    }
+        </a>
+    }           
 }
+else
+{
+    <p>Không có bài viết nào để hiển thị.</p>
+}
+

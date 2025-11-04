@@ -1,4 +1,7 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using Azure.Core
+@using Microsoft.AspNetCore.Http.Extensions
+@using Microsoft.AspNetCore.Identity
+@using System.Web
 @model Trang_tin_điện_tử_mvc.Models.Article
 @inject UserManager<ApplicationUser> UserManager
 @inject SignInManager<ApplicationUser> SignInManager
@@ -31,7 +34,7 @@
 
 <div class="container-fluid mt-4">
     <div class="row g-4">
-        <main class="col-lg-8">
+        <main class="col-lg-9" style="max-width: 900px;">
             <article class="card shadow-sm border-0">
                 @* Ảnh đại diện nổi bật *@
                 @{
@@ -40,7 +43,7 @@
                     : "/uploads/articles/default-thumbnail.jpg"; // Đường dẫn ảnh mặc định
                 }
                 <img src="@imageUrl"
-                     class="card-img-top"
+                     class="card-img-top rounded shadow-sm"
                      alt="Ảnh đại diện bài viết: @Model.Title"
                      style="object-fit: cover; max-height: 450px;"
                      onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
@@ -127,8 +130,8 @@
         </main>
 
         @* --- SIDEBAR --- *@
-        <aside class="col-lg-4">
-            <div class="sticky-top" style="top: 2rem;">
+        <aside class="col-lg-3">
+            <div class="sticky-top sidebar-compact" style="top: 1.2rem;">
 
                 @* Card thông tin bài viết - GIỮ LẠI PHIÊN BẢN NÀY *@
                 <div class="card shadow-sm border-0 mb-4">
@@ -205,15 +208,19 @@
 @* (Tùy chọn) Thêm CSS cho hiệu ứng focus *@
 @if (relatedArticles.Any())
 {
+    <div class="col-lg-11">
     <hr class="my-5" /> @* Đường kẻ phân cách *@
     <h2 class="mb-4 text-center text-primary fw-bold">Có thể bạn quan tâm</h2>
 
     <div class="related-articles-scroll-container mb-5">
         @foreach (var relatedArticle in relatedArticles)
         {
+                var imageUrl1 = !string.IsNullOrEmpty(relatedArticle.ThumbnailUrl)
+                ? relatedArticle.ThumbnailUrl
+                : "/uploads/articles/default-thumbnail.jpg"; // Đường dẫn ảnh mặc định
             <div class="related-article-card"> @* Dùng class riêng thay vì card mặc định *@
                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@relatedArticle.Id" class="text-decoration-none text-dark">
-                     <img src="@imageUrl" class="related-article-img" alt="@relatedArticle.Title"                        
+                     <img src="@imageUrl1" class="related-article-img" alt="@relatedArticle.Title"                        
                          onerror="this.onerror=null; this.src='@defaultImageUrl';" />
                      <div class="related-article-body">
                          <h6 class="related-article-title">@relatedArticle.Title</h6>
@@ -224,6 +231,7 @@
                  </a>
             </div>
         }
+    </div>
     </div>
 }
 @section Scripts {
@@ -315,7 +323,7 @@
             font-size: 0.8rem;
         }
     </style>
-    
+
     <script>
         $(document).ready(function () {
 
@@ -363,5 +371,5 @@
             });
 
         });
-    </script>
+</script>
 }

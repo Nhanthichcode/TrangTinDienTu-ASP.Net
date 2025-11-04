@@ -38,24 +38,57 @@
              <span class="fs-4">E-News Panel</span>
         </a>
         <hr>
-        <ul class="nav nav-pills flex-column mb-auto">
+        <ul class="admin-nav-custom">
             @if (SignInManager.IsSignedIn(User))
             {
                 @* LOGIC MENU ĐÃ TỐI ƯU (IF / ELSE IF) *@
                 if (User.IsInRole("Admin"))
                 {
-                    <li class="nav-item"><a class="nav-link @IsActive("AdminDashboard", area: "Admin")" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index"><i class="bi bi-speedometer2 me-2"></i>Trang quản trị</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Users")" asp-controller="Users" asp-area="" asp-action="Index"><i class="bi bi-people me-2"></i>Người dùng</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Articles")" asp-controller="Articles" asp-area="" asp-action="Index"><i class="bi bi-newspaper me-2"></i>Bài viết</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Comments")" asp-controller="Comments" asp-area="" asp-action="Index"><i class="bi  bi-chat-dots-fill me-2"></i>Bình luận</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Categories")" asp-controller="Categories" asp-area="" asp-action="Index"><i class="bi bi-tags me-2"></i>Danh mục</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Tags")" asp-controller="Tags" asp-area="" asp-action="Index"><i class="bi bi-hash me-2"></i>Thẻ</a></li>                   
- 
+                    <li class="admin-nav-custom-item">
+                        @* Đổi class *@
+                        <a class="admin-nav-custom-link @IsActive("AdminDashboard", area: "Admin")" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-speedometer2 me-2"></i>Trang quản trị</span> @* Bọc text trong span *@
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Users")" asp-controller="Users" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-people me-2"></i>Người dùng</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Articles")" asp-controller="Articles" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-newspaper me-2"></i>Bài viết</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Comments")" asp-controller="Comments" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-chat-dots-fill me-2"></i>Bình luận</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Categories")" asp-controller="Categories" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-tags me-2"></i>Danh mục</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Tags")" asp-controller="Tags" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-hash me-2"></i>Thẻ</span>
+                        </a>
+                    </li>
+
                 }
                 else if (User.IsInRole("Author"))
                 {
-                    <li class="nav-item"><a class="nav-link @IsActive("Articles", "Index")" asp-area="" asp-controller="Articles" asp-action="Index"><i class="bi bi-pencil-square me-2"></i>Bài viết của tôi</a></li>
-                    <li class="nav-item"><a class="nav-link @IsActive("Articles", "Create")" asp-controller="Articles" asp-area="" asp-action="Create"><i class="bi bi-plus-circle me-2"></i>Tạo bài mới</a></li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Articles", "Index")" asp-area="" asp-controller="Articles" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-pencil-square me-2"></i>Bài viết của tôi</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Articles", "Create")" asp-controller="Articles" asp-area="" asp-action="Create">
+                            <span class="admin-nav-custom-text"><i class="bi bi-plus-circle me-2"></i>Tạo bài mới</span>
+                        </a>
+                    </li>
                 }
             }
         </ul>

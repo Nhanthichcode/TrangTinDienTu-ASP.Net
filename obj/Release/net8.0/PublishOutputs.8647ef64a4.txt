@@ -3,7 +3,6 @@ D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\ne
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\publish\web.config
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\appsettings.Development.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\appsettings.json
-D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\publish\appsettings.Development.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\publish\appsettings.json
 D:\ASP .Net\Đồ án cá nhân E_news\Trang tin điện tử mvc\obj\Release\net8.0\PubTmp\Out\publish\client_secret_774804233537-63rv39hrjquivhmn673iajl7cq7eek8c.apps.googleusercontent.com.json

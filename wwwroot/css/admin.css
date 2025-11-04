@@ -72,3 +72,86 @@
 .table-container {
     scrollbar-width: thin;
     scrollbar-color: #adb5bd #f1f1f1;
+}
+
+.admin-scroll-container {
+    max-height: calc(100vh - 40px); /* Điều chỉnh khoảng trống theo header/footer */
+    overflow-y: auto;
+    padding-right: 10px; /* tránh che nội dung bởi thanh cuộn */
+}
+ul.admin-nav-custom {
+    width: fit-content;
+    height: fit-content;
+    background-color: transparent;
+    list-style: none;
+    padding-left: 0; /* Ghi đè padding mặc định của Bootstrap */
+    margin-bottom: auto !important; /* Ghi đè mb-auto */
+}
+
+/* Thay thế .li */
+li.admin-nav-custom-item {
+    margin-bottom: 0px;
+}
+
+/* Thay thế .button, áp dụng cho thẻ <a> */
+a.admin-nav-custom-link {
+    background-color: transparent;
+    font-family: sans-serif;
+    color: rgb(255, 255, 255); /* Giữ màu chữ trắng */
+    border: none;
+    font-size: 18px; /* Giảm cỡ chữ 1 chút */
+    font-weight: 700;
+    padding: 10px 30px;
+    cursor: pointer;
+    position: relative;
+    padding-left: 11px;
+    text-align: left; /* Căn trái thay vì căn giữa */
+    transition: 0.1s;
+    z-index: 1;
+    display: block; /* Làm cho thẻ <a> hoạt động như block */
+    text-decoration: none; /* Bỏ gạch chân */
+}
+
+/* Thay thế .p, áp dụng cho <span> bên trong <a> */
+.admin-nav-custom-text {
+    z-index: 2;
+    position: relative;
+}
+
+/* Hiệu ứng khi hover HOẶC khi link đang active */
+a.admin-nav-custom-link:hover,
+a.admin-nav-custom-link.active { /* Thêm .active */
+    color: rgb(255, 255, 255);
+    text-align: left; /* Giữ căn trái */
+}
+
+    a.admin-nav-custom-link:hover::before,
+    a.admin-nav-custom-link.active::before { /* Thêm .active */
+        transform: rotate(0deg);
+        width: 100%;
+        height: 40px;
+        top: 2px;
+        border-radius: 3px;
+        background-color: rgb(255, 83, 53);
+    }
+
+/* Hiệu ứng chấm tròn ban đầu */
+a.admin-nav-custom-link::before {
+    content: "";
+    border-radius: 1px;
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: tomato;
+    left: -10px;
+    top: 19px;
+    cursor: pointer;
+    transform: rotate(225deg);
+    transition: 0.5s;
+    z-index: -1;
+}
+
+/* Hiệu ứng khi nhấn */
+a.admin-nav-custom-link:active::before {
+    background-color: rgb(255, 38, 0);
+}

@@ -91,7 +91,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             var pagedArticles = articlesQuery.ToPagedList(pageNumber, pageSize);
 
             // --- Lấy dữ liệu cho Sidebar (giữ nguyên logic cũ) ---
-            var featuredArticles = await articlesQuery.Take(3).ToListAsync(); // Lấy 3 bài nổi bật từ query đã sắp xếp
+            var featuredArticles = await articlesQuery.Take(6).ToListAsync(); // Lấy 3 bài nổi bật từ query đã sắp xếp
             var categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
             var categoryCounts = await _context.Articles
                 .Where(a => a.IsApproved)
