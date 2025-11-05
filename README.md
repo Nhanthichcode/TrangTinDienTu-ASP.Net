@@ -11,9 +11,9 @@
 >
 > Do đây là dự án môn học chạy trên gói **Azure App Service Miễn phí (Free Tier)**, ứng dụng sẽ tự động **Dừng (Stopped)** nếu không có ai truy cập.
 >
-> Nếu bạn (ví dụ: Giảng viên) truy cập link trên và thấy thông báo lỗi (ví dụ: "Error 500" hoặc "Service Unavailable"), vui lòng nhấn vào link dưới đây để gửi email yêu cầu tôi khởi động lại máy chủ:
+> Nếu bạn truy cập link trên và thấy thông báo lỗi (ví dụ: "Error 500" hoặc "Service Unavailable"), vui lòng nhấn vào link dưới đây để gửi email yêu cầu tôi khởi động lại máy chủ:
 >
-> **[Nhấn vào đây để yêu cầu mở lại trang web](mailto:[ĐỊA CHỈ EMAIL CỦA BẠN]?subject=Y%C3%AAu%20c%E1%BA%A7u%20m%E1%BB%9F%20demo%20E-News)**
+> **[Nhấn vào đây để yêu cầu mở lại trang web](mailto:nhanlx151@gmail.com?subject=Y%C3%AAu%20c%E1%BA%A7u%20m%E1%BB%9F%20demo%20E-News)**
 >
 > *(Tôi sẽ khởi động lại máy chủ ngay khi nhận được email. Xin cảm ơn!)*
 
