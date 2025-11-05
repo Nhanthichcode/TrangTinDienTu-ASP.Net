@@ -14,6 +14,7 @@
 > Nếu bạn truy cập link trên và thấy thông báo lỗi (ví dụ: "Error 500" hoặc "Service Unavailable"), vui lòng nhấn vào link dưới đây để gửi email yêu cầu tôi khởi động lại máy chủ:
 >
 > **[Nhấn vào đây để yêu cầu mở lại trang web](mailto:nhanlx151@gmail.com?subject=Y%C3%AAu%20c%E1%BA%A7u%20m%E1%BB%9F%20demo%20E-News)**
+> Hoặc nhanlx151@gmail.com
 >
 > *(Tôi sẽ khởi động lại máy chủ ngay khi nhận được email. Xin cảm ơn!)*
 
@@ -73,30 +74,42 @@ Hướng dẫn cài đặt và chạy dự án trên máy cục bộ.
 
 1.  **Clone Repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo.git](https://github.com/your-username/your-repo.git)
-    cd your-repo-folder
+    https://github.com/Nhanthichcode/TrangTinDienTu-ASP.Net.git
+    cd your-repo
+    [ Ví dụ: cd TrangTinDienTu-ASP.Net ]
     ```
-    *(Thay `your-username/your-repo` bằng URL repo của bạn)*
+    *(Thay `your-repo` bằng URL repo của bạn)*
 
-2.  **Cấu hình Chuỗi Kết nối (Connection String):**
-    * Mở file `appsettings.Development.json` (hoặc `appsettings.json`).
-    * Tìm đến phần `"ConnectionStrings"`.
-    * Chỉnh sửa chuỗi `"DefaultConnection"` để trỏ đến CSDL SQL Server của bạn. Ví dụ:
-        ```json
-        "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=EnewsDb;Trusted_Connection=True;MultipleActiveResultSets=true"
-        ```
-        *(Đảm bảo tên Server và Database đúng)*
-
+2.  Cấu hình Bí mật (User Secrets) - Rất Quan trọng:
+   **Dự án này sử dụng User Secrets để lưu trữ các thông tin nhạy cảm (Chuỗi kết nối CSDL, API Keys) nhằm tránh đưa lên GitHub.
+   * Mở dự án trong Visual Studio.
+   * Trong Solution Explorer, chuột phải vào project Trang tin điện tử mvc > chọn Manage User Secrets.
+   * Một file **secrets.json** sẽ mở ra. Dán nội dung sau vào file này:
+```
+   {
+     "ConnectionStrings": {
+       "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=aspnet-Trang_tin_điện_tử_mvc;Trusted_Connection=True;MultipleActiveResultSets=true"
+     },
+     "Authentication": {
+       "Google": {
+         "ClientId": "[ĐIỀN CLIENT ID CỦA BẠN VÀO ĐÂY]",
+         "ClientSecret": "[ĐIỀN CLIENT SECRET CỦA BẠN VÀO ĐÂY]"
+       }
+     }
+     // Thêm các khóa bí mật khác (ví dụ: SendGridApiKey) nếu có
+   }
+```
+   * Lưu ý: Sửa lại **DefaultConnection** nếu bạn dùng tên Server hoặc Database khác cho máy local. Điền **ClientId** và **ClientSecret** của Google bạn đã tạo ( Nếu chưa đăng kí hãy đăng ký **Google Cloud** _tại đây: https://console.cloud.google.com_ ).
 3.  **Cập nhật Database (Entity Framework Migrations):**
     * Mở **Package Manager Console** trong Visual Studio (Tools > NuGet Package Manager > Package Manager Console) hoặc dùng Terminal/Command Prompt trong thư mục dự án.
     * Chạy lệnh để áp dụng các migrations và tạo database (nếu chưa có):
         ```powershell
-        dotnet ef database update
+       Update-Database
         ```
         *(Nếu bạn chưa có thư mục Migrations, chạy `dotnet ef migrations add InitialCreate` trước)*
 
-4.  **(Tùy chọn) Cấu hình Khác:**
-    * Nếu bạn dùng dịch vụ ngoài (như SendGrid API Key), cấu hình chúng trong **User Secrets** (Chuột phải project > Manage User Secrets) hoặc `appsettings.Development.json` (nhớ không commit key lên repo công khai).
+4.  **Chạy Ứng Dụng:
+   * Nhấn F5 hoặc nút "Run" trong Visual Studio. Ứng dụng sẽ tự động chạy DataSeeder (nếu CSDL trống) để tạo vai trò, tài khoản mẫu và bài viết mẫu.
 
 ### ▶️ Chạy Ứng Dụng (Running the Application)
 
@@ -110,9 +123,9 @@ Hướng dẫn cài đặt và chạy dự án trên máy cục bộ.
         ```
     * Ứng dụng sẽ khởi chạy và lắng nghe trên các cổng được cấu hình (thường là `https://localhost:xxxx` và `http://localhost:yyyy`). Mở trình duyệt và truy cập URL đó.
 
-### 👤 Tài khoản Mặc định (Nếu có Seed Data)
+### 👤 Tài khoản Mặc định:
 
-* **Admin:** `admin@enews.com` / `Password123!` * **Author:** `author@enews.com` / `Password123!` *(Bạn nên tạo tài khoản Admin/Author bằng chức năng Seed Data trong `Program.cs`)*
+* **Admin:** `admin@news.com` / `Admin@123` * **Author:** `author@news.com` / `Author@123`
 
 ---
 
