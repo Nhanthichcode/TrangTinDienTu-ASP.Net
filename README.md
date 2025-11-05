@@ -100,6 +100,22 @@ Hướng dẫn cài đặt và chạy dự án trên máy cục bộ.
    }
 ```
    * Lưu ý: Sửa lại **DefaultConnection** nếu bạn dùng tên Server hoặc Database khác cho máy local. Điền **ClientId** và **ClientSecret** của Google bạn đã tạo ( Nếu chưa đăng kí hãy đăng ký **Google Cloud** _tại đây: https://console.cloud.google.com_ ).
+   * Nếu bạn không muốn **dùng Google** hãy mở file **Progams.cs** và comment đoạn mã sau:
+````
+   // builder.Services.AddAuthentication(options =>
+   //            {
+   //                // giữ default theo Identity
+   //                options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+   //                options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
+   //           })
+   //         .AddGoogle(googleOptions =>
+   //            {
+   //              googleOptions.ClientId = builder.Configuration["Authentication:Google:ClientId"];
+   //            googleOptions.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+   //          googleOptions.CallbackPath = "/signin-google"; // mặc định; thay nếu cần
+   //        googleOptions.SaveTokens = true;
+   //  });
+```` 
 3.  **Cập nhật Database (Entity Framework Migrations):**
     * Mở **Package Manager Console** trong Visual Studio (Tools > NuGet Package Manager > Package Manager Console) hoặc dùng Terminal/Command Prompt trong thư mục dự án.
     * Chạy lệnh để áp dụng các migrations và tạo database (nếu chưa có):
