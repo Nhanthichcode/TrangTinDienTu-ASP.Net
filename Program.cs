@@ -37,6 +37,7 @@ namespace Trang_tin_điện_tử_mvc
             {
                 // giữ default theo Identity
                 options.DefaultAuthenticateScheme = IdentityConstants.ApplicationScheme;
+                options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
                 options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
             })
             .AddGoogle(googleOptions =>
