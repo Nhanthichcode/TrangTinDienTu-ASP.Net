@@ -204,7 +204,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
 
             // Quay lại trang Index (hoặc trang danh sách bài chờ duyệt nếu có)
-            return RedirectToAction(nameof(Pending));
+            return RedirectToAction(nameof(Index));
         }
 
         //Post ẩn bài 
