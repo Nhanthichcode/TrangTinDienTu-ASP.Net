@@ -18,6 +18,9 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Trang_tin_điện_tử_mvc.Models;
+using System.Data;
+using Microsoft.CodeAnalysis.Diagnostics;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
 
 namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
 {
@@ -26,7 +29,8 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IUserStore<ApplicationUser> _userStore;
+        private readonly RoleManager<IdentityRole>  _roleManager;
+        private readonly IUserStore<ApplicationUser> _userStore; 
         private readonly IUserEmailStore<ApplicationUser> _emailStore;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<ExternalLoginModel> _logger;
@@ -34,12 +38,14 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
         public ExternalLoginModel(
             SignInManager<ApplicationUser> signInManager,
             UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager,
             IUserStore<ApplicationUser> userStore,
             ILogger<ExternalLoginModel> logger,
             IEmailSender emailSender)
         {
             _signInManager = signInManager;
             _userManager = userManager;
+            _roleManager = roleManager;
             _userStore = userStore;
             _emailStore = GetEmailStore();
             _logger = logger;
@@ -48,14 +54,14 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
+        ///     directly ffrom your code. This API may change or be removed in future releases.
         /// </summary>
         [BindProperty]
         public InputModel Input { get; set; }
 
         /// <summary>
         ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
+        ///     directly from your ccode. This API may change or be removed in future releases.
         /// </summary>
         public string ProviderDisplayName { get; set; }
 
@@ -111,32 +117,73 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
                 ErrorMessage = "Error loading external login information.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
-
-            // Sign in the user with this external login provider if the user already has a login.
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
-            if (result.Succeeded)
+            var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
+            if (signInResult.Succeeded)
             {
-                _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
                 return LocalRedirect(returnUrl);
             }
-            if (result.IsLockedOut)
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            if (email != null)
             {
-                return RedirectToPage("./Lockout");
-            }
-            else
-            {
-                // If the user does not have an account, then ask the user to create an account.
-                ReturnUrl = returnUrl;
-                ProviderDisplayName = info.ProviderDisplayName;
-                if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+                var user = new ApplicationUser
                 {
-                    Input = new InputModel
+                    UserName = email,
+                    Email = email,
+                    FullName = info.Principal.FindFirstValue(ClaimTypes.Name), // nếu bạn muốn lấy tên từ Google
+                    AvatarUrl = info.Principal.FindFirstValue("picture")       // nếu Google trả về ảnh đại diện
+                };
+
+                var result = await _userManager.CreateAsync(user);
+
+                if (result.Succeeded)
+                { // Liên kết login với Google
+                    await _userManager.AddLoginAsync(user, info);
+
+                    // ✅ Gán role mặc định cho user mới
+                    // Kiểm tra role có tồn tại chưa
+                    if (!await _roleManager.RoleExistsAsync("User"))
                     {
-                        Email = info.Principal.FindFirstValue(ClaimTypes.Email)
-                    };
+                        await _roleManager.CreateAsync(new IdentityRole("User"));
+                    }
+
+                    // ✅ Gán role đúng cách
+                    await _userManager.AddToRoleAsync(user, "User");
+                    // Có thể gán vai trò khác dựa vào email công ty
+                    // if (email.EndsWith("@mycompany.com")) 
+                    //    await _userManager.AddToRoleAsync(user, "Admin");
+
+                    // Đăng nhập user
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect(returnUrl);
                 }
-                return Page();
             }
+            ModelState.AddModelError(string.Empty, "Email không được cung cấp bởi Google.");
+            return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
+            //// Sign in the user with this external login provider if the user already has a login.
+            //var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+            //if (result.Succeeded)
+            //{
+            //    _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
+            //    return LocalRedirect(returnUrl);
+            //}
+            //if (result.IsLockedOut)
+            //{
+            //    return RedirectToPage("./Lockout");
+            //}
+            //else
+            //{
+            //    // If the user does not have an account, then ask the user to create an account.
+            //    ReturnUrl = returnUrl;
+            //    ProviderDisplayName = info.ProviderDisplayName;
+            //    if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            //    {
+            //        Input = new InputModel
+            //        {
+            //            Email = info.Principal.FindFirstValue(ClaimTypes.Email)
+            //        };
+            //    }
+            //    return Page();
+            //}
         }
 
         public async Task<IActionResult> OnPostConfirmationAsync(string returnUrl = null)
@@ -211,7 +258,7 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
                     $"override the external login page in /Areas/Identity/Pages/Account/ExternalLogin.cshtml");
             }
         }
-
+       
         private IUserEmailStore<ApplicationUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
