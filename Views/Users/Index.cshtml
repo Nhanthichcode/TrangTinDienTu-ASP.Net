@@ -67,10 +67,12 @@
                
                 <td>
                         <a class="btn btn-sm btn-warning" asp-action="Edit" asp-route-id="@user.Id"><i class="bi bi-pencil-square me-1"></i>Chỉnh sửa</a>
-                    <form method="post" asp-action="Delete" asp-route-id="@user.Id" class="d-inline">
+
+                        <a class="btn btn-sm btn-danger" asp-action="Delete" asp-route-id="@user.Id"><i class="bi bi-trash-fill me-1"></i>Xóa</a>
+                        @* <form method="post" asp-action="Delete" asp-route-id="@user.Id" class="d-inline">
                         @Html.AntiForgeryToken()
                             <button class="btn btn-sm btn-danger"><i class="bi bi-trash-fill me-1"></i>Xóa</button>
-                    </form>
+                    </form> *@
                 </td>
             </tr>
         }
