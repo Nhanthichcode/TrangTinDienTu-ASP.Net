@@ -1,17 +1,12 @@
-﻿    using System;
-    using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.Design;
-using System.Linq;
-using System.Security.Claims;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.Rendering;
-    using Microsoft.EntityFrameworkCore;
-    using Trang_tin_điện_tử_mvc.Data;
-    using Trang_tin_điện_tử_mvc.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Trang_tin_điện_tử_mvc.Data;
+using Trang_tin_điện_tử_mvc.Models;
+using X.PagedList;
 
 
 namespace Trang_tin_điện_tử_mvc.Controllers
@@ -22,6 +17,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly ILogger<ArticlesController> _logger;
+        private const int DefaultPageSize = 6;
         public ArticlesController(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IWebHostEnvironment webHostEnvironment, ILogger<ArticlesController> logger)
         {
             _userManager = userManager;
@@ -31,73 +27,102 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         }
 
         // GET: Articles
-        public async Task<IActionResult> Index(int? categoryId, string tag, string query) // Thêm tham số từ lần trước
+        [Authorize(Policy = "RequireAdminRole")]
+        // GET: Articles
+        public async Task<IActionResult> Index(
+    string searchString,
+    int pageNumber = 1,
+    string filterAuthor = "",   // Lọc theo tên tác giả (username)
+    string filterStatus = "",   // "approved", "pending"
+    int? filterCategory = null, // ID chuyên mục
+    string filterTag = ""       // Tên tag
+)
         {
+            int pageSize = 6;
+
             var articlesQuery = _context.Articles
                 .Include(a => a.Author)
                 .Include(a => a.Category)
-                .Include(a => a.ArticleTags)
-                    .ThenInclude(at => at.Tag)
+                .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
                 .AsQueryable();
 
-            // --- LỌC ---
-            if (categoryId.HasValue)
+            // --- 1. LOGIC PHÂN QUYỀN (Giữ nguyên) ---
+            if (User.Identity.IsAuthenticated)
             {
-                articlesQuery = articlesQuery.Where(a => a.CategoryId == categoryId.Value);
-                // ... (ViewData cho tiêu đề lọc)
-            }
-            if (!string.IsNullOrEmpty(tag))
-            {
-                articlesQuery = articlesQuery.Where(a => a.ArticleTags.Any(at => at.Tag.Name == tag));
-                // ... (ViewData cho tiêu đề lọc)
-            }
-            if (!string.IsNullOrEmpty(query)) // Lọc cho Search
-            {
-                articlesQuery = articlesQuery.Where(a => a.Title.Contains(query) || a.Content.Contains(query));
-                ViewData["FilterTitle"] = $"Kết quả tìm kiếm cho: \"{query}\"";
-                ViewData["CurrentFilter"] = query;
-            }
-
-            // --- PHÂN QUYỀN ---
-            if (User.Identity != null && User.Identity.IsAuthenticated)
-            {
-                if (User.IsInRole("Admin"))
+                if (User.IsInRole("Author"))
                 {
-                    // Admin xem được hết
-                }
-                else if (User.IsInRole("Author"))
-                {
-                    // Author CHỈ xem bài của mình
                     var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                     articlesQuery = articlesQuery.Where(a => a.AuthorId == currentUserId);
                 }
-                else // User thường
+                else if (!User.IsInRole("Admin"))
                 {
                     articlesQuery = articlesQuery.Where(a => a.IsApproved);
                 }
             }
-            else // Khách
+            else
             {
                 articlesQuery = articlesQuery.Where(a => a.IsApproved);
             }
 
-            var articles = await articlesQuery
-                                 .OrderByDescending(a => a.CreatedAt)
-                                 .ToListAsync();
+            // --- 2. LOGIC TÌM KIẾM TỪ KHÓA ---
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                searchString = searchString.Trim();
+                articlesQuery = articlesQuery.Where(a => a.Title.Contains(searchString) || a.Summary.Contains(searchString));
+                ViewData["CurrentFilter"] = searchString;
+            }
 
-            // Tải lại sidebar (nếu View Index của Article cũng có sidebar)
+            // --- 3. LOGIC BỘ LỌC MỚI ---
+
+            // Lọc theo Tác giả (User Name)
+            if (!string.IsNullOrEmpty(filterAuthor))
+            {
+                articlesQuery = articlesQuery.Where(a => a.Author.UserName == filterAuthor);
+                ViewData["FilterAuthor"] = filterAuthor;
+            }
+
+            // Lọc theo Trạng thái (Chỉ Admin mới thấy bộ lọc này có ý nghĩa)
+            if (!string.IsNullOrEmpty(filterStatus))
+            {
+                if (filterStatus == "approved") articlesQuery = articlesQuery.Where(a => a.IsApproved);
+                else if (filterStatus == "pending") articlesQuery = articlesQuery.Where(a => !a.IsApproved);
+                ViewData["FilterStatus"] = filterStatus;
+            }
+
+            // Lọc theo Danh mục
+            if (filterCategory.HasValue)
+            {
+                articlesQuery = articlesQuery.Where(a => a.CategoryId == filterCategory);
+                ViewData["FilterCategory"] = filterCategory;
+            }
+
+            // Lọc theo Tag
+            if (!string.IsNullOrEmpty(filterTag))
+            {
+                articlesQuery = articlesQuery.Where(a => a.ArticleTags.Any(at => at.Tag.Name == filterTag));
+                ViewData["FilterTag"] = filterTag;
+            }
+
+            // --- 4. KẾT THÚC & PHÂN TRANG ---
+            articlesQuery = articlesQuery.OrderByDescending(a => a.CreatedAt);
+            var pagedArticles = await articlesQuery.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
+
+            // Chuẩn bị dữ liệu cho các Dropdown bộ lọc
             ViewBag.Categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
-            ViewBag.Tags = await _context.Tags.OrderBy(t => t.Name).Take(10).ToListAsync();
+            // Lấy danh sách tác giả (chỉ những người đã viết bài) - Tùy chọn
+            ViewBag.Authors = await _context.Users
+                .Where(u => _context.Articles.Any(a => a.AuthorId == u.Id))
+                .Select(u => u.UserName)
+                .Distinct()
+                .ToListAsync();
 
-            return View(articles);
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                return PartialView("_ArticleTablePartial", pagedArticles);
+            }
+
+            return View(pagedArticles);
         }
-        public async Task<IActionResult> Search(string query)
-        {
-            // Chuyển hướng đến Index với tham số query
-            return RedirectToAction(nameof(Index), new { query = query });
-        }
-
-
         // GET: Articles/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -535,9 +560,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 fragment: "comment-" + comment.Id
             );
         }
-
-        // --- XÓA ACTION ReplyToComment (Đã gộp vào AddComment) ---
-        // public async Task<IActionResult> ReplyToComment(...) {}
+        
 
         [HttpPost]
         [ValidateAntiForgeryToken]
