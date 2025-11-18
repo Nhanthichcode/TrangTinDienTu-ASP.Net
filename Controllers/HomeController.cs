@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Trang_tin_điện_tử_mvc.Data;
-using X.PagedList.EF;
+using X.PagedList.EF; // Đảm bảo có thư viện này
 using X.PagedList;
 using Trang_tin_điện_tử_mvc.Models;
 
@@ -15,6 +15,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
+
+        // Đặt số bài viết mỗi trang là 6
         private const int DefaultPageSize = 6;
 
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IEmailSender emailSender)
@@ -66,13 +68,17 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Index(string searchString, int? categoryId, string tag, int pageNumber = 1)
+        // --- ACTION INDEX (ĐÃ SỬA) ---
+        public async Task<IActionResult> Index(string searchString, int? categoryId, string tag, int? page = 1)
         {
             int pageSize = DefaultPageSize;
+            int pageNumber = (page ?? 1);
 
             // 1. Query cơ bản
             var baseQuery = _context.Articles
-                .Include(a => a.Author).Include(a => a.Category).Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+                .Include(a => a.Author)
+                .Include(a => a.Category)
+                .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
                 .Where(a => a.IsApproved)
                 .OrderByDescending(a => a.CreatedAt)
                 .AsQueryable();
@@ -108,17 +114,22 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 ViewData["Title"] = "Trang chủ";
             }
 
-            // 3. Phân trang
-            // Gọi rõ hàm của X.PagedList.EF
+            // 3. Lấy dữ liệu phân trang
             var pagedArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
+
+            // QUAN TRỌNG: Nếu là AJAX (bấm chuyển trang), chỉ trả về Partial View
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 return PartialView("_ArticleListPartial", pagedArticles);
             }
 
-            var viewModel = new HomeIndexViewModel { LatestArticles = pagedArticles };
+            // 4. Nếu load trang thường, nạp đầy đủ ViewModel
+            var viewModel = new HomeIndexViewModel
+            {
+                LatestArticles = pagedArticles // Gán danh sách bài viết vào Model
+            };
 
-            // 4. Chỉ load Hero/Box chuyên mục khi KHÔNG lọc (Trang chủ thuần túy)
+            // Load dữ liệu phụ (Hero, Sidebar) chỉ khi ở trang chủ gốc (không lọc)
             if (!isFiltered)
             {
                 viewModel.TopStory = await baseQuery.AsNoTracking().FirstOrDefaultAsync();
@@ -126,7 +137,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 viewModel.TechStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Công Nghệ").OrderByDescending(a => a.CreatedAt).Take(4).ToListAsync();
             }
 
-            // Sidebar (Luôn hiện)
+            // Load Sidebar (Luôn hiện)
             viewModel.FeaturedArticles = await _context.Articles.Where(a => a.IsApproved).OrderByDescending(a => a.CreatedAt).Take(6).AsNoTracking().ToListAsync();
             viewModel.Categories = await _context.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
             viewModel.CategoryCounts = await _context.Articles.Where(a => a.IsApproved).GroupBy(a => a.CategoryId).Select(g => new { CategoryId = g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.CategoryId, x => x.Count);
