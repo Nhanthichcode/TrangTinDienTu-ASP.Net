@@ -22,9 +22,69 @@
 
     if (!isAdminOrAuthorRole) { Layout = "_Layout"; }
 }
+<style>
+    /*nút quay lại đầu trang*/ 
+    /* Khung chứa nhóm nút */
+    .floating-action-group {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column; /* Xếp dọc */
+        gap: 10px; /* Khoảng cách giữa 2 nút */
+    }
 
-    @* --- CSS RIÊNG ĐỂ GIỐNG CNN --- *@
-    <style>
+    /* Style chung cho các nút */
+    .floating-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+    }
+
+    /* Style riêng cho nút Home (Màu xanh hoặc trắng) */
+    .home-btn {
+        background-color: #fff;
+        color: #0d6efd; /* Màu xanh bootstrap */
+        border: 1px solid #e9ecef;
+    }
+
+        .home-btn:hover {
+            background-color: #0d6efd;
+            color: #fff;
+            transform: translateY(-3px);
+        }
+
+    /* Style riêng cho nút Top (Màu đỏ hoặc tối) */
+    .top-btn {
+        background-color: #CC0000; /* Màu đỏ CNN */
+        color: #fff;
+        opacity: 0; /* Mặc định ẩn */
+        visibility: hidden;
+        transform: translateY(10px);
+    }
+
+        .top-btn:hover {
+            background-color: #990000;
+            color: #fff;
+            transform: translateY(-3px);
+        }
+
+        /* Class hiển thị nút Top */
+        .top-btn.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        // Style bản tin
+
         /* 1. Thanh đỏ bên trái tiêu đề */
         .cnn-title-wrapper {
             border-left: 6px solid #CC0000; /* Màu đỏ đặc trưng CNN */
@@ -131,7 +191,17 @@
             overflow: hidden;
         }
     </style>
+<div class="floating-action-group">
 
+    <a href="/" class="floating-btn home-btn" title="Về trang chủ">
+        <i class="bi bi-house-door-fill"></i>
+    </a>
+
+    <a href="javascript:void(0);" id="btn-back-top" class="floating-btn top-btn" title="Lên đầu trang">
+        <i class="bi bi-arrow-up"></i>
+    </a>
+
+</div>
 <div class="container mt-4">
     @* Dùng container thay vì fluid để gom gọn giống báo *@
     <div class="row g-5">
@@ -326,7 +396,22 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+            var $btnTop = $('#btn-back-top');
 
+            // 1. Sự kiện cuộn chuột để ẩn/hiện nút Top
+            $(window).scroll(function () {
+                if ($(window).scrollTop() > 300) {
+                    $btnTop.addClass('show');
+                } else {
+                    $btnTop.removeClass('show');
+                }
+            });
+
+            // 2. Bấm nút Top -> Cuộn mượt lên đầu
+            $btnTop.click(function (e) {
+                e.preventDefault();
+                $('html, body').animate({ scrollTop: 0 }, 400);
+            });
             // 1. Xử lý nút "Sửa"
             $(document).on('click', '.btn-edit-comment', function () {
                 // Tìm thẻ cha gần nhất (li.comment-item) để khoanh vùng xử lý
@@ -364,5 +449,23 @@
                 $(this).closest('.reply-form-container').hide();
             });
         });
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     var btn = document.getElementById("backToTopBtn");
+
+        //     // 1. Hiện nút khi cuộn
+        //     window.addEventListener("scroll", function () {
+        //         if (window.scrollY > 300) { // Cuộn quá 300px thì hiện
+        //             btn.classList.add("show");
+        //         } else {
+        //             btn.classList.remove("show");
+        //         }
+        //     });
+
+        //     // 2. Bấm để lên đầu
+        //     btn.addEventListener("click", function (e) {
+        //         e.preventDefault();
+        //         window.scrollTo({ top: 0, behavior: 'smooth' });
+        //     });
+        // });
     </script>
 }
