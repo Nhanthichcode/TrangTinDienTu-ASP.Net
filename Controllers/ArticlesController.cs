@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Trang_tin_điện_tử_mvc.Data;
 using Trang_tin_điện_tử_mvc.Models;
+using X.PagedList.EF;
 using X.PagedList;
 
 
