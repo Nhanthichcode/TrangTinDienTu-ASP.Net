@@ -109,8 +109,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             }
 
             // 3. Phân trang
-            var pagedArticles = await baseQuery.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
-
+            // Gọi rõ hàm của X.PagedList.EF
+            var pagedArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
                 return PartialView("_ArticleListPartial", pagedArticles);

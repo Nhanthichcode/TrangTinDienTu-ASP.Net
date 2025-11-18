@@ -105,8 +105,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
             // --- 4. KẾT THÚC & PHÂN TRANG ---
             articlesQuery = articlesQuery.OrderByDescending(a => a.CreatedAt);
-            var pagedArticles = await articlesQuery.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
-
+            // Gọi rõ hàm của X.PagedList.EF
+            var pagedArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(articlesQuery.AsNoTracking(), pageNumber, pageSize);
             // Chuẩn bị dữ liệu cho các Dropdown bộ lọc
             ViewBag.Categories = await _context.Categories.OrderBy(c => c.Name).ToListAsync();
             // Lấy danh sách tác giả (chỉ những người đã viết bài) - Tùy chọn
