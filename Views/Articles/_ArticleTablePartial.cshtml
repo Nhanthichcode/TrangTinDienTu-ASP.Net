@@ -1,0 +1,138 @@
+﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Article>
+@using X.PagedList
+@using X.PagedList.Mvc.Core
+@using X.PagedList.Mvc.Core.Common
+@using X.PagedList.Web.Common
+@using System.Security.Claims
+
+@{
+    // Ép kiểu về IPagedList để dùng phân trang
+    var pagedList = Model as IPagedList<Trang_tin_điện_tử_mvc.Models.Article>;
+
+    bool isAuth = User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Author"));
+    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin");
+}
+
+<div class="table-responsive" style="max-height: 65vh; overflow-y: auto;">
+    <table class="table table-hover align-middle mb-0 table-bordered border-light">
+        <thead class="bg-light text-uppercase small fw-bold text-muted" style="position: sticky; top: 0; z-index: 1;">
+            <tr>
+                <th style="width: 80px;" class="text-center">Ảnh</th>
+                <th style="width: 35%;">Tiêu đề & Tóm tắt</th>
+                <th style="width: 15%;">Danh mục</th>
+                <th style="width: 15%;">Tác giả</th>
+                <th style="width: 10%;" class="text-center">Trạng thái</th>
+                <th class="text-center">Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i> Không tìm thấy kết quả nào.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model)
+                {
+                    var imageUrl = !string.IsNullOrEmpty(item.ThumbnailUrl) ? item.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
+                    bool canEditDelete = isAdmin || (isAuth && item.AuthorId == User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+                    <tr>
+                        <td class="text-center py-3">
+                            <img src="@imageUrl" class="rounded shadow-sm" style="width: 60px; height: 45px; object-fit: cover;" onerror="this.src='/uploads/articles/default-thumbnail.jpg';" />
+                        </td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none text-dark d-block mb-1 text-truncate" style="max-width: 350px;">@item.Title</a>
+                            <small class="text-muted d-block text-truncate" style="max-width: 350px;">@(item.Summary ?? "...")</small>
+                        </td>
+                        <td><span class="badge bg-light text-dark border fw-normal">@(item.Category?.Name ?? "N/A")</span></td>
+                        <td><small>@(item.Author?.FullName ?? item.Author?.UserName ?? "Ẩn danh")</small></td>
+                        <td class="text-center">
+                            @if (item.IsApproved)
+                            {
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">Đã duyệt</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-3">Chờ duyệt</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <div class="btn-group btn-group-sm" role="group">
+                                @if (isAdmin)
+                                {
+                                    @if (item.IsApproved)
+                                    {
+                                        // Nếu đã duyệt -> Hiện nút Ẩn
+                                        <form asp-action="Unapprove" asp-controller="Articles" method="post" class="d-inline"
+                                              onsubmit="return confirm('Bạn muốn ẩn bài viết này khỏi trang chủ?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-outline-warning" title="Ẩn bài viết (Bỏ duyệt)">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        // Nếu chưa duyệt -> Hiện nút Duyệt
+                                        <form asp-action="Approve" asp-controller="Articles" method="post" class="d-inline"
+                                              onsubmit="return confirm('Duyệt bài viết này ngay?');">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="btn btn-outline-success" title="Duyệt bài viết">
+                                                <i class="bi bi-check-lg"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                }
+                                @if (canEditDelete)
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary" title="Sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@* --- THANH PHÂN TRANG --- *@
+@if (pagedList != null && pagedList.PageCount > 1)
+{
+    <div class="p-3 d-flex justify-content-between align-items-center bg-white border-top">
+        <small class="text-muted">Trang @pagedList.PageNumber / @pagedList.PageCount</small>
+        <div>
+            @Html.PagedListPager(pagedList, page => Url.Action("Index", new
+                {
+                    pageNumber = page,
+                    searchString = ViewData["CurrentFilter"],
+                    filterAuthor = ViewData["FilterAuthor"],
+                    filterCategory = ViewData["FilterCategory"],
+                    filterStatus = ViewData["FilterStatus"],
+                    filterTag = ViewData["FilterTag"]
+                }),
+                     new PagedListRenderOptions
+        {
+            LiElementClasses = new[] { "page-item" },
+            PageClasses = new[] { "page-link" },
+            ActiveLiElementClass = "active",
+            DisplayLinkToFirstPage = PagedListDisplayMode.Never,
+            DisplayLinkToLastPage = PagedListDisplayMode.Never,
+            DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
+            DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded
+        })
+        </div>
+    </div>
+}

@@ -35,9 +35,9 @@
                         <textarea asp-for="Summary" class="form-control" rows="3" placeholder="Tóm tắt ngắn gọn..."></textarea>
                         <span asp-validation-for="Summary" class="text-danger"></span>
                     </div>
-                    <div class="mb-3">
-                        <label asp-for="Content" class="form-label"></label>
-                        <textarea asp-for="Content" class="form-control" rows="10" placeholder="Nội dung chi tiết..."></textarea>
+                     <div class="mb-3">
+                        <label asp-for="Content" class="form-label fw-bold"></label>       
+                        <textarea asp-for="Content" class="form-control" id="content-editor"></textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
                 </div>
@@ -120,31 +120,79 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                @* ... bạn có thể thêm các card khác ở đây nếu cần ... *@
+                </div>               
             </div>
         </div>
     </div>
 </form>
 
 @section Scripts {
+  <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
+    
+    <script>
+       $(document).ready(function () {
+            
+            // --- 1. KHỞI TẠO SUMMERNOTE ---
+            $('#content-editor').summernote({
+                placeholder: 'Nhập nội dung bài viết...',
+                tabsize: 2,
+                height: 300,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['color', ['color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture', 'video']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ]
+            });
+
+            // --- 2. SCRIPT XEM TRƯỚC ẢNH ---
+            const thumbnailFileInput = document.getElementById('thumbnailFile');
+            const previewContainer = document.getElementById('previewContainer');
+            const imgPreview = document.getElementById('imgPreview');
+            const fileInfo = document.getElementById('fileInfo');
+            const defaultThumbnail = '/uploads/articles/default-thumbnail.jpg';
+
+            if (thumbnailFileInput) { // Kiểm tra input có tồn tại không
+                thumbnailFileInput.addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (file) {
+                        if (file.type.startsWith('image/')) {
+                            const reader = new FileReader();
+                            previewContainer.style.display = 'block';
+                            reader.onload = function (e) {
+                                imgPreview.src = e.target.result;
+                            }
+                            reader.readAsDataURL(file);
+                            fileInfo.textContent = `Tệp: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                        } else {
+                            this.value = '';
+                            previewContainer.style.display = 'none';
+                            imgPreview.src = '#';
+                            fileInfo.textContent = '';
+                            alert('Vui lòng chọn một file ảnh hợp lệ (.jpg, .png, .gif...).');
+                        }
+                    } else {
+                        previewContainer.style.display = 'none';
+                        imgPreview.src = '#';
+                        fileInfo.textContent = '';
+                    }
+                });
+            }
+
+            if (imgPreview) { // Kiểm tra img có tồn tại không
+                 imgPreview.onerror = function () {
+                    this.onerror = null;
+                    this.src = defaultThumbnail;
+                };
+            }
+
+        });
+    </script>
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    @* SCRIPT XEM TRƯỚC ẢNH *@
-    <script>
-        const fileInput = document.getElementById('thumbnailFile');
-        const imgPreview = document.getElementById('imgPreview');
-
-        fileInput.addEventListener('change', function () {
-            const file = this.files[0];
-            if (file) {
-                imgPreview.src = URL.createObjectURL(file);
-                imgPreview.onload = () => {
-                    URL.revokeObjectURL(imgPreview.src); // Giải phóng bộ nhớ URL cũ
-                }
-            }
-        });
-    </script>
 }

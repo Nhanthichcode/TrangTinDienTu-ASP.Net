@@ -1,0 +1,45 @@
+﻿@model X.PagedList.IPagedList<Trang_tin_điện_tử_mvc.Models.Article>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-warning">Không có bài viết nào.</div>
+    return;
+}
+
+@foreach (var item in Model)
+{
+    var imageUrl = !string.IsNullOrEmpty(item.ThumbnailUrl) ? item.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
+
+    <div class="card shadow-sm border-0 article-card-hover mb-3">
+        <div class="row g-0">
+            <div class="col-md-4 col-lg-3">
+                <a asp-controller="Articles" asp-action="Details" asp-route-id="@item.Id">
+                    <img src="@imageUrl"
+                         class="img-fluid rounded-start"
+                         alt="Thumbnail for @item.Title"
+                         style="height: 100%; object-fit: cover; min-height: 170px;"
+                         onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+                </a>
+            </div>
+            <div class="col-md-8 col-lg-9">
+                <div class="card-body d-flex flex-column h-100">
+                    <h5 class="card-title">
+                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@item.Id" class="text-decoration-none text-dark stretched-link">
+                            @item.Title
+                        </a>
+                    </h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        @{
+                            var summary = item.Summary?.Length > 150 ? item.Summary.Substring(0, 150) + "..." : item.Summary;
+                        }
+                        @summary
+                    </p>
+                    <div class="d-flex justify-content-between text-muted small mt-2">
+                        <span><i class="bi bi-person me-1"></i> @(item.Author?.FullName ?? "N/A")</span>
+                        <span><i class="bi bi-folder me-1"></i> @(item.Category?.Name ?? "N/A")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
