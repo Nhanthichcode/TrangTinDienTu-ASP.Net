@@ -1,5 +1,4 @@
-﻿using Trang_tin_điện_tử_mvc.Models;
-using X.PagedList;
+﻿using X.PagedList;
 
 namespace Trang_tin_điện_tử_mvc.Models
 {
