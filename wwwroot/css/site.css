@@ -224,137 +224,50 @@ body {
     padding-top: .25rem;
     padding-bottom: .25rem;
 }
-/* --- Bắt đầu CSS Hiệu ứng Sách (Phiên bản tùy chỉnh) --- */
-
-/* (Quan trọng) Đảm bảo thẻ <a> bao ngoài là block */
-.article-item {
-    display: block;
-    color: #333;
-    /* Loại bỏ margin-bottom mặc định của .col nếu cần */
-    margin-bottom: 2rem;
+/* CSS cho bố cục CNN */
+.cnn-top-story-img {
+    max-height: 450px; /* Chiều cao ảnh tin chính */
+    object-fit: cover;
 }
 
-/* Thùng chứa .book (Dùng 100% chiều rộng của .col) */
-.book {
-    position: relative;
-    width: 100%;
-    /* Chúng ta dùng padding-top để giữ tỷ lệ 4:3 (cao/rộng)
-      Nếu muốn chiều cao cố định, thay thế bằng: height: 400px;
-    */
-    padding-top: 133.33%; /* Tỷ lệ 4:3 (ví dụ 400px cao / 300px rộng) */
-    height: 0;
-    background-color: whitesmoke; /* Nền cho trang bên trong */
-    border-radius: 10px;
-    /* Thuộc tính 3D từ code của bạn */
-    box-shadow: 1px 1px 12px rgba(0,0,0,0.2);
-    transform: preserve-3d;
-    perspective: 2000px;
+.cnn-medium-story-img {
+    height: 200px; /* Chiều cao ảnh tin phụ */
+    object-fit: cover;
+}
+// footer /* --- CSS CHO FOOTER --- */
+footer {
+    background-color: #1a1d20 !important; /* Màu nền tối sẫm */
+    font-size: 0.9rem;
 }
 
-/* Bìa sách (Phần lật) */
-.cover {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: lightgray; /* Nền dự phòng nếu ảnh lỗi */
-    border-radius: 10px;
-    cursor: pointer;
-    /* Thuộc tính 3D và chuyển động từ code của bạn */
-    transition: transform 0.8s ease-in-out;
-    transform-origin: 0; /* Lật từ cạnh trái */
-    transform-style: preserve-3d; /* Cần thiết cho 3D */
-    backface-visibility: hidden; /* Ẩn mặt sau khi lật */
-    box-shadow: 1px 1px 12px rgba(0,0,0,0.3);
-    z-index: 10;
-    /* Thêm overflow để bo góc ảnh bên trong */
-    overflow: hidden;
+footer h5 {
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
 }
 
-/* Hiệu ứng lật khi di chuột vào .book */
-.book:hover .cover {
-    transform: rotateY(-140deg); /* Lật nhiều hơn 80 độ để thấy rõ 3D */
+/* Hiệu ứng cho các link trong footer */
+.footer-link {
+    transition: all 0.3s ease;
 }
 
-/* Ảnh bìa */
-.cover-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Đảm bảo ảnh luôn vừa vặn */
-    display: block;
+    .footer-link:hover {
+        color: #fff !important; /* Chuyển sang màu trắng khi hover */
+        padding-left: 5px; /* Dịch chuyển nhẹ sang phải */
+    }
+
+/* Icon mạng xã hội */
+footer .social-icons a {
+    width: 35px;
+    height: 35px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
 }
 
-/* Tiêu đề trên bìa */
-.cover-caption {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 1.5rem 1rem 1rem;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
-}
-
-.cover-title {
-    font-size: 1.1rem; /* Điều chỉnh cỡ chữ */
-    font-weight: bold;
-    color: white;
-    margin: 0;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
-    /* Giới hạn 2 dòng */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-/* Nội dung bên trong sách (trang bên phải) */
-.book-details {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: #ffffff; /* Nền trắng */
-    z-index: 5; /* Nằm dưới bìa */
-    padding: 1.5rem;
-    border-radius: 10px; /* Bo góc toàn bộ */
-    display: flex;
-    flex-direction: column;
-    white-space: normal;
-}
-
-/* Các thuộc tính p trong CSS của bạn, nhưng áp dụng CỤ THỂ */
-.book-details-title {
-    font-size: 1.1rem; /* Cỡ 20px hơi to, giảm còn 1.1rem */
-    font-weight: bold;
-    color: #dc3545; /* Màu đỏ chủ đạo của bạn */
-    margin-bottom: 0.5rem;
-    /* Giới hạn 2 dòng */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-.book-details-summary {
-    font-size: 0.9rem; /* Cỡ chữ tóm tắt */
-    flex-grow: 1; /* Đẩy phần meta xuống dưới */
-    overflow: hidden;
-    /* Giới hạn số dòng cho tóm tắt */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 8; /* Tùy chỉnh số dòng tóm tắt */
-    -webkit-box-orient: vertical;
-}
-
-.book-details-meta {
-    font-size: 0.8rem;
-    font-weight: normal; /* Không cần bold */
-    margin-bottom: 0;
-}
-
-/* --- Hết CSS cho Hiệu ứng Sách --- */
+    footer .social-icons a:hover {
+        background-color: #0d6efd; /* Màu xanh bootstrap */
+        transform: translateY(-3px);
+    }
