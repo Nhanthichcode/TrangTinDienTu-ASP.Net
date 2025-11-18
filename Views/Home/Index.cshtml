@@ -228,41 +228,18 @@
             @* --- 3. DANH SÁCH BÀI VIẾT --- *@
             <section class="mb-4">
                 <h3 class="border-bottom pb-2 mb-3 fw-bold" id="list-title">
-                    @(isFiltered ? "Danh sách bài viết" : "Tin Mới Nhất")
+                    @(isFiltered ? "Danh sách bài viết" : "Tin Mới Nhất..")
                 </h3>
 
+                @* Container này sẽ chứa cả Danh sách + Phân trang (do Partial cung cấp) *@
                 <div id="latest-articles-container" style="min-height: 300px;">
-                    <partial name="_ArticleListPartial" model="Model.LatestArticles" />
-                </div>
-
-                <div class="pagination-container d-flex justify-content-center mt-4">
-                    @Html.PagedListPager(Model.LatestArticles,
-                             page => Url.Action("Index", new
-                             {
-                                 pageNumber = page,
-                                 searchString = currentSearch,
-                                 tag = currentTag,
-                                 categoryId = currentCategoryId // Truyền lại ID Category
-                             }),
-                             new X.PagedList.Mvc.Core.Common.PagedListRenderOptions
-                    {
-                        LiElementClasses = new[] { "page-item" },
-                        PageClasses = new[] { "page-link" },
-                        ActiveLiElementClass = "active",
-                        DisplayLinkToFirstPage = PagedListDisplayMode.Never,
-                        DisplayLinkToLastPage = PagedListDisplayMode.Never,
-                        DisplayLinkToPreviousPage = PagedListDisplayMode.IfNeeded,
-                        DisplayLinkToNextPage = PagedListDisplayMode.IfNeeded,
-                        LinkToPreviousPageFormat = "«",
-                        LinkToNextPageFormat = "»"
-                    })
+                     <partial name="_ArticleListPartial" model="Model.LatestArticles" />
                 </div>
             </section>
-
         </div>
     </div>
 </div>
-
+<h3>hết phân trang</h3>
 @section Scripts {
     <script>
         $(function () {
