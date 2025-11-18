@@ -9,7 +9,6 @@ using Trang_tin_điện_tử_mvc.Models;
 using X.PagedList.EF;
 using X.PagedList;
 
-
 namespace Trang_tin_điện_tử_mvc.Controllers
     {
     public class ArticlesController : Controller

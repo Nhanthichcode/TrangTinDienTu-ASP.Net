@@ -1,5 +1,6 @@
 ﻿@model Trang_tin_điện_tử_mvc.Models.HomeIndexViewModel
 @using X.PagedList.Mvc.Core
+@using X.PagedList.Web.Common
 
 @{
     ViewData["Title"] = ViewData["Title"] ?? "Trang Chủ";
@@ -243,7 +244,7 @@
                                  tag = currentTag,
                                  categoryId = currentCategoryId // Truyền lại ID Category
                              }),
-                             new PagedListRenderOptions
+                             new X.PagedList.Mvc.Core.Common.PagedListRenderOptions
                     {
                         LiElementClasses = new[] { "page-item" },
                         PageClasses = new[] { "page-link" },

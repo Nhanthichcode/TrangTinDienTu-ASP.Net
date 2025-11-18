@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Trang_tin_điện_tử_mvc.Data;
 using X.PagedList.EF;
+using X.PagedList;
 using Trang_tin_điện_tử_mvc.Models;
 
 namespace Trang_tin_điện_tử_mvc.Controllers
