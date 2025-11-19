@@ -133,8 +133,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             if (!isFiltered)
             {
                 viewModel.TopStory = await baseQuery.AsNoTracking().FirstOrDefaultAsync();
-                viewModel.BusinessStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Kinh Tế").OrderByDescending(a => a.CreatedAt).Take(4).ToListAsync();
-                viewModel.TechStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Công Nghệ").OrderByDescending(a => a.CreatedAt).Take(4).ToListAsync();
+                viewModel.BusinessStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Kinh Tế").OrderByDescending(a => a.CreatedAt).Take(6).ToListAsync();
+                viewModel.TechStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Công Nghệ").OrderByDescending(a => a.CreatedAt).Take(6).ToListAsync();
             }
 
             // Load Sidebar (Luôn hiện)

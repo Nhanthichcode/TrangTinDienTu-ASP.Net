@@ -23,6 +23,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             _context = context;
         }
 
+        [Authorize(Policy = "RequireAdminRole")]        
         // GET: Comments
         public async Task<IActionResult> Index(string statusFilter = "All", int pageNumber = 1, int pageSize = 15)
         {
@@ -98,6 +99,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(displayComments);
         }
 
+        [Authorize(Policy = "Freedom")]
         // GET: Comments/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -121,6 +123,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(comment);
         }
 
+        [Authorize(Policy = "Freedom")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ApproveComment(int id)
@@ -139,6 +142,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return RedirectToAction(nameof(Index)); // Quay lại trang Index Comments
         }
 
+        [Authorize(Policy = "Freedom")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UnapproveComment(int id)
@@ -157,6 +161,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return RedirectToAction(nameof(Index)); // Quay lại trang Index Comments
         }
 
+        [Authorize(Policy = "Freedom")]
         // GET: Comments/Create
         public IActionResult Create()
         {
@@ -165,6 +170,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View();
         }
 
+        [Authorize(Policy = "Freedom")]
         // POST: Comments/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -183,6 +189,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(comment);
         }
 
+        [Authorize(Policy = "Freedom")]
         // GET: Comments/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -201,6 +208,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(comment);
         }
 
+        [Authorize(Policy = "Freedom")]
         // POST: Comments/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -238,6 +246,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(comment);
         }
 
+        [Authorize(Policy = "Freedom")]
         //GET: xóa bình luận
         public async Task<IActionResult> Delete(int? id)
         {
@@ -265,6 +274,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(comment); // Trả về View Delete.cshtml
         }
 
+        [Authorize(Policy = "Freedom")]
         // --- POST: Comments/Delete/5 (XÁC NHẬN VÀ XỬ LÝ XÓA) ---
         [HttpPost, ActionName("Delete")] // Đặt tên Action là Delete nhưng route vẫn là /Comments/Delete/{id} (POST)
         [ValidateAntiForgeryToken]
