@@ -23,7 +23,140 @@
     if (!isAdminOrAuthorRole) { Layout = "_Layout"; }
 }
 <style>
-    /*nút quay lại đầu trang*/ 
+    .article-carousel {
+        margin-top: 3rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 2rem;
+    }
+
+    .carousel-image {
+        height: 400px;
+        object-fit: cover;
+        width: 100%;
+        border-radius: 8px;
+    }
+
+    .carousel-caption-custom {
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        padding: 15px;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+    }
+
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 5%;
+        opacity: 0.8;
+    }
+
+        .carousel-control-prev:hover,
+        .carousel-control-next:hover {
+            opacity: 1;
+        }
+
+    .carousel-indicators {
+        bottom: -50px;
+    }
+
+        .carousel-indicators button {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin: 0 5px;
+            background-color: #666;
+        }
+
+        .carousel-indicators .active {
+            background-color: #CC0000;
+        }
+
+    /* Thumbnail navigation */
+    .thumbnail {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .active-thumbnail {
+        opacity: 1 !important;
+        border-color: #CC0000 !important;
+        transform: scale(1.05);
+    }
+
+    /* 🎯 STYLE CHO GALLERY ẢNH */
+    .image-gallery {
+        border-top: 2px solid #f0f0f0;
+        padding-top: 2rem;
+    }
+
+    .gallery-item {
+        transition: transform 0.3s ease;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+        .gallery-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .gallery-item img {
+            border: 1px solid #e9ecef;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.05);
+        }
+
+    /* Ảnh trong nội dung bài viết */
+    .article-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin: 1rem 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .article-content img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+    /* Ảnh căn giữa */
+    .article-content img {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Tùy chọn: Thêm caption cho ảnh nếu cần */
+    .article-content figure {
+        margin: 1.5rem 0;
+        text-align: center;
+    }
+
+    .article-content figcaption {
+        font-size: 0.9rem;
+        color: #666;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    /* Nút download trong gallery */
+    .gallery-item .btn {
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .gallery-item:hover .btn {
+        opacity: 1;
+    }
+
+    /*nút quay lại đầu trang*/
     /* Khung chứa nhóm nút */
     .floating-action-group {
         position: fixed;
@@ -83,157 +216,149 @@
             visibility: visible;
             transform: translateY(0);
         }
-        // Style bản tin
 
-        /* 1. Thanh đỏ bên trái tiêu đề */
-        .cnn-title-wrapper {
-            border-left: 6px solid #CC0000; /* Màu đỏ đặc trưng CNN */
-            padding-left: 15px;
-            margin-bottom: 15px;
-        }
+    /* Style bản tin */
+    /* 1. Thanh đỏ bên trái tiêu đề */
+    .cnn-title-wrapper {
+        border-left: 6px solid #CC0000; /* Màu đỏ đặc trưng CNN */
+        padding-left: 15px;
+        margin-bottom: 15px;
+    }
 
-        .cnn-title {
-            font-weight: 700; /* Chữ đậm */
-            line-height: 1.2;
+    .cnn-title {
+        font-weight: 700; /* Chữ đậm */
+        line-height: 1.2;
+        color: #000;
+        font-size: 2.5rem;
+    }
+
+    /* 2. Breadcrumb nhỏ phía trên (WORLD > ASIA) */
+    .cnn-category-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #666;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    /* 3. Thông tin tác giả & thời gian */
+    .cnn-meta-info {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 15px;
+    }
+
+    .cnn-author-name {
+        font-weight: 600;
+        color: #000;
+    }
+
+    /* 4. Nút chia sẻ mạng xã hội (Tròn/Vuông nhỏ) */
+    .cnn-share-buttons .btn-share {
+        width: 32px;
+        height: 32px;
+        border: 1px solid #ddd;
+        border-radius: 4px; /* Bo góc nhẹ giống hình */
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        margin-right: 5px;
+        background: #fff;
+        transition: all 0.2s;
+    }
+
+        .cnn-share-buttons .btn-share:hover {
+            background: #f0f0f0;
             color: #000;
-            font-size: 2.5rem;
         }
 
-        /* 2. Breadcrumb nhỏ phía trên (WORLD > ASIA) */
-        .cnn-category-label {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            display: block;
-        }
+    /* Style cũ của bạn cho comment/related */
+    .comment-form textarea:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 
-        /* 3. Thông tin tác giả & thời gian */
-        .cnn-meta-info {
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 15px;
-        }
+    .comment-item .comment-item {
+        border-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 1rem !important;
+    }
 
-        .cnn-author-name {
-            font-weight: 600;
-            color: #000;
-        }
+    .related-articles-scroll-container {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 15px;
+        scrollbar-width: thin;
+    }
 
-        /* 4. Nút chia sẻ mạng xã hội (Tròn/Vuông nhỏ) */
-        .cnn-share-buttons .btn-share {
-            width: 32px;
-            height: 32px;
-            border: 1px solid #ddd;
-            border-radius: 4px; /* Bo góc nhẹ giống hình */
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: #333;
-            margin-right: 5px;
-            background: #fff;
-            transition: all 0.2s;
-        }
+    .related-article-card {
+        display: inline-block;
+        width: 280px;
+        vertical-align: top;
+        margin-right: 1.5rem;
+        background-color: #fff;
+        border-radius: 0.375rem;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
+        white-space: normal;
+    }
 
-            .cnn-share-buttons .btn-share:hover {
-                background: #f0f0f0;
-                color: #000;
-            }
+    .related-article-img {
+        width: 100%;
+        height: 160px;
+        object-fit: cover;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+    }
 
-        /* Style cũ của bạn cho comment/related */
-        .comment-form textarea:focus {
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-        }
+    .related-article-body {
+        padding: 1rem;
+    }
 
-        .comment-item .comment-item {
-            border-bottom: 0 !important;
-            padding-bottom: 0 !important;
-            margin-bottom: 1rem !important;
-        }
+    .related-article-title {
+        font-size: 1rem;
+        font-weight: 600;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
 
-        .related-articles-scroll-container {
-            overflow-x: auto;
-            white-space: nowrap;
-            padding-bottom: 15px;
-            scrollbar-width: thin;
-        }
+    /* Toast notification */
+    .toast {
+        background-color: white;
+        border: 1px solid #dee2e6;
+    }
+</style>
 
-        .related-article-card {
-            display: inline-block;
-            width: 280px;
-            vertical-align: top;
-            margin-right: 1.5rem;
-            background-color: #fff;
-            border-radius: 0.375rem;
-            box-shadow: 0 .125rem .25rem rgba(0,0,0,.075);
-            white-space: normal;
-        }
-
-        .related-article-img {
-            width: 100%;
-            height: 160px;
-            object-fit: cover;
-            border-top-left-radius: 0.375rem;
-            border-top-right-radius: 0.375rem;
-        }
-
-        .related-article-body {
-            padding: 1rem;
-        }
-
-        .related-article-title {
-            font-size: 1rem;
-            font-weight: 600;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-    </style>
 <div class="floating-action-group">
-
     <a href="/" class="floating-btn home-btn" title="Về trang chủ">
         <i class="bi bi-house-door-fill"></i>
     </a>
-
     <a href="javascript:void(0);" id="btn-back-top" class="floating-btn top-btn" title="Lên đầu trang">
         <i class="bi bi-arrow-up"></i>
     </a>
-
 </div>
+
 <div class="container mt-4">
-    @* Dùng container thay vì fluid để gom gọn giống báo *@
     <div class="row g-5">
-        @* Tăng khoảng cách g-5 *@
-
-        @* --- CỘT NỘI DUNG CHÍNH --- *@
+        <!-- CỘT NỘI DUNG CHÍNH -->
         <main class="col-lg-8">
-            @* Giảm xuống col-8 để sidebar rộng hơn chút *@
             <article>
-
-                @* 1. HEADER BÀI VIẾT (KIỂU CNN) *@
+                <!-- 1. HEADER BÀI VIẾT (KIỂU CNN) -->
                 <header class="mb-4">
-
-                    @* Breadcrumb: Category *@
                     <span class="cnn-category-label">
                         News > @(Model.Category?.Name ?? "General") > @Model.CreatedAt.ToString("dd/MM")
                     </span>
-
-                    @* Tiêu đề với thanh đỏ *@
                     <div class="cnn-title-wrapper">
                         <h1 class="cnn-title">@Model.Title</h1>
                     </div>
-
-                    @* Metadata: Tác giả & Ngày *@
                     <div class="cnn-meta-info">
                         <span class="text-uppercase text-muted fw-bold" style="font-size: 0.8rem;">Updated @Model.CreatedAt.ToString("HH:mm, dd/MM/yyyy")</span>
                         <div class="mt-1">
                             By <span class="cnn-author-name">@(Model.Author?.FullName ?? Model.Author?.UserName ?? "News Staff")</span>
                         </div>
                     </div>
-
-                    @* Các nút Share nhỏ *@
                     <div class="cnn-share-buttons mb-4">
                         <a href="#" class="btn-share"><i class="bi bi-envelope"></i></a>
                         <a href="#" class="btn-share"><i class="bi bi-link-45deg"></i></a>
@@ -242,7 +367,7 @@
                     </div>
                 </header>
 
-                @* 2. ẢNH ĐẠI DIỆN (Giờ mới hiển thị ảnh) *@
+                <!-- 2. ẢNH ĐẠI DIỆN -->
                 @{
                     var imageUrl = !string.IsNullOrEmpty(Model.ThumbnailUrl) ? Model.ThumbnailUrl : defaultImageUrl;
                 }
@@ -252,22 +377,102 @@
                          alt="@Model.Title"
                          style="height: auto; object-fit: cover; max-height: 500px;"
                          onerror="this.onerror=null; this.src='@defaultImageUrl';" />
-                    @* Caption ảnh nếu có (giả lập) *@
                     <figcaption class="figure-caption mt-2 p-2 bg-light border-start border-3 border-danger">
                         Ảnh minh họa: @Model.Title
                     </figcaption>
                 </figure>
 
-                @* 3. NỘI DUNG BÀI VIẾT *@
+                <!-- 3. NỘI DUNG BÀI VIẾT -->
                 <div class="article-content fs-5" style="line-height: 1.8; color: #222;">
-                    <p class="lead fw-bold">@Model.Summary</p> @Html.Raw(Model.Content)
+                    <p class="lead fw-bold">@Model.Summary</p>
+                    @Html.Raw(ViewBag.ContentWithImages)
                 </div>
 
+                <!-- 4. CAROUSEL ẢNH TRONG BÀI VIẾT -->
+                @if (ViewBag.ArticleImages != null && ViewBag.ArticleImages.Count > 0)
+                {
+                    <div class="article-carousel">
+                        <h4 class="mb-4 border-bottom pb-2">
+                            <i class="bi bi-images me-2"></i>Hình ảnh đính kèm (@ViewBag.ArticleImages.Count)
+                        </h4>
+
+                        <div id="articleCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <!-- Indicators -->
+                            <div class="carousel-indicators">
+                                @for (int i = 0; i < ViewBag.ArticleImages.Count; i++)
+                                {
+                                    <button type="button" data-bs-target="#articleCarousel" data-bs-slide-to="@i"
+                                            class="@(i == 0 ? "active" : "")"
+                                            aria-label="Slide @(i + 1)"></button>
+                                }
+                            </div>
+
+                            <!-- Carousel items -->
+                            <div class="carousel-inner rounded">
+                                @for (int i = 0; i < ViewBag.ArticleImages.Count; i++)
+                                {
+                                    var media = ViewBag.ArticleImages[i];
+                                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                                        <img src="@media.FileUrl" class="d-block w-100 carousel-image" alt="@media.FileName">
+                                        <div class="carousel-caption carousel-caption-custom">
+                                            <h6>@media.FileName</h6>
+                                            <p class="mb-1">
+                                                @media.FileType - @media.FileSizeKB KB
+                                                <br>
+                                                <small>Uploaded: @media.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+                                            </p>
+                                            <div class="d-flex gap-2 justify-content-center">
+                                                <button class="btn btn-sm btn-light" onclick="downloadImage('@media.FileUrl')">
+                                                    <i class="bi bi-download"></i> Tải xuống
+                                                </button>
+                                                <button class="btn btn-sm btn-light" onclick="copyUrl('@media.FileUrl')">
+                                                    <i class="bi bi-link-45deg"></i> Copy URL
+                                                </button>
+                                                <button class="btn btn-sm btn-light" onclick="openImageModal('@media.FileUrl')">
+                                                    <i class="bi bi-arrows-fullscreen"></i> Xem lớn
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <!-- Controls -->
+                            <button class="carousel-control-prev" type="button" data-bs-target="#articleCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#articleCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+
+                        <!-- Thumbnail navigation -->
+                        @if (ViewBag.ArticleImages.Count > 1)
+                        {
+                            <div class="row mt-3 g-2">
+                                @for (int i = 0; i < ViewBag.ArticleImages.Count; i++)
+                                {
+                                    var media = ViewBag.ArticleImages[i];
+                                    <div class="col-2">
+                                        <img src="@media.FileUrl"
+                                             class="img-fluid rounded thumbnail @(i == 0 ? "active-thumbnail" : "")"
+                                             style="height: 60px; object-fit: cover; cursor: pointer; opacity: 0.6;"
+                                             data-bs-target="#articleCarousel"
+                                             data-bs-slide-to="@i"
+                                             onmouseover="this.style.opacity='1'"
+                                             onmouseout="if(!this.classList.contains('active-thumbnail')) this.style.opacity='0.6'"
+                                             onclick="setActiveThumbnail(this)"
+                                             title="@media.FileName">
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
             </article>
 
-            @* --- CÁC PHẦN CŨ (Bình luận, ...) GIỮ NGUYÊN --- *@
-
-            @* (Nếu Admin/Author thì hiện nút hành động ở đây cho tiện) *@
             @if (isUserAdmin || isUserTheAuthor)
             {
                 <div class="my-4 p-3 bg-light border rounded">
@@ -280,11 +485,10 @@
                 </div>
             }
 
-            @* Khu vực Bình luận *@
+            <!-- Khu vực Bình luận -->
             <div class="mt-5" id="comment-section">
                 <h4 class="mb-4 fw-bold border-bottom pb-2">Bình luận (@(Model.Comments?.Count ?? 0))</h4>
 
-                @* Form gửi bình luận *@
                 @if (SignInManager.IsSignedIn(User))
                 {
                     var currentUser = await UserManager.GetUserAsync(User);
@@ -307,7 +511,6 @@
                     <div class="alert alert-light border">Vui lòng <a asp-area="Identity" asp-page="/Account/Login">đăng nhập</a> để bình luận.</div>
                 }
 
-                @* Danh sách bình luận *@
                 @if (Model.Comments != null && Model.Comments.Any())
                 {
                     <div class="comment-list">
@@ -320,16 +523,14 @@
             </div>
         </main>
 
-        @* --- SIDEBAR (GIỮ NGUYÊN LOGIC CŨ) --- *@
+        <!-- SIDEBAR -->
         <aside class="col-lg-4">
             <div class="sticky-top" style="top: 2rem;">
-
-                @* Có thể thêm mục "Tin nổi bật" ở đây *@
                 @if (relatedArticles.Any())
                 {
                     <h5 class="fw-bold text-danger border-bottom border-danger pb-2 mb-3">TIN LIÊN QUAN</h5>
                     <div class="d-flex flex-column gap-3 mb-4">
-                        @foreach (var item in relatedArticles.Take(4)) // Lấy 4 tin dọc
+                        @foreach (var item in relatedArticles.Take(4))
                         {
                             var img = !string.IsNullOrEmpty(item.ThumbnailUrl) ? item.ThumbnailUrl : defaultImageUrl;
                             <div class="d-flex gap-2">
@@ -348,7 +549,7 @@
                     </div>
                 }
 
-                @* Thẻ Tags *@
+                <!-- Thẻ Tags -->
                 <div class="card border-0 bg-light mb-4">
                     <div class="card-body">
                         <h6 class="fw-bold mb-3">Tags</h6>
@@ -357,18 +558,17 @@
                             <div class="d-flex flex-wrap gap-2">
                                 @foreach (var at in Model.ArticleTags)
                                 {
-                                    <a asp-controller ="Home" asp-action="Index" asp-route-tag="@at.Tag?.Name" class="btn btn-sm btn-outline-secondary rounded-pill">#@at.Tag?.Name</a>
+                                    <a asp-controller="Home" asp-action="Index" asp-route-tag="@at.Tag?.Name" class="btn btn-sm btn-outline-secondary rounded-pill">#@at.Tag?.Name</a>
                                 }
                             </div>
                         }
                     </div>
                 </div>
-
             </div>
         </aside>
     </div>
 
-    @* "Có thể bạn quan tâm" (Ngang bên dưới - nếu cần giữ lại) *@
+    <!-- "Có thể bạn quan tâm" -->
     @if (relatedArticles.Any())
     {
         <div class="row mt-5">
@@ -393,6 +593,28 @@
         </div>
     }
 </div>
+
+<!-- Modal xem ảnh lớn -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Xem ảnh</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalImage" src="" alt="" class="img-fluid" style="max-height: 70vh;" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                <button type="button" class="btn btn-primary" onclick="downloadImage(document.getElementById('modalImage').src)">
+                    <i class="bi bi-download me-1"></i> Tải xuống
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
@@ -412,60 +634,135 @@
                 e.preventDefault();
                 $('html, body').animate({ scrollTop: 0 }, 400);
             });
-            // 1. Xử lý nút "Sửa"
-            $(document).on('click', '.btn-edit-comment', function () {
-                // Tìm thẻ cha gần nhất (li.comment-item) để khoanh vùng xử lý
-                var $item = $(this).closest('.comment-item');
 
-                // Ẩn nội dung hiển thị gốc và các nút hành động (Sửa/Xóa/Trả lời)
-                // Dùng :first để tránh ẩn nhầm của các bình luận con lồng bên trong
+            // 3. Carousel events
+            $('#articleCarousel').on('slide.bs.carousel', function (e) {
+                // Cập nhật thumbnail active
+                $('.thumbnail').removeClass('active-thumbnail').css('opacity', '0.6');
+                $('.thumbnail[data-bs-slide-to="' + e.to + '"]').addClass('active-thumbnail').css('opacity', '1');
+            });
+
+            // 4. Click thumbnail để chuyển slide
+            $('.thumbnail').click(function () {
+                var slideTo = $(this).data('bs-slide-to');
+                $('#articleCarousel').carousel(parseInt(slideTo));
+            });
+
+            // 5. Xử lý nút "Sửa" bình luận
+            $(document).on('click', '.btn-edit-comment', function () {
+                var $item = $(this).closest('.comment-item');
                 $item.find('.comment-content-display:first').hide();
                 $item.find('.comment-actions:first').hide();
-
-                // Hiện form sửa
                 $item.find('.comment-content-edit:first').show();
             });
 
-            // 2. Xử lý nút "Hủy" (khi đang Sửa)
+            // 6. Xử lý nút "Hủy" (khi đang Sửa)
             $(document).on('click', '.btn-cancel-edit', function () {
                 var $item = $(this).closest('.comment-item');
-
-                // Hiện lại nội dung gốc
                 $item.find('.comment-content-display:first').show();
                 $item.find('.comment-actions:first').show();
-
-                // Ẩn form sửa đi
                 $item.find('.comment-content-edit:first').hide();
             });
 
-            // 3. Xử lý nút "Trả lời"
+            // 7. Xử lý nút "Trả lời"
             $(document).on('click', '.btn-toggle-reply', function () {
-                // Tìm form trả lời ngay bên dưới và bật/tắt nó
                 $(this).closest('.comment-item').find('.reply-form-container:first').toggle();
             });
 
-            // 4. Xử lý nút "Hủy" (khi đang Trả lời)
+            // 8. Xử lý nút "Hủy" (khi đang Trả lời)
             $(document).on('click', '.btn-cancel-reply', function () {
                 $(this).closest('.reply-form-container').hide();
             });
+
+            // 9. XỬ LÝ CLICK ẢNH TRONG NỘI DUNG
+            $(document).on('click', '.article-content img', function () {
+                var imageUrl = $(this).attr('src');
+                openImageModal(imageUrl);
+            });
         });
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     var btn = document.getElementById("backToTopBtn");
 
-        //     // 1. Hiện nút khi cuộn
-        //     window.addEventListener("scroll", function () {
-        //         if (window.scrollY > 300) { // Cuộn quá 300px thì hiện
-        //             btn.classList.add("show");
-        //         } else {
-        //             btn.classList.remove("show");
-        //         }
-        //     });
+        // FUNCTION ĐẶT THUMBNAIL ACTIVE
+        function setActiveThumbnail(element) {
+            $('.thumbnail').removeClass('active-thumbnail').css('opacity', '0.6');
+            $(element).addClass('active-thumbnail').css('opacity', '1');
+        }
 
-        //     // 2. Bấm để lên đầu
-        //     btn.addEventListener("click", function (e) {
-        //         e.preventDefault();
-        //         window.scrollTo({ top: 0, behavior: 'smooth' });
-        //     });
-        // });
+        // FUNCTION MỞ MODAL XEM ẢNH LỚN
+        function openImageModal(imageUrl) {
+            document.getElementById('modalImage').src = imageUrl;
+            var imageModal = new bootstrap.Modal(document.getElementById('imageModal'));
+            imageModal.show();
+        }
+
+        // FUNCTION TẢI ẢNH XUỐNG
+        function downloadImage(imageUrl) {
+            var fileName = imageUrl.split('/').pop() || 'image.jpg';
+
+            var a = document.createElement('a');
+            a.href = imageUrl;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            showDownloadNotification(fileName);
+        }
+
+        // FUNCTION COPY URL
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(function () {
+                showCopyNotification();
+            });
+        }
+
+        // HIỂN THỊ THÔNG BÁO TẢI XUỐNG
+        function showDownloadNotification(fileName) {
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed bottom-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                        <div class="toast show" role="alert">
+                            <div class="toast-header">
+                                <i class="bi bi-download text-success me-2"></i>
+                                <strong class="me-auto">Tải xuống</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                            </div>
+                            <div class="toast-body">
+                                Đang tải: <strong>${fileName}</strong>
+                            </div>
+                        </div>
+                    `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 3000);
+        }
+
+        // HIỂN THỊ THÔNG BÁO COPY
+        function showCopyNotification() {
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed bottom-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                        <div class="toast show" role="alert">
+                            <div class="toast-header">
+                                <i class="bi bi-check-circle text-success me-2"></i>
+                                <strong class="me-auto">Thành công</strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                            </div>
+                            <div class="toast-body">
+                                Đã copy URL vào clipboard
+                            </div>
+                        </div>
+                    `;
+
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 2000);
+        }
     </script>
 }
