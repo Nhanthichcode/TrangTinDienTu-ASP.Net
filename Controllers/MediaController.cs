@@ -244,7 +244,87 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 return StatusCode(500, "Lỗi khi xóa file");
             }
         }
+        [HttpPost]
+        public async Task<IActionResult> DeleteAllUnused()
+        {
+            _logger.LogInformation("Bắt đầu tiến trình xóa tất cả ảnh chưa sử dụng.");
 
+            // 1. Tìm các media chưa gắn bài viết (ArticleId == null)
+            var unusedMediaList = await _context.Media
+                .Where(m => m.ArticleId == null)
+                .ToListAsync();
+
+            if (unusedMediaList == null || !unusedMediaList.Any())
+            {
+                // Trường hợp này ít xảy ra nếu check kỹ ở client, nhưng vẫn nên có
+                return Json(new { success = false, message = "Hệ thống không tìm thấy ảnh nào chưa sử dụng." });
+            }
+
+            int successCount = 0;
+            int failCount = 0;
+            var mediaToDeleteFromDb = new List<Media>();
+
+            // 2. Duyệt và cố gắng xóa file vật lý trên ổ cứng
+            foreach (var media in unusedMediaList)
+            {
+                try
+                {
+                    // Tạo đường dẫn vật lý tới file
+                    string filePath = Path.Combine(_env.WebRootPath, media.FileUrl.TrimStart('/'));
+
+                    // Kiểm tra nếu file tồn tại thì xóa
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+
+                    // Thêm vào danh sách sẽ xóa khỏi DB (chỉ thêm nếu không bị lỗi file system)
+                    mediaToDeleteFromDb.Add(media);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi file system nhưng tiếp tục chạy các file khác
+                    _logger.LogError(ex, "Lỗi khi xóa file vật lý: {FilePath}", media.FileUrl);
+                    failCount++;
+                }
+            }
+
+            // 3. Xóa hàng loạt khỏi Database
+            if (mediaToDeleteFromDb.Any())
+            {
+                try
+                {
+                    // Nếu bạn chắc chắn ảnh chưa dùng không có liên kết nào khác thì dùng RemoveRange
+                    _context.Media.RemoveRange(mediaToDeleteFromDb);
+                    await _context.SaveChangesAsync();
+
+                    // Tạo thông báo kết quả
+                    string message = $"Đã xóa thành công {successCount} ảnh.";
+                    if (failCount > 0)
+                    {
+                        message += $" (Cảnh báo: Có {failCount} file không thể xóa khỏi ổ cứng do lỗi quyền hạn hoặc file đang bận, vui lòng kiểm tra log server).";
+                    }
+
+                    _logger.LogInformation(message);
+                    // Trả về success = true để client reload trang
+                    return Json(new { success = true, count = successCount, message = message });
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Lỗi Database khi xóa hàng loạt media.");
+                    // Trả về success = true vì file vật lý đã xóa rồi, nhưng kèm cảnh báo lỗi DB
+                    return Json(new { success = true, message = $"Đã xóa {successCount} file trên ổ cứng, nhưng gặp lỗi khi cập nhật Database. Vui lòng refresh trang để kiểm tra lại." });
+                }
+            }
+            else if (failCount > 0 && successCount == 0)
+            {
+                // Trường hợp lỗi tất cả các file
+                return Json(new { success = false, message = "Lỗi nghiêm trọng! Không thể xóa bất kỳ file vật lý nào (có thể do lỗi quyền truy cập thư mục uploads)." });
+            }
+
+            return Json(new { success = false, message = "Không có hành động nào được thực hiện." });
+        }
         // 🎯 THÊM ACTION LẤY THỐNG KÊ
         [HttpGet]
         public async Task<IActionResult>
