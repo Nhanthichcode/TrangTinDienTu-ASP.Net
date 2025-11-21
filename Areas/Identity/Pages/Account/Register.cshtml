@@ -1,65 +1,328 @@
 ﻿@page
 @model RegisterModel
 @{
-    ViewData["Title"] = "Đăng ký";
-    Layout = "_Layout";
+    ViewData["Title"] = "Đăng ký AGU-News";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="d-flex justify-content-center align-items-center vh-100 bg-light">
-    <div class="card shadow-lg p-4" style="width: 28rem; border-radius: 1rem;">
-        <div class="text-center mb-4">
-            <h2 class="fw-bold">@ViewData["Title"]</h2>
-            <p class="text-muted">Tạo tài khoản mới để bắt đầu</p>
+<style>
+    .agu-register-page {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: #f7f7f7;
+    }
+
+    .agu-register-container {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .agu-register-card {
+        background: white;
+        border-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        padding: 2rem;
+        margin: 0 auto;
+    }
+
+    .agu-register-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e5e5e5;
+    }
+
+    .agu-register-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0c0c0c;
+        margin-bottom: 0.25rem;
+    }
+
+    .agu-register-subtitle {
+        color: #6e6e6e;
+        font-size: 0.9rem;
+    }
+
+    .agu-form-group {
+        margin-bottom: 1rem;
+    }
+
+    .agu-form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #0c0c0c;
+        font-size: 0.9rem;
+    }
+
+    .agu-form-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+    }
+
+        .agu-form-input:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 2px rgba(204,0,0,0.1);
+        }
+
+    .password-container {
+        position: relative;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 0;
+        width: 20px;
+        height: 20px;
+    }
+
+    .agu-form-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+        font-size: 1rem;
+        background-color: white;
+        transition: all 0.2s;
+    }
+
+        .agu-form-select:focus {
+            outline: none;
+            border-color: #cc0000;
+            box-shadow: 0 0 0 2px rgba(204,0,0,0.1);
+        }
+
+    .agu-role-note {
+        font-size: 0.8rem;
+        color: #666;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    .agu-register-btn {
+        width: 100%;
+        background: #cc0000;
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-bottom: 1rem;
+    }
+
+        .agu-register-btn:hover {
+            background: #990000;
+        }
+
+    .agu-divider {
+        text-align: center;
+        margin: 1rem 0;
+        position: relative;
+    }
+
+        .agu-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            border-top: 1px solid #e5e5e5;
+        }
+
+        .agu-divider span {
+            background: white;
+            padding: 0 1rem;
+            color: #6e6e6e;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+    .agu-oauth-btn {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d0d0d0;
+        background: white;
+        border-radius: 4px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-bottom: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+        .agu-oauth-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .agu-oauth-btn.google {
+            color: #333;
+            border-color: #dadce0;
+        }
+
+    .agu-login-link {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e5e5;
+        text-align: center;
+        color: #6e6e6e;
+        font-size: 0.9rem;
+    }
+
+        .agu-login-link a {
+            color: #cc0000;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+            .agu-login-link a:hover {
+                text-decoration: underline;
+            }
+
+    .agu-register-page main {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+        flex: 1;
+    }
+
+    .alert-danger {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 4px;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        color: #721c24;
+        font-size: 0.9rem;
+    }
+
+    .text-danger {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+</style>
+
+<div class="agu-register-page">
+    <main>
+        <div class="agu-register-container">
+            <div class="agu-register-card">
+                <div class="agu-register-header">
+                    <h1 class="agu-register-title">Đăng ký AGU-News</h1>
+                    <p class="agu-register-subtitle">
+                        Tạo tài khoản mới để bắt đầu trải nghiệm
+                    </p>
+                </div>
+
+                <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="agu-form-group">
+                        <label class="agu-form-label" asp-for="Input.Email">Email</label>
+                        <input asp-for="Input.Email" class="agu-form-input" autocomplete="username" placeholder="Nhập địa chỉ email của bạn" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="agu-form-group">
+                        <label class="agu-form-label" asp-for="Input.Password">Mật khẩu</label>
+                        <div class="password-container">
+                            <input asp-for="Input.Password" type="password" class="agu-form-input" autocomplete="new-password" placeholder="Tạo mật khẩu mới" id="password" />
+                            <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="agu-form-group">
+                        <label class="agu-form-label" asp-for="Input.ConfirmPassword">Xác nhận mật khẩu</label>
+                        <div class="password-container">
+                            <input asp-for="Input.ConfirmPassword" type="password" class="agu-form-input" autocomplete="new-password" placeholder="Nhập lại mật khẩu" id="confirmPassword" />
+                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <!-- Lựa chọn loại tài khoản -->
+                    <div class="agu-form-group">
+                        <label class="agu-form-label" asp-for="Input.Role">Loại tài khoản</label>
+                        <select asp-for="Input.Role" class="agu-form-select">
+                            <option value="User">Độc giả</option>
+                            <option value="Author">Tác giả</option>
+                        </select>
+                        <div class="agu-role-note">
+                            ⓘ Lựa chọn "Tác giả" cần được xét duyệt trước khi có thể đăng bài
+                        </div>
+                    </div>
+
+                    <button id="registerSubmit" type="submit" class="agu-register-btn">Đăng ký tài khoản</button>
+                </form>
+
+                <div class="agu-divider">
+                    <span>Hoặc</span>
+                </div>
+
+                <!-- Đăng ký với Google -->
+                <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                    <button type="submit" class="agu-oauth-btn google" name="provider" value="Google">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                             alt="Google" width="18" height="18" />
+                        Đăng ký với Google
+                    </button>
+                </form>
+
+                <div class="agu-login-link">
+                    <span>Bạn đã có tài khoản? </span>
+                    <a asp-area="Identity" asp-page="/Account/Login">Đăng nhập ngay</a>
+                </div>
+            </div>
         </div>
-
-        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control rounded-3" autocomplete="username" placeholder="name@example.com" />
-                <label asp-for="Input.Email">Email</label>
-                <span asp-validation-for="Input.Email" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Input.Password" type="password" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••" />
-                <label asp-for="Input.Password">Mật khẩu</label>
-                <span asp-validation-for="Input.Password" class="text-danger"></span>
-            </div>
-
-            <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" type="password" class="form-control rounded-3" autocomplete="new-password" placeholder="••••••" />
-                <label asp-for="Input.ConfirmPassword">Xác nhận mật khẩu</label>
-                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
-            </div>
-
-            <!-- Lựa chọn loại tài khoản -->
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Loại tài khoản</label>
-                <select asp-for="Input.Role" class="form-select">
-                    <option value="User">Độc giả</option>
-                    <option value="Author">Tác giả</option>
-                </select>
-            </div>
-
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary rounded-3 mb-3">Đăng ký</button>
-        </form>
-        <div class="text-center text-muted mb-3">hoặc</div>
-
-        <!-- Đăng ký với Google -->
-        <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="text-center">
-            <button type="submit" class="btn btn-outline-danger w-100 rounded-3" name="provider" value="Google">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                     alt="Google" width="20" height="20" /> Đăng ký với Google
-            </button>
-        </form>
-
-        <div class="text-center mt-4">
-            <small>Bạn đã có tài khoản? <a asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a></small>
-        </div>
-    </div>
+    </main>
 </div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        function togglePassword(inputId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleButton = passwordInput.nextElementSibling;
+            const icon = toggleButton.querySelector('i');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+    </script>
 }
