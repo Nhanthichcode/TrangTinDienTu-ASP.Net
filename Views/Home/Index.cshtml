@@ -3,316 +3,410 @@
 @using X.PagedList.Web.Common
 
 @{
-    ViewData["Title"] = ViewData["Title"] ?? "Trang Chủ";
-
-    // Lấy các tham số lọc
+    ViewData["Title"] = ViewData["Title"] ?? "AGU-News - Tin tức mới nhất";
     var currentSearch = ViewData["CurrentFilter"] as string;
     var currentTag = ViewData["CurrentTag"] as string;
     var currentCategoryId = ViewData["CurrentCategoryId"] as int?;
-
-    // Logic kiểm tra xem có đang ở chế độ lọc không
-    bool isSearching = !string.IsNullOrEmpty(currentSearch);
-    bool isFiltered = isSearching || !string.IsNullOrEmpty(currentTag) || currentCategoryId.HasValue;
-
-    // Biến cho Hero Section
-    var heroMain = Model.FeaturedArticles.ElementAtOrDefault(0);
-    var heroLeft1 = Model.FeaturedArticles.ElementAtOrDefault(1);
-    var heroLeft2 = Model.FeaturedArticles.ElementAtOrDefault(2);
-    var heroRight1 = Model.FeaturedArticles.ElementAtOrDefault(3);
-    var heroRight2 = Model.FeaturedArticles.ElementAtOrDefault(4);
+    var defaultimg = "/uploads/articles/default-thumbnail.jpg";
+    bool isFiltered = !string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentTag) || currentCategoryId.HasValue;
 }
 
 <style>
-    /* CSS Hero giữ nguyên như cũ */
-    .hero-cnn-section .hero-main-title {
-        font-size: 2.5rem;
-        font-weight: 700;
-        line-height: 1.1;
+    /* --- MAIN LAYOUT STYLES --- */
+    .container-main {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
     }
 
-    .hero-cnn-section .hero-main-card {
-        position: relative;
+    /* THREE COLUMN SECTION */
+    .three-column-section {
+        margin-bottom: 2rem;
     }
 
-        .hero-cnn-section .hero-main-card .hero-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.0));
-            padding: 1.5rem 1rem 1rem;
-            color: white;
+    .column-card {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+        .column-card:hover {
+            transform: translateY(-5px);
         }
 
-            .hero-cnn-section .hero-main-card .hero-overlay h4 {
-                font-weight: 700;
+    .column-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .column-content {
+        padding: 1rem;
+    }
+
+    .column-category {
+        color: #cc0000;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .column-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+    }
+
+        .column-title a {
+            color: #000;
+            text-decoration: none;
+        }
+
+            .column-title a:hover {
+                color: #cc0000;
             }
 
-    .hero-cnn-section .hero-card-img {
-        width: 100%;
-        object-fit: cover;
+    .column-meta {
+        color: #666;
+        font-size: 0.8rem;
     }
 
-    .hero-cnn-section .hero-card-left .hero-card-img {
-        height: 180px;
+    /* RELATED NEWS SECTION */
+    .related-news-section {
+        margin: 2rem 0;
     }
 
-    .hero-cnn-section .hero-card-right .hero-card-img-small {
-        width: 120px;
-        height: 80px;
-        object-fit: cover;
-    }
-
-    .hero-cnn-section .hero-card-right h6 {
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-    .hero-cnn-section .hero-card-left h5 {
-        font-weight: 600;
-    }
-
-    .hero-cnn-section a {
-        text-decoration: none;
-        color: #212529;
-    }
-
-        .hero-cnn-section a:hover {
-            color: #007bff;
-        }
-
-    .loading-overlay {
-        opacity: 0.5;
-        pointer-events: none;
-        transition: opacity 0.3s;
-    }
-
-    /* Style cho Alert lọc */
-    .filter-alert {
-        background-color: #f8f9fa;
-        border-left: 5px solid #0d6efd;
-        padding: 1rem;
+    .section-header {
+        border-bottom: 3px solid #cc0000;
         margin-bottom: 1.5rem;
-        border-radius: 4px;
+        padding-bottom: 0.5rem;
     }
 
-        .filter-alert h4 {
-            margin: 0;
-            font-size: 1.25rem;
-            color: #495057;
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #000;
+        text-transform: uppercase;
+        margin: 0;
+    }
+
+    /* RELATED ARTICLES WITH IMAGES */
+    .related-article {
+        display: flex;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #eee;
+    }
+
+        .related-article:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
-        .filter-alert strong {
-            color: #0d6efd;
+    .related-article-image {
+        width: 200px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+
+    .related-article-content {
+        flex: 1;
+    }
+
+    .related-article-category {
+        color: #cc0000;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        margin-bottom: 0.3rem;
+    }
+
+    .related-article-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+    }
+
+        .related-article-title a {
+            color: #000;
+            text-decoration: none;
         }
+
+            .related-article-title a:hover {
+                color: #cc0000;
+            }
+
+    .related-article-summary {
+        color: #666;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        margin-bottom: 0.5rem;
+    }
+
+    .related-article-meta {
+        color: #999;
+        font-size: 0.8rem;
+    }
+
+    /* SIDEBAR ARTICLES WITHOUT IMAGES */
+    .sidebar-section {
+        background: #f8f8f8;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-title {
+        font-size: 1.2rem;
+        font-weight: 800;
+        color: #000;
+        border-bottom: 2px solid #cc0000;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+    }
+
+    .sidebar-article {
+        padding: 0.8rem 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+        .sidebar-article:last-child {
+            border-bottom: none;
+        }
+
+    .sidebar-article-title {
+        font-size: 1rem;
+        font-weight: 600;
+        line-height: 1.3;
+        margin-bottom: 0.3rem;
+    }
+
+        .sidebar-article-title a {
+            color: #000;
+            text-decoration: none;
+        }
+
+            .sidebar-article-title a:hover {
+                color: #cc0000;
+            }
+
+    .sidebar-article-meta {
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    /* LATEST NEWS SECTION */
+    .latest-section {
+        margin: 2rem 0;
+    }
+
+    .load-more-btn {
+        background: #fff;
+        border: 2px solid #cc0000;
+        color: #cc0000;
+        font-weight: 700;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        display: block;
+        margin: 2rem auto;
+    }
+
+        .load-more-btn:hover {
+            background: #cc0000;
+            color: #fff;
+        }
+
+    .no-articles {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        font-style: italic;
+    }
 </style>
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-lg-12">
-
-            @* --- 1. HERO & CHUYÊN MỤC (Chỉ hiện khi KHÔNG lọc) --- *@
-            <div id="home-sections" style="display: @(isFiltered ? "none" : "block")">
-
-                @* Hero Section *@
-                <section class="hero-cnn-section mb-4">
-                    <div class="row g-3">
-                        <div class="col-lg-3">
-                            @if (heroLeft1 != null)
-                            {
-                                var img = !string.IsNullOrEmpty(heroLeft1.ThumbnailUrl) ? heroLeft1.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
-                                <div class="card border-0 mb-3 hero-card-left">
-                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@heroLeft1.Id">
-                                        <img src="@img" class="card-img-top hero-card-img" onerror="this.src='/uploads/articles/default-thumbnail.jpg'">
-                                        <div class="card-body px-0 pt-2"><h5 class="card-title mb-0">@heroLeft1.Title</h5></div>
-                                    </a>
-                                </div>
-                            }
-                            @if (heroLeft2 != null)
-                            {
-                                var img = !string.IsNullOrEmpty(heroLeft2.ThumbnailUrl) ? heroLeft2.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
-                                <div class="card border-0 mb-3 hero-card-left">
-                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@heroLeft2.Id">
-                                        <img src="@img" class="card-img-top hero-card-img" onerror="this.src='/uploads/articles/default-thumbnail.jpg'">
-                                        <div class="card-body px-0 pt-2"><h5 class="card-title mb-0">@heroLeft2.Title</h5></div>
-                                    </a>
-                                </div>
-                            }
-                        </div>
-                        <div class="col-lg-6">
-                            @if (heroMain != null)
-                            {
-                                var img = !string.IsNullOrEmpty(heroMain.ThumbnailUrl) ? heroMain.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
-                                <h1 class="hero-main-title mb-2"><a asp-controller="Articles" asp-action="Details" asp-route-id="@heroMain.Id">@heroMain.Title</a></h1>
-                                <div classs="card border-0 hero-main-card">
-                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@heroMain.Id">
-                                        <img src="@img" class="img-fluid" style="width: 100%; height: auto;" onerror="this.src='/uploads/articles/default-thumbnail.jpg'">
-                                        <div class="hero-overlay"><h4>@heroMain.Summary</h4></div>
-                                    </a>
-                                </div>
-                            }
-                        </div>
-                        <div class="col-lg-3">
-                            @if (heroRight1 != null)
-                            {
-                                var img = !string.IsNullOrEmpty(heroRight1.ThumbnailUrl) ? heroRight1.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
-                                <div class="card border-0 mb-3 hero-card-right">
-                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@heroRight1.Id" class="row g-2 align-items-center">
-                                        <div class="col-5"><img src="@img" class="img-fluid rounded hero-card-img-small" onerror="this.src='/uploads/articles/default-thumbnail.jpg'"></div>
-                                        <div class="col-7"><h6>@heroRight1.Title</h6></div>
-                                    </a>
-                                </div>
-                            }
-                            <hr class="my-3">
-                            @if (heroRight2 != null)
-                            {
-                                var img = !string.IsNullOrEmpty(heroRight2.ThumbnailUrl) ? heroRight2.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
-                                <div class="card border-0 mb-3 hero-card-right">
-                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@heroRight2.Id" class="row g-2 align-items-center">
-                                        <div class="col-5"><img src="@img" class="img-fluid rounded hero-card-img-small" onerror="this.src='/uploads/articles/default-thumbnail.jpg'"></div>
-                                        <div class="col-7"><h6>@heroRight2.Title</h6></div>
-                                    </a>
-                                </div>
-                            }
-                        </div>
-                    </div>
-                </section>
-
-                @if (Model.BusinessStories.Any())
+<div class="container-main">
+    @if (!isFiltered)
+    {
+        <!-- THREE COLUMN FEATURED SECTION -->
+        <div class="three-column-section">
+            <div class="row">
+                @if (Model.FeaturedArticles != null && Model.FeaturedArticles.Any())
                 {
-                    <section class="mb-4">
-                        <h3 class="border-bottom pb-2 mb-3 fw-bold"><a href="#" class="text-dark text-decoration-none">Kinh Tế</a></h3>
-                        <div class="row g-3">
-                            @foreach (var item in Model.BusinessStories)
-                            {
-                                <div class="col-md-6"><partial name="_ArticleCardPartial" model="item" /></div>
-                            }
+                    @foreach (var article in Model.FeaturedArticles.Take(3))
+                    {
+                        <div class="col-lg-4 col-md-6 mb-4">
+                            <div class="column-card">
+                                <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                    <img src="@(article.ThumbnailUrl ?? defaultimg)"
+                                         onerror="this.onerror=null; this.src='@defaultimg';"
+                                         class="column-image"
+                                         alt="@article.Title">
+                                </a>
+                                <div class="column-content">
+                                    <div class="column-category">@article.Category?.Name</div>
+                                    <h3 class="column-title">
+                                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                            @article.Title
+                                        </a>
+                                    </h3>
+                                    <div class="column-meta">
+                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm") • @article.Author?.FullName
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </section>
+                    }
                 }
-                @if (Model.TechStories.Any())
+                else
                 {
-                    <section class="mb-4">
-                        <h3 class="border-bottom pb-2 mb-3 fw-bold"><a href="#" class="text-dark text-decoration-none">Công Nghệ</a></h3>
-                        <div class="row g-3">
-                            @foreach (var item in Model.TechStories)
-                            {
-                                <div class="col-md-6"><partial name="_ArticleCardPartial" model="item" /></div>
-                            }
-                        </div>
-                    </section>
+                    <div class="col-12">
+                        <div class="no-articles">Chưa có bài viết nổi bật</div>
+                    </div>
                 }
             </div>
-
-            @* --- 2. THÔNG BÁO KHI ĐANG LỌC --- *@
-            @if (isFiltered)
-            {
-                <div class="filter-alert" id="search-alert">
-                    <h4>
-                        @if (currentCategoryId.HasValue)
-                        {
-                            <span><i class="bi bi-folder-fill me-2"></i>Chuyên mục: <strong>@ViewData["Title"]?.ToString().Replace("Chuyên mục: ", "")</strong></span>
-                        }
-                        else if (!string.IsNullOrEmpty(currentTag))
-                        {
-                            <span><i class="bi bi-tags-fill me-2"></i>Thẻ Tag: <strong>@currentTag</strong></span>
-                        }
-                        else if (isSearching)
-                        {
-                            <span id="search-result-text"><i class="bi bi-search me-2"></i>Kết quả tìm kiếm: <strong>@currentSearch</strong></span>
-                        }
-                    </h4>
-                </div>
-            }
-
-            @* --- 3. DANH SÁCH BÀI VIẾT --- *@
-            <section class="mb-4">
-                <h3 class="border-bottom pb-2 mb-3 fw-bold" id="list-title">
-                    @(isFiltered ? "Danh sách bài viết" : "Tin Mới Nhất")
-                </h3>
-
-                @* Container này sẽ chứa cả Danh sách + Phân trang (do Partial cung cấp) *@
-                <div id="latest-articles-container" style="min-height: 300px;">
-                     <partial name="_ArticleListPartial" model="Model.LatestArticles" />
-                </div>
-            </section>
         </div>
-    </div>
-</div>
-@section Scripts {
-    <script>
-        $(function () {
-            let typingTimer;
-            const doneTypingInterval = 500;
-            const $container = $('#latest-articles-container');
-            const $homeSections = $('#home-sections');
-            const $listTitle = $('#list-title');
-            const $pagination = $('.pagination-container');
-            const $input = $('#layoutSearchInput');
 
-            // 1. Live Search Logic (Khi gõ trên Layout)
-            if ($input.length > 0) {
-                $input.on('input', function () {
-                    clearTimeout(typingTimer);
-                    typingTimer = setTimeout(doneTyping, doneTypingInterval);
-                });
-            }
+        <!-- RELATED NEWS SECTION -->
+        <div class="related-news-section">
+            <div class="row">
+                <!-- Left Column - Articles with Images -->
+                <div class="col-lg-8">
+                    <div class="section-header">
+                        <h2 class="section-title">Thể Thao</h2>
+                    </div>
 
-            function doneTyping() {
-                var keyword = $input.val().trim();
-                var url = '@Url.Action("Index", "Home")' + '?searchString=' + encodeURIComponent(keyword);
-                $container.addClass('loading-overlay');
-
-                $.get(url, function (data) {
-                    $container.html(data).removeClass('loading-overlay');
-                    if (keyword.length > 0) {
-                        $homeSections.slideUp();
-                        $listTitle.text('Kết quả tìm kiếm');
-
-                        // Xóa alert cũ nếu có và thêm alert mới
-                        $('.filter-alert').remove();
-                        $('<div class="filter-alert mb-4"><h4><span><i class="bi bi-search me-2"></i>Kết quả tìm kiếm: <strong>' + keyword + '</strong></span></h4></div>').insertBefore($('section.mb-4:last'));
-
-                        history.pushState(null, '', url);
-                    } else {
-                        $homeSections.slideDown();
-                        $('.filter-alert').remove(); // Xóa alert khi hết tìm kiếm
-                        $listTitle.text('Tin Mới Nhất');
-                        history.pushState(null, '', '@Url.Action("Index", "Home")');
-                    }
-
-                    // Update pagination links
-                    $pagination.find('a.page-link').each(function () {
-                        var oldHref = $(this).attr('href');
-                        if (oldHref) {
-                            var newHref = updateQueryStringParameter(oldHref, 'searchString', keyword);
-                            $(this).attr('href', newHref);
+                    @if (Model.BusinessStories != null && Model.BusinessStories.Any())
+                    {
+                        @foreach (var article in Model.BusinessStories.Take(4))
+                        {
+                            <div class="related-article">
+                                <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                    <img src="@(article.ThumbnailUrl ?? defaultimg)"
+                                         onerror="this.onerror=null; this.src='@defaultimg';"
+                                         class="related-article-image"
+                                         alt="@article.Title">
+                                </a>
+                                <div class="related-article-content">
+                                    <div class="related-article-category">@article.Category?.Name</div>
+                                    <h3 class="related-article-title">
+                                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                            @article.Title
+                                        </a>
+                                    </h3>
+                                    <p class="related-article-summary">@article.Summary</p>
+                                    <div class="related-article-meta">
+                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </div>
+                            </div>
                         }
-                    });
-                }).fail(function () { console.error("Lỗi tìm kiếm."); $container.removeClass('loading-overlay'); });
-            }
+                    }
+                    else
+                    {
+                        <div class="no-articles">Chưa có bài viết về thể thao</div>
+                    }
+                </div>
 
-            function updateQueryStringParameter(uri, key, value) {
-                var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-                var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-                if (uri.match(re)) return uri.replace(re, '$1' + key + "=" + value + '$2');
-                else return uri + separator + key + "=" + value;
-            }
+                <!-- Right Column - Articles without Images -->
+                <div class="col-lg-4">
+                    <!-- Sidebar Articles -->
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Tin Nổi Bật</h3>
+                        @if (Model.SidebarArticles != null && Model.SidebarArticles.Any())
+                        {
+                            @foreach (var article in Model.SidebarArticles.Take(5))
+                            {
+                                <div class="sidebar-article">
+                                    <h4 class="sidebar-article-title">
+                                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                            @article.Title
+                                        </a>
+                                    </h4>
+                                    <div class="sidebar-article-meta">
+                                        @article.Category?.Name • @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-articles" style="padding: 1rem;">Chưa có tin nổi bật</div>
+                        }
+                    </div>
 
-            // 2. AJAX Pagination
-            $(document).on('click', '.pagination-container .page-link', function (e) {
-                e.preventDefault();
-                var url = $(this).attr('href');
-                if (url && url !== '#') {
-                    $container.addClass('loading-overlay');
-                    $.get(url, function (data) {
-                        $container.html(data).removeClass('loading-overlay');
-                        $('html, body').animate({ scrollTop: $container.offset().top - 100 }, 400);
-                        history.pushState(null, '', url);
-                    });
+                    <!-- Tech Stories -->
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">Công Nghệ</h3>
+                        @if (Model.TechStories != null && Model.TechStories.Any())
+                        {
+                            @foreach (var article in Model.TechStories.Take(5))
+                            {
+                                <div class="sidebar-article">
+                                    <h4 class="sidebar-article-title">
+                                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
+                                            @article.Title
+                                        </a>
+                                    </h4>
+                                    <div class="sidebar-article-meta">
+                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="no-articles" style="padding: 1rem;">Chưa có tin công nghệ</div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LATEST NEWS SECTION -->
+        <div class="latest-section">
+            <div class="section-header">
+                <h2 class="section-title">Tin Mới Nhất</h2>
+            </div>
+
+            <div id="latest-articles-container">
+                @if (Model.LatestArticles != null && Model.LatestArticles.Any())
+                {
+                    <partial name="_ArticleListPartial" model="Model.LatestArticles" />
                 }
-            });
-            $(window).on('popstate', function () { location.reload(); });
-        });
-    </script>
-}
+                else
+                {
+                    <div class="no-articles">Chưa có bài viết mới</div>
+                }
+            </div>          
+        </div>
+    }
+    else
+    {
+        <!-- FILTERED RESULTS -->
+        <div class="section-header">
+            <h2 class="section-title">Kết Quả Tìm Kiếm</h2>
+        </div>
+        <div id="latest-articles-container">
+            @if (Model.LatestArticles != null && Model.LatestArticles.Any())
+            {
+                <partial name="_ArticleListPartial" model="Model.LatestArticles" />
+            }
+            else
+            {
+                <div class="no-articles">Không tìm thấy kết quả phù hợp</div>
+            }
+        </div>
+    }
+</div>
