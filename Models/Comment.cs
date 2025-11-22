@@ -26,12 +26,14 @@ namespace Trang_tin_điện_tử_mvc.Models
         public Comment? ParentComment { get; set; }
 
         // Khóa ngoại
-        [Required] 
+        [Required]
         public string UserId { get; set; } = null!;
+        [DisplayName("Người viết")]
         public ApplicationUser? User { get; set; }
 
         [Required] 
         public int ArticleId { get; set; }
+        [DisplayName("Bài viết")]
         public Article? Article { get; set; }
         public ICollection<Comment> Replies { get; set; } = new List<Comment>();
     }
