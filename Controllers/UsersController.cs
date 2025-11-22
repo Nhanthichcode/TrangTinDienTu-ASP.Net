@@ -35,6 +35,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         }
 
         // GET: Users
+        [Authorize(Policy = "Freedom")]
         public async Task<IActionResult> Index()
         {
             var users = await _userManager.Users.ToListAsync();
@@ -150,27 +151,28 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(model);
         }
 
-        // GET: Users/Details/{id}
+        // GET: Users/Details/{id}        
         public async Task<IActionResult> Details(string id)
         {
-            if (id == null) return NotFound();
-            var currentUserId = _userManager.GetUserId(User);
-            var isAdmin = User.IsInRole("Admin");
+            if (string.IsNullOrEmpty(id)) return NotFound();
 
-            // Chỉ Admin hoặc chính chủ sở hữu mới được xem Details
-            if (!isAdmin && id != currentUserId)
-            {
-                return Forbid(); // Lỗi 403 Cấm
-            }
             var user = await _userManager.FindByIdAsync(id);
-            if (user == null)
-            {
-                return NotFound($"Không tìm thấy người dùng với ID '{id}'.");
-            }
+            if (user == null) return NotFound($"Không tìm thấy người dùng với ID '{id}'.");
 
-            // Lấy vai trò của người dùng để hiển thị
             var userRoles = await _userManager.GetRolesAsync(user);
-            ViewBag.UserRole = userRoles.FirstOrDefault() ?? "Không có"; // Lưu vai trò vào ViewBag
+            var roleName = userRoles.FirstOrDefault() ?? "Không có";
+            ViewBag.UserRole = roleName;
+
+            if (roleName == "Author")
+            {
+                var authorArticles = await _context.Articles
+                    .Where(a => a.AuthorId == id)
+                    //.Include( a=> a.IsApproved)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .ToListAsync();
+
+                ViewBag.AuthorArticles = authorArticles;
+            }
 
             return View(user);
         }

@@ -76,8 +76,15 @@
  
                         <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm me-1" title="Sửa"><i class="bi bi-pencil-square"></i></a>
                         <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm me-1" title="Chi tiết"><i class="bi bi-info-circle"></i></a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" title="Xóa"><i class="bi bi-trash"></i></a>
-                    </div>
+                            <form asp-action="Delete" asp-controller="Categories" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục @item.Name không? Hành động này không thể hoàn tác.');">
+                                    <i class="bi bi-trash-fill me-1"></i>Xóa
+                                </button>
+                            </form>
+                        </div>
                 </td>
             </tr>
         }

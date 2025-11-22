@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using Trang_tin_điện_tử_mvc.Data;
 using X.PagedList.EF;
+using X.PagedList;
 using Trang_tin_điện_tử_mvc.Models;
 
 namespace Trang_tin_điện_tử_mvc.Controllers
@@ -14,6 +15,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
+
+        // Đặt số bài viết mỗi trang là 6
         private const int DefaultPageSize = 6;
 
         public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, IEmailSender emailSender)
@@ -65,13 +68,17 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Index(string searchString, int? categoryId, string tag, int pageNumber = 1)
+        // --- ACTION INDEX (ĐÃ SỬA LỖI TRÙNG LẶP) ---
+        public async Task<IActionResult> Index(string searchString, int? categoryId, string tag, int? page = 1)
         {
             int pageSize = DefaultPageSize;
+            int pageNumber = (page ?? 1);
 
-            // 1. Query cơ bản
+            // 1. Query cơ bản cho bài viết
             var baseQuery = _context.Articles
-                .Include(a => a.Author).Include(a => a.Category).Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
+                .Include(a => a.Author)
+                .Include(a => a.Category)
+                .Include(a => a.ArticleTags).ThenInclude(at => at.Tag)
                 .Where(a => a.IsApproved)
                 .OrderByDescending(a => a.CreatedAt)
                 .AsQueryable();
@@ -104,31 +111,84 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             }
             else
             {
-                ViewData["Title"] = "Trang chủ";
+                ViewData["Title"] = "AGU-News - Tin tức mới nhất";
             }
 
-            // 3. Phân trang
-            var pagedArticles = await baseQuery.AsNoTracking().ToPagedListAsync(pageNumber, pageSize);
-
+            // QUAN TRỌNG: Nếu là AJAX (bấm chuyển trang), chỉ trả về Partial View
             if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
             {
+                var pagedArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
                 return PartialView("_ArticleListPartial", pagedArticles);
             }
 
-            var viewModel = new HomeIndexViewModel { LatestArticles = pagedArticles };
+            // 3. Tạo ViewModel
+            var viewModel = new HomeIndexViewModel();
 
-            // 4. Chỉ load Hero/Box chuyên mục khi KHÔNG lọc (Trang chủ thuần túy)
             if (!isFiltered)
             {
-                viewModel.TopStory = await baseQuery.AsNoTracking().FirstOrDefaultAsync();
-                viewModel.BusinessStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Kinh Tế").OrderByDescending(a => a.CreatedAt).Take(4).ToListAsync();
-                viewModel.TechStories = await _context.Articles.AsNoTracking().Where(a => a.IsApproved && a.Category.Name == "Công Nghệ").OrderByDescending(a => a.CreatedAt).Take(4).ToListAsync();
+                // TRANG CHỦ - KHÔNG CÓ BỘ LỌC
+
+                // Lấy 8 bài nổi bật cho 3 cột đầu tiên (3 bài) và sidebar (5 bài)
+                var featuredArticles = await baseQuery.AsNoTracking().Take(8).ToListAsync();
+
+                // 3 cột đầu tiên
+                viewModel.FeaturedArticles = featuredArticles.Take(3).ToList();
+
+                // 5 bài cho sidebar (lấy từ bài thứ 4 đến 8)
+                viewModel.SidebarArticles = featuredArticles.Skip(3).Take(5).ToList();
+
+                // Lấy bài viết cho các chuyên mục (LOẠI BỎ CÁC BÀI ĐÃ CÓ TRONG FEATURED)
+                var featuredIds = featuredArticles.Select(a => a.Id).ToList();
+
+                // Tin thể thao (loại bỏ trùng lặp)
+                viewModel.BusinessStories = await _context.Articles.AsNoTracking()
+                    .Where(a => a.IsApproved && a.Category.Name == "Thể thao" && !featuredIds.Contains(a.Id))
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Take(4).ToListAsync();
+
+                // Tin công nghệ (loại bỏ trùng lặp)
+                viewModel.TechStories = await _context.Articles.AsNoTracking()
+                    .Where(a => a.IsApproved && a.Category.Name == "Công Nghệ" && !featuredIds.Contains(a.Id))
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Take(4).ToListAsync();
+
+                // Tin thế giới (loại bỏ trùng lặp)
+                viewModel.WorldStories = await _context.Articles.AsNoTracking()
+                    .Where(a => a.IsApproved && a.Category.Name == "Thế Giới" && !featuredIds.Contains(a.Id))
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Take(6).ToListAsync();
+
+                // Lấy tin mới nhất (LOẠI BỎ CÁC BÀI ĐÃ CÓ TRONG FEATURED VÀ CÁC CHUYÊN MỤC)
+                var allExcludedIds = featuredIds
+                    .Concat(viewModel.BusinessStories.Select(a => a.Id))
+                    .Concat(viewModel.TechStories.Select(a => a.Id))
+                    .Concat(viewModel.WorldStories.Select(a => a.Id))
+                    .Distinct().ToList();
+
+                var latestQuery = baseQuery.AsNoTracking().Where(a => !allExcludedIds.Contains(a.Id));
+                viewModel.LatestArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
+            }
+            else
+            {
+                // TRANG CÓ BỘ LỌC - CHỈ HIỂN THỊ KẾT QUẢ LỌC
+                //var pagedArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
+                // Lấy kết quả phân trang cho bộ lọc
+                viewModel.LatestArticles = await X.PagedList.EF.PagedListExtensions.ToPagedListAsync(baseQuery.AsNoTracking(), pageNumber, pageSize);
+
+                // Lấy 5 bài mới nhất cho sidebar (không liên quan đến bộ lọc)
+                viewModel.SidebarArticles = await _context.Articles
+                    .Where(a => a.IsApproved)
+                    .OrderByDescending(a => a.CreatedAt)
+                    .Take(5).AsNoTracking().ToListAsync();
             }
 
-            // Sidebar (Luôn hiện)
-            viewModel.FeaturedArticles = await _context.Articles.Where(a => a.IsApproved).OrderByDescending(a => a.CreatedAt).Take(6).AsNoTracking().ToListAsync();
+            // Load dữ liệu chung (categories, tags)
             viewModel.Categories = await _context.Categories.AsNoTracking().OrderBy(c => c.Name).ToListAsync();
-            viewModel.CategoryCounts = await _context.Articles.Where(a => a.IsApproved).GroupBy(a => a.CategoryId).Select(g => new { CategoryId = g.Key, Count = g.Count() }).ToDictionaryAsync(x => x.CategoryId, x => x.Count);
+            viewModel.CategoryCounts = await _context.Articles
+                .Where(a => a.IsApproved)
+                .GroupBy(a => a.CategoryId)
+                .Select(g => new { CategoryId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.CategoryId, x => x.Count);
             viewModel.Tags = await _context.Tags.AsNoTracking().OrderBy(t => t.Name).Take(15).ToListAsync();
 
             return View(viewModel);

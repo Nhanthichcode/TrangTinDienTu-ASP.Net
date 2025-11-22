@@ -1,6 +1,7 @@
 ﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Article>
 @using X.PagedList
 @using X.PagedList.Mvc.Core
+@using X.PagedList.Web.Common
 @using System.Security.Claims
 
 @{
@@ -121,7 +122,7 @@
                     filterStatus = ViewData["FilterStatus"],
                     filterTag = ViewData["FilterTag"]
                 }),
-                     new PagedListRenderOptions
+                     new X.PagedList.Mvc.Core.Common.PagedListRenderOptions
         {
             LiElementClasses = new[] { "page-item" },
             PageClasses = new[] { "page-link" },

@@ -37,8 +37,9 @@ namespace Trang_tin_điện_tử_mvc.Models
         public Category? Category { get; set; }
 
         // Quan hệ
-   public ICollection<ArticleTag> ArticleTags { get; set; } = new List<ArticleTag>();
+        public ICollection<ArticleTag> ArticleTags { get; set; } = new List<ArticleTag>();
         public ICollection<Comment> Comments { get; set; } = new List<Comment>();
-   public ICollection<Media> Media { get; set; } = new List<Media>();
+        public ICollection<Media> Media { get; set; } = new List<Media>();
+        public virtual ICollection<ArticleImagePosition> ArticleImagePositions { get; set; } = new List<ArticleImagePosition>();
     }
 }

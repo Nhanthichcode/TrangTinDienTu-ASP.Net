@@ -1,52 +1,95 @@
 ﻿@model Trang_tin_điện_tử_mvc.Models.Comment
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Chỉnh sửa Bình luận";
+    // Lấy thông tin người dùng và bài viết để hiển thị (nếu có trong ViewBag)
+    // Giả sử controller đã nạp dữ liệu này vào ViewBag.
+    // Nếu Model đã include User và Article thì có thể dùng Model.User.UserName và Model.Article.Title
+    var userName = ViewBag.UserName;
+    var articleTitle = ViewBag.ArticleTitle;
 }
 
-<h1>Edit</h1>
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý Bình luận</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-action="Index">Danh sách Bình luận</a></li>
+        <li class="breadcrumb-item active">Chỉnh sửa</li>
+    </ol>
 
-<h4>Comment</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Content" class="control-label"></label>
-                <input asp-for="Content" class="form-control" />
-                <span asp-validation-for="Content" class="text-danger"></span>
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            Chỉnh sửa Bình luận
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8 col-lg-6">
+                    <form asp-action="Edit">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        @* Các trường ẩn: ID và các thông tin không được phép thay đổi *@
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        <input type="hidden" asp-for="UserId" />
+                        <input type="hidden" asp-for="ArticleId" />
+
+                        @* Hiển thị thông tin ngữ cảnh (Read-only) *@
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Người viết:</label>
+                            <input type="text" class="form-control-plaintext border px-2 py-1 rounded" value="@userName"/>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Bài viết:</label>
+                            @* Có thể thêm link đến bài viết để tiện tra cứu *@
+                            <div class="border px-2 py-1 rounded text-truncate" title="@articleTitle">
+                                @if (Model?.ArticleId != null)
+                                {
+                                    <a asp-controller="Articles" asp-action="Details" asp-route-id="@Model.ArticleId" target="_blank">
+                                        @articleTitle <i class="fas fa-external-link-alt ms-1 small"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    @articleTitle
+                                }
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ngày tạo:</label>
+                            <input type="text" class="form-control-plaintext border px-2 py-1 rounded" value="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")" readonly />
+                        </div>
+
+                        @* Nội dung bình luận (Cho phép sửa) *@
+                        <div class="mb-3">
+                            <label asp-for="Content" class="form-label fw-bold">Nội dung bình luận:</label>
+                            <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        @* Trạng thái duyệt (Cho phép sửa) *@
+                        <div class="mb-3 form-check">
+                            <input class="form-check-input" asp-for="IsApproved" id="flexCheckApproved" />
+                            <label class="form-check-label fw-bold" for="flexCheckApproved">
+                                @Html.DisplayNameFor(model => model.IsApproved) (Đã duyệt hiển thị)
+                            </label>
+                        </div>
+
+                        @* Nút hành động *@
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> Lưu thay đổi
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Quay lại danh sách
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsApproved" /> @Html.DisplayNameFor(model => model.IsApproved)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
-                <span asp-validation-for="UserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ArticleId" class="control-label"></label>
-                <select asp-for="ArticleId" class="form-control" asp-items="ViewBag.ArticleId"></select>
-                <span asp-validation-for="ArticleId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
