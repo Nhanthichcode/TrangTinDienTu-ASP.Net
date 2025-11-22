@@ -115,49 +115,52 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // 1. Tìm người dùng theo UserName hoặc Email
                 var user = await _userManager.FindByNameAsync(Input.UserNameOrEmail)
-                   ?? await _userManager.FindByEmailAsync(Input.UserNameOrEmail);
+                    ?? await _userManager.FindByEmailAsync(Input.UserNameOrEmail);
 
-                // 2. Nếu tìm thấy người dùng, kiểm tra xem họ có bị khóa không
+                // Nếu tìm thấy người dùng thì mới thực hiện các kiểm tra tiếp theo
                 if (user != null)
                 {
+                    // 2. Kiểm tra xem họ có bị khóa không
                     if (await _userManager.IsLockedOutAsync(user))
                     {
                         _logger.LogWarning($"Tài khoản người dùng '{user.UserName}' đang bị khóa.");
-                        // Chuyển hướng đến trang Lockout ngay lập tức
                         return RedirectToPage("./Lockout");
+                    }
+
+                    // 3. Kiểm tra xem tài khoản có được duyệt không (IsApproved)
+                    // Đã an toàn để truy cập user.IsApproved vì user != null
+                    if (user.IsApproved == false)
+                    {
+                        _logger.LogWarning($"Người dùng '{user.UserName}' cố gắng đăng nhập nhưng tài khoản chưa được kích hoạt/bị khóa (IsApproved = false).");
+                        ModelState.AddModelError(string.Empty, "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên.");
+                        return Page();
                     }
                 }
 
-                if (user.IsApproved == false)
-                {
-                    _logger.LogWarning($"Người dùng '{user.UserName}' cố gắng đăng nhập nhưng tài khoản chưa được kích hoạt/bị khóa (IsApproved = false).");
-                    // Thêm lỗi vào ModelState để hiển thị cho người dùng
-                    ModelState.AddModelError(string.Empty, "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên.");
-                    return Page(); // Hiển thị lại trang Login với thông báo lỗi
-                }
+                // 4. Thử đăng nhập (PasswordSignInAsync tự xử lý việc user null hoặc sai password)
+                // Lưu ý: PasswordSignInAsync sử dụng UserName để đăng nhập, không phải Email.
+                // Nếu Input.UserNameOrEmail là Email, bạn cần dùng user.UserName (nếu user != null) hoặc để SignInManager tự xử lý.
+                // Cách tốt nhất khi cho phép đăng nhập bằng cả hai là:
+                var userNameToSignIn = user?.UserName ?? Input.UserNameOrEmail;
 
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.UserNameOrEmail, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(userNameToSignIn, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
 
-                    // Lấy thông tin người dùng hiện tại
-                    user = await _userManager.FindByNameAsync(Input.UserNameOrEmail)
-                               ?? await _userManager.FindByEmailAsync(Input.UserNameOrEmail);
+                    // User đã đăng nhập thành công, chắc chắn user != null.
+                    // Không cần tìm lại user nữa.
 
-                    // Kiểm tra nếu là Admin thì vào Dashboard
+                    // Kiểm tra vai trò để chuyển hướng
                     if (await _userManager.IsInRoleAsync(user, "Admin"))
                         return RedirectToAction("Index", "AdminDashboard", new { area = "Admin" });
 
                     if (await _userManager.IsInRoleAsync(user, "Author"))
                         return RedirectToAction("Index", "AuthorDashboard", new { area = "Admin" });
 
-
-
-                    // Người dùng thường thì về trang chủ
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -171,6 +174,7 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
                 }
                 else
                 {
+                    // Đăng nhập thất bại (sai username/password hoặc user không tồn tại)
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return Page();
                 }

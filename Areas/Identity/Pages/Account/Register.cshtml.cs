@@ -43,10 +43,10 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
             _userManager = userManager;
             _userStore = userStore;
             _roleManager = roleManager;
-            _emailStore = GetEmailStore();
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _emailStore = GetEmailStore();
         }
 
         /// <summary>
@@ -106,7 +106,6 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
             public string Role { get; set; } = "User";
         }
 
-
         public async Task OnGetAsync(string returnUrl = null)
         {
             ReturnUrl = returnUrl;
@@ -117,46 +116,109 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
         {
             returnUrl ??= Url.Content("~/");
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser
+                // Kiểm tra email đã tồn tại chưa
+                var existingUser = await _userManager.FindByEmailAsync(Input.Email);
+                if (existingUser != null)
                 {
-                    UserName = Input.Email,
-                    Email = Input.Email,
-                    EmailConfirmed = false,
-                    IsApproved = Input.Role != "Author", // Tác giả thì cần duyệt
-                };
+                    ModelState.AddModelError(string.Empty, "Email này đã được sử dụng. Vui lòng sử dụng email khác hoặc đăng nhập.");
+                    return Page();
+                }
+
+                var user = CreateUser();
+
+                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+
+                user.EmailConfirmed = false;
+                user.IsApproved = Input.Role != "Author"; // Tác giả thì cần duyệt
 
                 var result = await _userManager.CreateAsync(user, Input.Password);
+
                 if (result.Succeeded)
                 {
-                    // tạo role nếu chưa có
-                    if (!await _roleManager.RoleExistsAsync(Input.Role))
+                    _logger.LogInformation("User created a new account with password.");
+
+                    // Tạo role nếu chưa có
+                    if (!await _roleManager.RoleExistsAsync("Admin"))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole(Input.Role));
+                        await _roleManager.CreateAsync(new IdentityRole("Admin"));
+                    }
+                    if (!await _roleManager.RoleExistsAsync("Author"))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("Author"));
+                    }
+                    if (!await _roleManager.RoleExistsAsync("User"))
+                    {
+                        await _roleManager.CreateAsync(new IdentityRole("User"));
                     }
 
+                    // Thêm user vào role
                     await _userManager.AddToRoleAsync(user, Input.Role);
 
-                    // nếu là Author thì không cho đăng nhập luôn
+                    // Gửi email xác nhận (tùy chọn)
+                    // var userId = await _userManager.GetUserIdAsync(user);
+                    // var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    // code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    // var callbackUrl = Url.Page(
+                    //     "/Account/ConfirmEmail",
+                    //     pageHandler: null,
+                    //     values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                    //     protocol: Request.Scheme);
+
+                    // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                    //     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                    // Nếu là Author thì không cho đăng nhập luôn
                     if (Input.Role == "Author")
                     {
-                        TempData["Message"] = "Tài khoản tác giả của bạn đang chờ duyệt bởi quản trị viên.";
+                        _logger.LogInformation("Author account created and pending approval.");
+                        TempData["SuccessMessage"] = "Tài khoản tác giả của bạn đã được tạo thành công và đang chờ duyệt bởi quản trị viên.";
                         return RedirectToPage("/Account/Login");
                     }
-                    // người dùng thường => đăng nhập luôn
+
+                    // Người dùng thường => đăng nhập luôn
                     await _signInManager.SignInAsync(user, isPersistent: false);
+                    _logger.LogInformation("User logged in after registration.");
                     return LocalRedirect(returnUrl);
                 }
 
+                // Xử lý lỗi từ Identity
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    // Phân loại lỗi để hiển thị thông báo phù hợp
+                    if (error.Code.Contains("Password"))
+                    {
+                        ModelState.AddModelError("Input.Password", error.Description);
+                    }
+                    else if (error.Code.Contains("Email") || error.Code.Contains("UserName"))
+                    {
+                        ModelState.AddModelError("Input.Email", error.Description);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+
+                    _logger.LogWarning("Error during user registration: {Error}", error.Description);
                 }
             }
 
             // Có lỗi thì hiển thị lại form
             return Page();
+        }
+
+        // Phương thức cho External Login (Google)
+        public IActionResult OnPostGoogle(string returnUrl = null)
+        {
+            returnUrl ??= Url.Content("~/");
+
+            var redirectUrl = Url.Page("./ExternalLogin", pageHandler: "Callback", values: new { returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
+
+            return new ChallengeResult("Google", properties);
         }
 
         private ApplicationUser CreateUser()

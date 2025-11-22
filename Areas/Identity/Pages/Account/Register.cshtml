@@ -147,8 +147,7 @@
             position: absolute;
             top: 50%;
             left: 0;
-            right: 0;
-            border-top: 1px solid #e5e5e5;
+            right: 0;            
         }
 
         .agu-divider span {
@@ -289,13 +288,36 @@
                 </div>
 
                 <!-- Đăng ký với Google -->
-                <form asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-                    <button type="submit" class="agu-oauth-btn google" name="provider" value="Google">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                             alt="Google" width="18" height="18" />
-                        Đăng ký với Google
-                    </button>
-                </form>
+                <section>
+                    <hr />
+                    @{
+                        if ((Model.ExternalLogins?.Count ?? 0) == 0)
+                        {
+                            <div>
+                                <p>
+                                    Chưa cấu hình dịch vụ đăng nhập bên ngoài.
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <form id="external-account" asp-page-handler="Google" method="post" class="form-horizontal">
+                                <div>
+                                    <p>
+                                        @foreach (var provider in Model.ExternalLogins)
+                                        {
+                                            <button type="submit" name="provider" value="@provider.Name" class="agu-oauth-btn google">
+                                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                                     alt="Google" width="18" height="18" />
+                                                Đăng ký với Google
+                                            </button>
+                                        }
+                                    </p>
+                                </div>
+                            </form>
+                        }
+                    }
+                </section>
 
                 <div class="agu-login-link">
                     <span>Bạn đã có tài khoản? </span>

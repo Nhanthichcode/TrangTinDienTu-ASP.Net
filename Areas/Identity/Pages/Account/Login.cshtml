@@ -168,8 +168,7 @@
             position: absolute;
             top: 50%;
             left: 0;
-            right: 0;
-            border-top: 1px solid #e5e5e5;
+            right: 0;          
         }
 
         .agu-divider span {
@@ -297,6 +296,7 @@
                 <!-- Đăng nhập bằng Google -->
                 @if ((Model.ExternalLogins?.Count ?? 0) > 0)
                 {
+                <hr />
                     <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post">
                         @foreach (var provider in Model.ExternalLogins!)
                         {
