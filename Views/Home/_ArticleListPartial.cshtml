@@ -37,7 +37,7 @@
                                 </p>
                                 <p class="card-text">
                                     <small class="text-muted">
-                                        <i class="bi bi-calendar-event me-1"></i> @(item.UpdatedAt.HasValue ? item.UpdatedAt.Value.ToString("dd/MM/yyyy") : "N/A")
+                                        <i class="bi bi-calendar-event me-1"></i> @(item.CreatedAt.HasValue ? item.CreatedAt.Value.ToString("dd/MM/yyyy") : "N/A")
                                         <span class="mx-2">|</span>
                                         <i class="bi bi-person me-1"></i> @(item.Author?.FullName ?? "Admin")
                                     </small>
