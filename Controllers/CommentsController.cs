@@ -198,16 +198,26 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 return NotFound();
             }
 
-            var comment = await _context.Comments.FindAsync(id);
+            // Sử dụng Include để nạp sẵn thông tin User và Article liên quan
+            var comment = await _context.Comments
+                .Include(c => c.User)
+                .Include(c => c.Article)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (comment == null)
             {
                 return NotFound();
             }
-            ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Id", comment.ArticleId);
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", comment.UserId);
+
+            // Truyền thông tin hiển thị (chỉ đọc) qua ViewBag để view sử dụng
+            // Sử dụng toán tử ?. và ?? để xử lý trường hợp User hoặc Article có thể null một cách an toàn
+            ViewBag.UserName = comment.User?.FullName ?? comment.User?.UserName ?? "Không xác định";
+            ViewBag.ArticleTitle = comment.Article?.Title ?? "Không xác định (Bài viết có thể đã bị xóa)";
+
+            // Không cần tạo SelectList nữa vì view không dùng dropdown để chọn lại User/Article
+
             return View(comment);
         }
-
         [Authorize(Policy = "Freedom")]
         // POST: Comments/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
