@@ -1,13 +1,42 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject UserManager<Trang_tin_điện_tử_mvc.Models.ApplicationUser> UserManager
-
+@{
+    var currentUser = await UserManager.GetUserAsync(User);
+    var defaultAvatarPath = "/uploads/avatars/default-images.png";
+    var avatarUrl = !string.IsNullOrEmpty(currentUser?.AvatarUrl) ? currentUser.AvatarUrl : defaultAvatarPath;
+}
 <div class="dropdown">
     <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-person-circle fs-2 me-2"></i>
-        <strong>@UserManager.GetUserName(User)</strong>
+        <img src="@avatarUrl"
+             alt="Avatar"
+             class="rounded-circle me-2"
+             width="32"
+             height="32"
+             style="object-fit: cover;"
+             onerror="this.onerror=null;this.src='@defaultAvatarPath';">
+
+        @* Hiển thị tên người dùng (lấy từ biến currentUser đã query ở trên cho tiện) *@
+        <strong>@(currentUser?.UserName ?? "User")</strong>
     </a>
     <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser">
-        <li><a class="dropdown-item" asp-controller="Users" asp-area="" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)"><i class="bi bi-person-gear me-2"></i>Thông tin cá nhân</a></li>
+
+        @* --- MỤC THÊM MỚI --- *@
+        @* Trỏ đến trang quản lý hồ sơ chuẩn của Identity (Razor Pages) *@
+        <li>
+            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Quản lý tài khoản, đổi mật khẩu...">
+                <i class="bi bi-person-badge me-2"></i>Xem hồ sơ (Quản lý)
+            </a>
+        </li>
+
+        <li><hr class="dropdown-divider"></li>
+
+        @* Mục cũ của bạn (Giữ nguyên, có thể là trang chi tiết công khai) *@
+        <li>
+            <a class="dropdown-item" asp-controller="Users" asp-area="" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)">
+                <i class="bi bi-person-gear me-2"></i>Thông tin chi tiết
+            </a>
+        </li>
+
         <li><hr class="dropdown-divider"></li>
         <li>
             <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
