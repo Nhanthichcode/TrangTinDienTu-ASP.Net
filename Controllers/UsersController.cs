@@ -54,6 +54,42 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(users);
         }
 
+        private async Task<string> SaveMediaAsync(IFormFile file, string folder, string category, string userId)
+        {
+            // 1. Upload file vật lý
+            var fileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folder);
+
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
+            var filePath = Path.Combine(path, fileName);
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var fileUrl = $"/uploads/{folder}/{fileName}";
+
+            // 2. Lưu vào bảng Media
+            var media = new Media
+            {
+                FileName = fileName,
+                FileUrl = fileUrl,
+                FileType = "image",
+                FileSizeKB = file.Length / 1024,
+                CreatedAt = DateTime.Now,
+                // QUAN TRỌNG: Phân loại
+                Category = category, // Ví dụ: "UserAvatar"
+                UploadedByUserId = userId,
+                ArticleId = null // Avatar không thuộc bài viết nào
+            };
+
+            _context.Add(media);
+            await _context.SaveChangesAsync(); // Lưu Media để lấy ID nếu cần
+
+            return fileUrl; // Trả về đường dẫn để gán vào User.AvatarUrl
+        }
+
         // GET: Users/Create
         [Authorize(Policy = "RequireAdminRole")]
         public async Task<IActionResult> Create()
@@ -82,84 +118,71 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                     EmailConfirmed = true,
                 };
 
-                Media? avatarMedia = null; // Biến để lưu đối tượng Media (nếu có)
+                // Biến lưu tạm đường dẫn file để xóa nếu tạo user thất bại
+                string? uploadedFilePath = null;
+                Media? avatarMedia = null;
 
-                // --- XỬ LÝ UPLOAD ẢNH VÀ TẠO MEDIA ---
+                // 1. XỬ LÝ UPLOAD FILE VẬT LÝ (Chưa lưu vào DB Media vội)
                 if (model.AvatarFile != null && model.AvatarFile.Length > 0)
                 {
-                    // 1. Kiểm tra định dạng ảnh
+                    // Kiểm tra đuôi file
                     var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
                     var fileExtension = Path.GetExtension(model.AvatarFile.FileName).ToLowerInvariant();
                     if (!allowedExtensions.Contains(fileExtension))
                     {
-                        ModelState.AddModelError("AvatarFile", "Định dạng ảnh không hợp lệ (chỉ chấp nhận .jpg, .png, .gif, .webp).");
+                        ModelState.AddModelError("AvatarFile", "Định dạng ảnh không hợp lệ.");
                         await LoadRolesList(model.SelectedRole);
                         return View(model);
                     }
 
+                    // Upload file lên ổ cứng
                     string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars");
-                    Directory.CreateDirectory(uploadsFolder); // Đảm bảo thư mục tồn tại
+                    Directory.CreateDirectory(uploadsFolder);
 
                     string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(model.AvatarFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    string fileUrl = "/uploads/avatars/" + uniqueFileName;
+                    uploadedFilePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-                    try
+                    using (var fileStream = new FileStream(uploadedFilePath, FileMode.Create))
                     {
-                        // 2. Lưu file vật lý lên ổ cứng
-                        using (var fileStream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await model.AvatarFile.CopyToAsync(fileStream);
-                        }
-
-                        // 3. Tạo đối tượng Media
-                        avatarMedia = new Media
-                        {
-                            FileName = model.AvatarFile.FileName,
-                            FileUrl = fileUrl,
-                            FileType = model.AvatarFile.ContentType,
-                            FileSizeKB = (int)(model.AvatarFile.Length / 1024),
-                            CreatedAt = DateTime.Now,
-                            // ArticleId để null vì đây là ảnh đại diện user
-                        };
-
-                        // 4. Lưu Media vào DB để lấy ID
-                        _context.Media.Add(avatarMedia);
-                        await _context.SaveChangesAsync();
-
-                        // 5. Gán ID của Media cho User
-                        // Đảm bảo model ApplicationUser của bạn đã có thuộc tính int? AvatarMediaId
-                        user.AvatarUrl = avatarMedia.FileUrl;
+                        await model.AvatarFile.CopyToAsync(fileStream);
                     }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Lỗi khi lưu ảnh avatar hoặc tạo Media: {FileName}", model.AvatarFile.FileName);
-                        // Nếu đã lỡ tạo file vật lý thì xóa đi để tránh rác
-                        if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath);
 
-                        ModelState.AddModelError("AvatarFile", $"Lỗi hệ thống khi xử lý ảnh. Vui lòng thử lại.");
-                        await LoadRolesList(model.SelectedRole);
-                        return View(model);
-                    }
+                    // Gán đường dẫn string cho User ngay để hiển thị (nếu cần)
+                    user.AvatarUrl = "/uploads/avatars/" + uniqueFileName;
                 }
-                // ------------------------------------
 
-                // Tạo user bằng UserManager
+                // 2. TẠO USER TRONG DB
                 var result = await _userManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
-                    // Gán role nếu có chọn
+                    // 3. NẾU TẠO USER THÀNH CÔNG -> MỚI TẠO MEDIA RECORD
+                    // Lúc này User đã có trong DB, nên gán UploadedByUserId sẽ không bị lỗi FK
+                    if (model.AvatarFile != null && uploadedFilePath != null)
+                    {
+                        avatarMedia = new Media
+                        {
+                            FileName = Path.GetFileName(uploadedFilePath),
+                            FileUrl = user.AvatarUrl, // Lấy lại URL đã gán
+                            FileType = model.AvatarFile.ContentType,
+                            FileSizeKB = model.AvatarFile.Length / 1024,
+                            CreatedAt = DateTime.Now,
+                            Category = "UserAvatar", // Phân loại
+                            UploadedByUserId = user.Id, // ID này giờ đã hợp lệ
+                            ArticleId = null
+                        };
+
+                        _context.Media.Add(avatarMedia);
+                        await _context.SaveChangesAsync();
+                        
+                    }
+
+                    // Gán Role
                     if (!string.IsNullOrEmpty(model.SelectedRole))
                     {
                         if (await _roleManager.RoleExistsAsync(model.SelectedRole))
                         {
                             await _userManager.AddToRoleAsync(user, model.SelectedRole);
-                        }
-                        else
-                        {
-                            // Trường hợp hy hữu role bị xóa giữa chừng
-                            _logger.LogWarning("Role '{Role}' không tồn tại khi tạo user '{User}'.", model.SelectedRole, user.UserName);
                         }
                     }
 
@@ -168,27 +191,13 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 }
                 else
                 {
-                    // NẾU TẠO USER THẤT BẠI: Cần xóa Media và file ảnh đã tạo (Rollback thủ công)
-                    if (avatarMedia != null && avatarMedia.Id > 0)
+                    // 4. NẾU TẠO USER THẤT BẠI -> XÓA FILE VẬT LÝ
+                    // Không cần xóa Media trong DB vì bước trên chưa chạy đến đoạn lưu DB Media
+                    if (uploadedFilePath != null && System.IO.File.Exists(uploadedFilePath))
                     {
-                        try
-                        {
-                            // Xóa file vật lý
-                            string filePathToDelete = Path.Combine(_webHostEnvironment.WebRootPath, avatarMedia.FileUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(filePathToDelete)) System.IO.File.Delete(filePathToDelete);
-
-                            // Xóa bản ghi Media trong DB
-                            _context.Media.Remove(avatarMedia);
-                            await _context.SaveChangesAsync();
-                            _logger.LogInformation("Đã rollback (xóa) media avatar {Id} do tạo user thất bại.", avatarMedia.Id);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Lỗi khi rollback xóa avatar media {Id} sau khi tạo user thất bại.", avatarMedia.Id);
-                        }
+                        System.IO.File.Delete(uploadedFilePath);
                     }
 
-                    // Thêm các lỗi từ UserManager vào ModelState để hiển thị
                     foreach (var error in result.Errors)
                     {
                         ModelState.AddModelError(string.Empty, error.Description);
@@ -196,11 +205,9 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 }
             }
 
-            // Nếu ModelState không hợp lệ hoặc tạo user thất bại, load lại danh sách role và trả về view
             await LoadRolesList(model.SelectedRole);
             return View(model);
         }
-
         private async Task LoadRolesList(string? selectedRole = null)
         {
             ViewBag.RolesList = new SelectList(await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync(), "Name", "Name", selectedRole);
@@ -232,8 +239,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(user);
         }
 
-        [Authorize(Policy = "Freedom")]
         // GET: Users/Edit/{id}
+        [Authorize(Policy = "Freedom")]       
         public async Task<IActionResult> Edit(string id)
         {
 
@@ -272,7 +279,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             return View(viewModel); // Trả về View với ViewModel        }
         }
 
-        //POST: Edit
+        //POST: Users/Edit/{id}
         [Authorize(Policy = "Freedom")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -292,22 +299,18 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 return Forbid();
             }
 
+            // Load lại dữ liệu cần thiết cho View nếu bị lỗi
             var allRoles = await _roleManager.Roles.OrderBy(r => r.Name).ToListAsync();
             viewModel.RolesList = new SelectList(allRoles, "Name", "Name", viewModel.SelectedRole);
             viewModel.ExistingAvatarUrl = user.AvatarUrl;
 
-            // --- SỬA LỖI VALIDATION KHI USER/AUTHOR SUBMIT ---
+            // --- LOGIC GÁN LẠI DỮ LIỆU BỊ ẨN KHI KHÔNG PHẢI ADMIN ---
             if (!isAdmin)
             {
-                // Gán lại giá trị Email và Role từ DB (vì chúng bị ẩn/readonly)
-                // để tránh lỗi validation 'Required' hoặc 'Compare'
                 viewModel.Email = user.Email;
                 viewModel.SelectedRole = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
-
-                // Bỏ qua validation cho các trường Admin
                 ModelState.Remove("SelectedRole");
                 ModelState.Remove("IsApproved");
-                // Gán lại IsApproved từ DB vào viewModel để logic so sánh "hasChanges" không bị sai
                 viewModel.IsApproved = user.IsApproved;
             }
 
@@ -315,123 +318,135 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             {
                 bool hasChanges = false;
 
-                // --- CÁC TRƯỜNG AI CŨNG SỬA ĐƯỢC ---
+                // Cập nhật thông tin cơ bản
                 if (user.FullName != viewModel.FullName) { user.FullName = viewModel.FullName; hasChanges = true; }
                 if (user.DateOfBirth != viewModel.DateOfBirth) { user.DateOfBirth = viewModel.DateOfBirth; hasChanges = true; }
 
-                // Xử lý Upload Ảnh (Ai cũng sửa được)
+                // --- XỬ LÝ UPLOAD ẢNH (REFACTOR CHO MEDIA) ---
                 if (viewModel.AvatarFile != null && viewModel.AvatarFile.Length > 0)
                 {
-                    // ... (Logic xóa ảnh cũ và lưu ảnh mới) ...
-                    // (Giả sử bạn đã inject IWebHostEnvironment và ILogger)
                     try
                     {
-                        // Xóa ảnh cũ
-                        if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.AvatarUrl.EndsWith("default-images.png"))
+                        // A. TÌM VÀ XÓA AVATAR CŨ (Cả File và DB Media)
+                        // Tìm record Media đang là Avatar của user này
+                        var oldAvatarMedia = await _context.Media
+                            .FirstOrDefaultAsync(m => m.UploadedByUserId == user.Id && m.Category == "UserAvatar");
+
+                        if (oldAvatarMedia != null)
                         {
-                            var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
-                            if (System.IO.File.Exists(oldImagePath)) { System.IO.File.Delete(oldImagePath); }
+                            // Xóa file vật lý
+                            var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, oldAvatarMedia.FileUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+
+                            // Xóa record trong DB
+                            _context.Media.Remove(oldAvatarMedia);
                         }
-                        // Lưu ảnh mới
-                        string wwwRootPath = _webHostEnvironment.WebRootPath;
-                        string uploadsFolder = Path.Combine(wwwRootPath, "uploads", "avatars");
+                        // (Backup) Xóa file cũ nếu user chưa có record trong Media (dữ liệu cũ)
+                        else if (!string.IsNullOrEmpty(user.AvatarUrl) && !user.AvatarUrl.Contains("default"))
+                        {
+                            var oldPathLegacy = Path.Combine(_webHostEnvironment.WebRootPath, user.AvatarUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPathLegacy)) System.IO.File.Delete(oldPathLegacy);
+                        }
+
+                        // B. TẠO AVATAR MỚI
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "avatars");
                         Directory.CreateDirectory(uploadsFolder);
-                        string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(viewModel.AvatarFile.FileName);
+
+                        string uniqueFileName = $"{Guid.NewGuid()}_{viewModel.AvatarFile.FileName}";
                         string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
                         using (var fileStream = new FileStream(filePath, FileMode.Create))
                         {
                             await viewModel.AvatarFile.CopyToAsync(fileStream);
                         }
-                        user.AvatarUrl = "/uploads/avatars/" + uniqueFileName;
+
+                        string newFileUrl = $"/uploads/avatars/{uniqueFileName}";
+
+                        // Tạo record Media
+                        var newMedia = new Media
+                        {
+                            FileName = uniqueFileName,
+                            FileUrl = newFileUrl,
+                            Category = "UserAvatar", // Đánh dấu loại
+                            FileType = viewModel.AvatarFile.ContentType,
+                            FileSizeKB = viewModel.AvatarFile.Length / 1024,
+                            UploadedByUserId = user.Id, // Quan trọng: Gán chủ sở hữu
+                            CreatedAt = DateTime.Now,
+                            ArticleId = null
+                        };
+
+                        _context.Media.Add(newMedia); // Thêm vào Context
+
+                        // Cập nhật User
+                        user.AvatarUrl = newFileUrl;
+                        // Nếu User có trường AvatarMediaId, bạn có thể gán sau khi SaveChanges hoặc để EF tự map nếu có quan hệ
+                        // user.AvatarMedia = newMedia; 
+
                         hasChanges = true;
                     }
                     catch (Exception ex)
                     {
-                        ModelState.AddModelError("AvatarFile", "Không thể lưu ảnh đại diện.");
+                        // Log error here
+                        ModelState.AddModelError("AvatarFile", "Lỗi khi xử lý ảnh đại diện.");
                         return View(viewModel);
                     }
                 }
 
-                // --- KHỐI LOGIC CHỈ DÀNH CHO ADMIN (ĐÃ DI CHUYỂN RA BÊN NGOÀI) ---
+                // --- KHỐI LOGIC ADMIN (Giữ nguyên) ---
                 if (isAdmin)
                 {
                     if (user.IsApproved != viewModel.IsApproved) { user.IsApproved = viewModel.IsApproved; hasChanges = true; }
 
-                    // Cập nhật Email (chỉ Admin)
                     if (user.Email != viewModel.Email)
                     {
                         var setEmailResult = await _userManager.SetEmailAsync(user, viewModel.Email);
-                        if (!setEmailResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi cập nhật Email."); return View(viewModel); }
-                        var setUserNameResult = await _userManager.SetUserNameAsync(user, viewModel.Email);
-                        if (!setUserNameResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi cập nhật UserName."); return View(viewModel); }
+                        if (!setEmailResult.Succeeded) { ModelState.AddModelError("", "Lỗi cập nhật Email."); return View(viewModel); }
+                        await _userManager.SetUserNameAsync(user, viewModel.Email);
                         hasChanges = true;
                     }
 
-                    // Xử lý thay đổi Vai trò (chỉ Admin)
                     var currentRoles = await _userManager.GetRolesAsync(user);
                     var currentRole = currentRoles.FirstOrDefault();
                     if (currentRole != viewModel.SelectedRole)
                     {
-                        if (!string.IsNullOrEmpty(currentRole))
-                        {
-                            var removeResult = await _userManager.RemoveFromRoleAsync(user, currentRole);
-                            if (!removeResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", "Lỗi khi xóa vai trò cũ."); return View(viewModel); }
-                        }
-                        if (!string.IsNullOrEmpty(viewModel.SelectedRole))
-                        {
-                            var addResult = await _userManager.AddToRoleAsync(user, viewModel.SelectedRole);
-                            if (!addResult.Succeeded) { /* Xử lý lỗi */ ModelState.AddModelError("", $"Lỗi khi thêm vai trò '{viewModel.SelectedRole}'."); return View(viewModel); }
-                        }
+                        if (!string.IsNullOrEmpty(currentRole)) await _userManager.RemoveFromRoleAsync(user, currentRole);
+                        if (!string.IsNullOrEmpty(viewModel.SelectedRole)) await _userManager.AddToRoleAsync(user, viewModel.SelectedRole);
                         hasChanges = true;
                     }
                 }
-                // --- KẾT THÚC KHỐI ADMIN ---
 
-
-                // Chỉ gọi UpdateAsync nếu thực sự có thay đổi
+                // --- LƯU THAY ĐỔI ---
                 if (hasChanges)
                 {
-                    var updateResult = await _userManager.UpdateAsync(user);
+                    // UpdateAsync chỉ cập nhật bảng User. 
+                    // Cần SaveChangesAsync của _context để lưu bảng Media vừa Add/Remove ở trên.
+
+                    var updateResult = await _userManager.UpdateAsync(user); // Lưu User
+                    await _context.SaveChangesAsync(); // Lưu Media (quan trọng!)
+
                     if (updateResult.Succeeded)
                     {
-                        TempData["SuccessMessage"] = $"Đã cập nhật thông tin người dùng '{user.UserName}' thành công!";
-
-                        // Sửa chuyển hướng cho User/Author
-                        if (!isAdmin)
-                        {
-                            // User/Author tự sửa thì quay về trang Details của họ
-                            return RedirectToAction(nameof(Details), new { id = user.Id });
-                        }
-                        return RedirectToAction(nameof(Index)); // Admin về trang Index
+                        TempData["SuccessMessage"] = $"Cập nhật thành công!";
+                        if (!isAdmin) return RedirectToAction(nameof(Details), new { id = user.Id });
+                        return RedirectToAction(nameof(Index));
                     }
                     else
                     {
-                        if (updateResult.Errors.Any(e => e.Code == "ConcurrencyFailure"))
-                        {
-                            ModelState.AddModelError(string.Empty, "Lỗi: Thông tin người dùng này vừa được cập nhật bởi người khác. Vui lòng tải lại trang và thử lại.");
-                        }
-                        else
-                        {
-                            foreach (var error in updateResult.Errors)
-                            {
-                                ModelState.AddModelError(string.Empty, error.Description);
-                            }
-                        }
+                        foreach (var error in updateResult.Errors) ModelState.AddModelError("", error.Description);
                     }
                 }
                 else
                 {
-                    TempData["InfoMessage"] = "Không có thay đổi nào được thực hiện.";
-                    if (!isAdmin) { return RedirectToAction(nameof(Details), new { id = user.Id }); } // Sửa chuyển hướng
+                    TempData["InfoMessage"] = "Không có thay đổi nào.";
+                    if (!isAdmin) return RedirectToAction(nameof(Details), new { id = user.Id });
                     return RedirectToAction(nameof(Index));
                 }
-
             }
+
             return View(viewModel);
         }
-
-        [Authorize(Policy = "RequireAdminRole")]
         // POST: Users/Approve/{id}
+        [Authorize(Policy = "RequireAdminRole")]      
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Approve(string id)
