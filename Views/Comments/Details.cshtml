@@ -2,95 +2,240 @@
 
 @{
     ViewData["Title"] = "Chi tiết Bình luận";
+    // Giả sử bạn có một đường dẫn ảnh đại diện mặc định
+    var defaultAvatar = "/uploads/avatars/default-images.png";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container-fluid px-4">
+    <h1 class="mt-4">Quản lý Bình luận</h1>
 
-<div>
-    <hr />
-    <dl class="row">
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Content)
-        </dt>
-        <dd class="col-sm-10">
-            <pre style="white-space: pre-wrap; word-break: break-word;">@Html.DisplayFor(model => model.Content)</pre>
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.User)
-        </dt>
-        <dd class="col-sm-10">
-            @(Model.User?.UserName ?? "N/A")
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Article)
-        </dt>
-        <dd class="col-sm-10">
-            <a asp-controller="Articles" asp-action="Details" asp-route-id="@Model.ArticleId" target="_blank">
-                @(Model.Article?.Title ?? $"ID: {Model.ArticleId}")
-            </a>
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedAt)
-        </dt>
-        <dd class="col-sm-10">
-            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")
-        </dd>
-        @* Hiển thị ParentCommentId nếu là reply *@
-        @if (Model.ParentCommentId.HasValue)
-        {
-            <dt class="col-sm-2">
-                Trả lời cho
-            </dt>
-            <dd class="col-sm-10">
-                <a asp-action="Details" asp-route-id="@Model.ParentCommentId">Bình luận ID: @Model.ParentCommentId.</a>
-            </dd>
-        }
-    </dl>
-</div>
+    @* --- BREADCRUMB --- *@
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a asp-action="Index">Danh sách Bình luận</a></li>
+        <li class="breadcrumb-item active">Chi tiết</li>
+    </ol>
 
-@* --- KHU VỰC HIỂN THỊ CÁC BÌNH LUẬN TRẢ LỜI --- *@
-@if (Model.Replies != null && Model.Replies.Any())
-{
-    <hr class="my-4" />
-    <h4 class="mb-3"><i class="bi bi-chat-right-dots-fill text-muted me-2"></i>Các bình luận trả lời (@Model.Replies.Count)</h4>
+    @* --- CARD THÔNG TIN CHÍNH --- *@
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center bg-light">
+            <div>
+                <i class="bi bi-info-circle-fill me-1 text-info"></i>
+                <strong>Thông tin chi tiết bình luận #@Model.Id</strong>
+            </div>
+            @* --- TRẠNG THÁI DUYỆT --- *@
+            <div>
+                @if (Model.IsApproved)
+                {
+                    <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Đã duyệt hiển thị</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split me-1"></i>Chờ phê duyệt</span>
+                }
+            </div>
+        </div>
+        <div class="card-body">
+            <dl class="row mb-0">
+                @* --- NỘI DUNG BÌNH LUẬN --- *@
+                <dt class="col-sm-3 col-lg-2 text-muted">
+                    @Html.DisplayNameFor(model => model.Content)
+                </dt>
+                <dd class="col-sm-9 col-lg-10">
+                    <div class="p-3 bg-light rounded border border-light" style="white-space: pre-wrap; word-break: break-word; font-family: inherit; font-size: 1rem;">
+                        @Html.DisplayFor(model => model.Content)
+                    </div>
+                </dd>
 
-    <div class="list-group">
-        @foreach (var reply in Model.Replies)
-        {
-            <div class="list-group-item list-group-item-action flex-column align-items-start mb-2 border rounded shadow-sm">
-                <div class="d-flex w-100 justify-content-between mb-1">
-                    <h6 class="mb-1 fw-bold text-primary">
-                        <i class="bi bi-person-circle me-1"></i>@(reply.User?.UserName ?? "N/A")
-                    </h6>
-                    <small class="text-muted">@reply.CreatedAt.ToString("dd/MM/yy HH:mm")</small>
-                </div>
-                <p class="mb-1">@reply.Content</p>
-                <small class="text-muted">
-                    @if (reply.IsApproved)
+                @* --- NGƯỜI GỬI --- *@
+                <dt class="col-sm-3 col-lg-2 text-muted mt-3">
+                    @Html.DisplayNameFor(model => model.User)
+                </dt>
+                <dd class="col-sm-9 col-lg-10 mt-3">
+                    <div class="d-flex align-items-center">
+                        @* Hiển thị Avatar nếu có (cần bổ sung logic lấy ảnh thật) *@
+                        <img src="@defaultAvatar" alt="Avatar" class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
+                        <span class="fw-bold text-primary">
+                            @(Model.User?.UserName ?? "N/A (Tài khoản đã xóa)")
+                        </span>
+                    </div>
+                </dd>
+
+                @* --- BÀI VIẾT LIÊN QUAN --- *@
+                <dt class="col-sm-3 col-lg-2 text-muted">
+                    @Html.DisplayNameFor(model => model.Article)
+                </dt>
+                <dd class="col-sm-9 col-lg-10">
+                    @if (Model.ArticleId != null)
                     {
-                        <span class="badge bg-success small">Đã duyệt</span>
+                        <a asp-controller="Articles" asp-action="Details" asp-route-id="@Model.ArticleId" target="_blank" class="text-decoration-none fw-semibold">
+                            <i class="bi bi-newspaper me-1"></i>@(Model.Article?.Title ?? $"Bài viết ID: {Model.ArticleId} (Đã xóa)")
+                            <i class="bi bi-box-arrow-up-right small ms-1"></i>
+                        </a>
                     }
                     else
                     {
-                        <span class="badge bg-warning text-dark small">Chờ duyệt</span>
+                        <span class="text-muted fst-italic">Không gắn với bài viết nào</span>
                     }
-                    - <a asp-action="Delete" asp-route-id="@reply.Id" class="text-danger small">Xóa trả lời này</a>
-                    @* Thêm link Edit nếu muốn *@
-                    @* - <a asp-action="Edit" asp-route-id="@reply.Id" class="text-primary small">Sửa</a> *@
-                </small>
-            </div>
-        }
+                </dd>
+
+                @* --- THỜI GIAN TẠO --- *@
+                <dt class="col-sm-3 col-lg-2 text-muted">
+                    @Html.DisplayNameFor(model => model.CreatedAt)
+                </dt>
+                <dd class="col-sm-9 col-lg-10">
+                    <span title="@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")">
+                        <i class="bi bi-calendar3 me-1"></i>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                    </span>
+                </dd>
+
+                @* --- THÔNG TIN TRẢ LỜI (Nếu có) --- *@
+                @if (Model.ParentCommentId.HasValue)
+                {
+                    <dt class="col-sm-3 col-lg-2 text-muted text-primary">
+                        <i class="bi bi-reply-fill me-1"></i>Trả lời cho
+                    </dt>
+                    <dd class="col-sm-9 col-lg-10">
+                        <a asp-action="Details" asp-route-id="@Model.ParentCommentId" class="btn btn-outline-primary btn-sm">
+                            Xem bình luận gốc (ID: @Model.ParentCommentId)
+                        </a>
+                    </dd>
+                }
+            </dl>
+        </div>
+        @* --- FOOTER CỦA CARD CHỨA CÁC NÚT HÀNH ĐỘNG --- *@
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end gap-2 py-3">
+            <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-1"></i>Sửa
+            </a>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@Model?.Id">
+                <i class="bi bi-trash-fill me-1"></i>Xóa
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left-circle me-1"></i>Quay lại
+            </a>
+        </div>
     </div>
-}
-else if (!Model.ParentCommentId.HasValue)
-{
-    <hr class="my-4" />
-    <p class="text-muted fst-italic">Chưa có bình luận trả lời nào cho bình luận này.</p>
-}
 
+    @* --- KHU VỰC HIỂN THỊ CÁC BÌNH LUẬN TRẢ LỜI (REPLIES) --- *@
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0 d-flex align-items-center">
+                <i class="bi bi-chat-dots-fill text-secondary me-2"></i>
+                Các bình luận trả lời
+                <span class="badge bg-secondary ms-2">@(Model.Replies?.Count ?? 0)</span>
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            @if (Model.Replies != null && Model.Replies.Any())
+            {
+                <div class="list-group list-group-flush">
+                    @foreach (var reply in Model.Replies.OrderBy(r => r.CreatedAt))
+                    {
+                        <div class="list-group-item p-3">
+                            <div class="d-flex w-100 justify-content-between align-items-start mb-2">
+                                @* --- Người trả lời --- *@
+                                <div class="d-flex align-items-center">
+                                    <img src="@defaultAvatar" alt="Avatar" class="rounded-circle me-2" width="28" height="28" style="object-fit: cover;">
+                                    <h6 class="mb-0 fw-bold text-primary me-2">
+                                        @(reply.User?.UserName ?? "N/A")
+                                    </h6>
+                                    @* --- Trạng thái duyệt của reply --- *@
+                                    @if (reply.IsApproved)
+                                    {
+                                        <span class="badge bg-success-subtle text-success badge-sm border border-success-subtle" style="font-size: 0.75rem;">Đã duyệt</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning badge-sm border border-warning-subtle" style="font-size: 0.75rem;">Chờ duyệt</span>
+                                    }
+                                </div>
+                                @* --- Thời gian trả lời --- *@
+                                <small class="text-muted" title="@reply.CreatedAt.ToString("dd/MM/yyyy HH:mm:ss")">
+                                    <i class="bi bi-clock me-1"></i>@reply.CreatedAt.ToString("dd/MM/yy HH:mm")
+                                </small>
+                            </div>
 
-<div class="mt-4">
-    @* Di chuyển nút xuống dưới cùng *@
-    <a asp-action="Delete" asp-route-id="@Model?.Id" class="btn btn-warning me-2"><i class="bi bi-pencil-square me-1"></i> Xóa bình luận này</a>
-    <a asp-action="Index" class="btn btn-secondary"><i class="bi bi-arrow-left-circle me-1"></i> Quay lại Danh sách</a>
+                            @* --- Nội dung trả lời --- *@
+                            <p class="mb-2 ms-4 ps-2 border-start border-3 border-light" style="white-space: pre-wrap; font-size: 0.95rem;">@reply.Content</p>
+
+                            @* --- Hành động cho reply --- *@
+                            <div class="d-flex justify-content-end gap-2 mt-2">
+                                <a asp-action="Edit" asp-route-id="@reply.Id" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-pencil me-1"></i>Sửa
+                                </a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@reply.Id">
+                                    <i class="bi bi-trash me-1"></i>Xóa
+                                </button>
+                                <a asp-action="Details" asp-route-id="@reply.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye me-1"></i>Chi tiết
+                                </a>
+                            </div>
+                        </div>
+                        @* Modal Xóa cho Reply *@
+                        <div class="modal fade" id="deleteModal-@reply.Id" tabindex="-1" aria-labelledby="deleteModalLabel-@reply.Id" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteModalLabel-@reply.Id">Xác nhận xóa trả lời</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Bạn có chắc chắn muốn xóa bình luận trả lời của <strong>@(reply.User?.UserName ?? "N/A")</strong> không? Hành động này không thể hoàn tác.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <form asp-action="Delete" asp-route-id="@reply.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-danger">Xóa</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else if (!Model.ParentCommentId.HasValue)
+            {
+                <div class="card-body text-center text-muted py-4 fst-italic">
+                    <i class="bi bi-chat-square-dots display-6 mb-3 d-block opacity-50"></i>
+                    Chưa có bình luận trả lời nào cho bình luận này.
+                </div>
+            }
+            else
+            {
+                <div class="card-body text-center text-muted py-4 fst-italic">
+                    Đây là một bình luận trả lời, không hiển thị các trả lời con ở đây.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* --- MODAL XÁC NHẬN XÓA (Cho bình luận chính) --- *@
+<div class="modal fade" id="deleteModal-@Model?.Id" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Xác nhận xóa bình luận</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa bình luận này không?</p>
+                <div class="alert alert-warning text-break">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <strong>Cảnh báo:</strong> Nếu bình luận này có các câu trả lời, chúng cũng sẽ bị xóa theo!
+                </div>
+                <p class="mb-0 text-muted small">Nội dung: "@(Model.Content.Length > 100 ? Model.Content.Substring(0, 100) + "..." : Model.Content)"</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                @* Sử dụng Form để gửi yêu cầu POST khi xóa *@
+                <form asp-action="Delete" asp-route-id="@Model?.Id" method="post">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Xóa vĩnh viễn</button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>

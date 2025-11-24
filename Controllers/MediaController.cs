@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Trang_tin_điện_tử_mvc.Data;
@@ -13,152 +9,365 @@ namespace Trang_tin_điện_tử_mvc.Controllers
     public class MediaController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
+        private readonly ILogger<MediaController> _logger; 
+        int pageSize = 12;
 
-        public MediaController(ApplicationDbContext context)
+        public MediaController(ApplicationDbContext context, IWebHostEnvironment env, ILogger<MediaController>
+            logger)
         {
             _context = context;
+            _env = env;
+            _logger = logger;
         }
 
-        // GET: Media
-        public async Task<IActionResult> Index()
+        // -----------------------------------------------
+        // INDEX (Gallery + Search + Filter + Pagination)
+        // -----------------------------------------------
+        public async Task<IActionResult>
+            Index(string? search, int? articleId, int page = 1)
         {
-            var applicationDbContext = _context.Media.Include(m => m.Article);
-            return View(await applicationDbContext.ToListAsync());
-        }
 
-        // GET: Media/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
+            var articlesQuery = _context.Articles
+                            .OrderByDescending(a => a.CreatedAt)
+                            .Select(a => new {
+                                a.Id,
+                                a.Title
+                            });
+
+            var query = _context.Media
+        .Include(m => m.Article)
+        .AsNoTracking() // Tối ưu hiệu năng cho truy vấn chỉ đọc
+        .AsQueryable();
+
+            // 2. Áp dụng các bộ lọc
+            if (!string.IsNullOrEmpty(search))
             {
-                return NotFound();
+                query = query.Where(m => m.FileName.Contains(search));
             }
 
-            var media = await _context.Media
-                .Include(m => m.Article)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (media == null)
+            if (articleId.HasValue)
             {
-                return NotFound();
+                query = query.Where(m => m.ArticleId == articleId.Value);
             }
+            int totalItems = await query.CountAsync();
+            var allMediaBaseQuery = _context.Media.AsNoTracking();
+            int statsTotalCount = await allMediaBaseQuery.CountAsync();
+            int statsUsedCount = await allMediaBaseQuery.CountAsync(m => m.ArticleId != null);
+            int statsUnusedCount = statsTotalCount - statsUsedCount;
+            long statsTotalSizeKB = await allMediaBaseQuery.SumAsync(m => (long?)m.FileSizeKB) ?? 0;
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
 
-            return View(media);
+            var pagedItems = await query
+                .OrderByDescending(m => m.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var viewModel = new MediaIndexViewModel
+            {
+                PagedMediaList = pagedItems,
+                TotalMediaCount = statsTotalCount,
+                UsedMediaCount = statsUsedCount,
+                UnusedMediaCount = statsUnusedCount,
+                TotalSizeKB = statsTotalSizeKB,
+                ArticlesDropdown = new SelectList(_context.Articles, "Id", "Title", articleId),
+                CurrentPage = page,
+                TotalPages = totalPages,
+                CurrentSearch = search,
+                CurrentArticleId = articleId
+            };
+            ViewBag.Articles = new SelectList(articlesQuery, "Id", "Title");
+            return View(viewModel);
         }
 
-        // GET: Media/Create
-        public IActionResult Create()
-        {
-            ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Id");
-            return View();
-        }
-
-        // POST: Media/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // -----------------------------------------------
+        // UPLOAD (Summernote & Multiple files)
+        // -----------------------------------------------
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,FilePath,Caption,UploadedAt,ArticleId")] Media media)
+        public async Task<IActionResult>
+            Upload(IFormFile file, int? articleId)
         {
-            if (ModelState.IsValid)
+            _logger.LogInformation("=======<> bắt đầu upload ảnh <>=======");
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            // Kiểm tra định dạng file
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+            var fileExtension = Path.GetExtension(file.FileName).ToLower();
+
+            if (!allowedExtensions.Contains(fileExtension))
+                return BadRequest("Định dạng file không được hỗ trợ");
+
+            // Kiểm tra kích thước file (max 5MB)
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest("File quá lớn (tối đa 5MB)");
+
+            string uploadPath = Path.Combine(_env.WebRootPath, "uploads", "medias");
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            string fileName = $"{Guid.NewGuid()}{fileExtension}";
+            string filePath = Path.Combine(uploadPath, fileName);
+
+            try
             {
-                _context.Add(media);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                string fileUrl = $"/uploads/medias/{fileName}";
+
+                // Lưu vào DB
+                var media = new Media
+                {
+                    FileName = file.FileName,
+                    FileUrl = fileUrl,
+                    FileType = file.ContentType,
+                    FileSizeKB = (int)(file.Length / 1024),
+                    CreatedAt = DateTime.Now,
+                    ArticleId = articleId == 0 ? null : articleId
+                };
+
+                _context.Media.Add(media);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+
+                _logger.LogInformation("=======<> upload thành công: {FileName} <>=======", fileName);
+                return Json(new { url = fileUrl });
             }
-            ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Id", media.ArticleId);
-            return View(media);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi upload file");
+                return StatusCode(500, "Lỗi server khi upload file");
+            }
         }
 
-        // GET: Media/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var media = await _context.Media.FindAsync(id);
-            if (media == null)
-            {
-                return NotFound();
-            }
-            ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Id", media.ArticleId);
-            return View(media);
-        }
-
-        // POST: Media/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // 🎯 THÊM ACTION UPLOAD NHIỀU ẢNH
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FilePath,Caption,UploadedAt,ArticleId")] Media media)
+        public async Task<IActionResult>
+            UploadMultiple(List<IFormFile>
+                files, int? articleId)
         {
-            if (id != media.Id)
-            {
-                return NotFound();
-            }
+            if (files == null || !files.Any())
+                return BadRequest("No files uploaded");
 
-            if (ModelState.IsValid)
+            var results = new List
+            <object>
+                ();
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp" };
+
+            foreach (var file in files)
             {
+                if (file.Length == 0) continue;
+
+                var fileExtension = Path.GetExtension(file.FileName).ToLower();
+                if (!allowedExtensions.Contains(fileExtension))
+                {
+                    results.Add(new { fileName = file.FileName, success = false, error = "Định dạng không hỗ trợ" });
+                    continue;
+                }
+
+                if (file.Length > 5 * 1024 * 1024)
+                {
+                    results.Add(new { fileName = file.FileName, success = false, error = "File quá lớn" });
+                    continue;
+                }
+
                 try
                 {
-                    _context.Update(media);
-                    await _context.SaveChangesAsync();
+                    string uploadPath = Path.Combine(_env.WebRootPath, "uploads", "medias");
+                    if (!Directory.Exists(uploadPath))
+                        Directory.CreateDirectory(uploadPath);
+
+                    string fileName = $"{Guid.NewGuid()}{fileExtension}";
+                    string filePath = Path.Combine(uploadPath, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    string fileUrl = $"/uploads/medias/{fileName}";
+
+                    var media = new Media
+                    {
+                        FileName = file.FileName,
+                        FileUrl = fileUrl,
+                        FileType = file.ContentType,
+                        FileSizeKB = (int)(file.Length / 1024),
+                        CreatedAt = DateTime.Now,
+                        ArticleId = articleId == 0 ? null : articleId
+                    };
+
+                    _context.Media.Add(media);
+                    results.Add(new { fileName = file.FileName, success = true, url = fileUrl });
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex)
                 {
-                    if (!MediaExists(media.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _logger.LogError(ex, "Lỗi khi upload file: {FileName}", file.FileName);
+                    results.Add(new { fileName = file.FileName, success = false, error = "Lỗi server" });
                 }
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["ArticleId"] = new SelectList(_context.Articles, "Id", "Id", media.ArticleId);
-            return View(media);
-        }
-
-        // GET: Media/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
-            var media = await _context.Media
-                .Include(m => m.Article)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (media == null)
-            {
-                return NotFound();
-            }
-
-            return View(media);
-        }
-
-        // POST: Media/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var media = await _context.Media.FindAsync(id);
-            if (media != null)
-            {
-                _context.Media.Remove(media);
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return Json(new { results });
         }
 
-        private bool MediaExists(int id)
+        // -----------------------------------------------
+        // BROWSER PICKER (Popup chọn ảnh)
+        // -----------------------------------------------
+        public async Task
+        <IActionResult>
+            Browser()
         {
-            return _context.Media.Any(e => e.Id == id);
+            var files = await _context.Media
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync();
+
+            return PartialView("_MediaBrowser", files);
+        }
+
+        // -----------------------------------------------
+        // DELETE (xóa file vật lý + DB)
+        // -----------------------------------------------
+        [HttpPost]
+        public async Task<IActionResult>
+            DeleteFile(int id)
+        {
+            var media = await _context.Media
+            .Include(m => m.ArticleImagePositions)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (media == null) return NotFound();
+
+            try
+            {
+                // Xóa file vật lý
+                string filePath = Path.Combine(_env.WebRootPath, media.FileUrl.TrimStart('/'));
+                if (System.IO.File.Exists(filePath))
+                {
+                    System.IO.File.Delete(filePath);
+                }
+
+                // Xóa các ArticleImagePositions liên quan
+                if (media.ArticleImagePositions.Any())
+                {
+                    _context.ArticleImagePositions.RemoveRange(media.ArticleImagePositions);
+                }
+
+                // Xóa Media
+                _context.Media.Remove(media);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Đã xóa media: {FileName}", media.FileName);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xóa media: {MediaId}", id);
+                return StatusCode(500, "Lỗi khi xóa file");
+            }
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteAllUnused()
+        {
+            _logger.LogInformation("Bắt đầu tiến trình xóa tất cả ảnh chưa sử dụng.");
+
+            // 1. Tìm các media chưa gắn bài viết (ArticleId == null)
+            var unusedMediaList = await _context.Media
+                .Where(m => m.ArticleId == null)
+                .ToListAsync();
+
+            if (unusedMediaList == null || !unusedMediaList.Any())
+            {
+                // Trường hợp này ít xảy ra nếu check kỹ ở client, nhưng vẫn nên có
+                return Json(new { success = false, message = "Hệ thống không tìm thấy ảnh nào chưa sử dụng." });
+            }
+
+            int successCount = 0;
+            int failCount = 0;
+            var mediaToDeleteFromDb = new List<Media>();
+
+            // 2. Duyệt và cố gắng xóa file vật lý trên ổ cứng
+            foreach (var media in unusedMediaList)
+            {
+                try
+                {
+                    // Tạo đường dẫn vật lý tới file
+                    string filePath = Path.Combine(_env.WebRootPath, media.FileUrl.TrimStart('/'));
+
+                    // Kiểm tra nếu file tồn tại thì xóa
+                    if (System.IO.File.Exists(filePath))
+                    {
+                        System.IO.File.Delete(filePath);
+                    }
+
+                    // Thêm vào danh sách sẽ xóa khỏi DB (chỉ thêm nếu không bị lỗi file system)
+                    mediaToDeleteFromDb.Add(media);
+                    successCount++;
+                }
+                catch (Exception ex)
+                {
+                    // Log lỗi file system nhưng tiếp tục chạy các file khác
+                    _logger.LogError(ex, "Lỗi khi xóa file vật lý: {FilePath}", media.FileUrl);
+                    failCount++;
+                }
+            }
+
+            // 3. Xóa hàng loạt khỏi Database
+            if (mediaToDeleteFromDb.Any())
+            {
+                try
+                {
+                    // Nếu bạn chắc chắn ảnh chưa dùng không có liên kết nào khác thì dùng RemoveRange
+                    _context.Media.RemoveRange(mediaToDeleteFromDb);
+                    await _context.SaveChangesAsync();
+
+                    // Tạo thông báo kết quả
+                    string message = $"Đã xóa thành công {successCount} ảnh.";
+                    if (failCount > 0)
+                    {
+                        message += $" (Cảnh báo: Có {failCount} file không thể xóa khỏi ổ cứng do lỗi quyền hạn hoặc file đang bận, vui lòng kiểm tra log server).";
+                    }
+
+                    _logger.LogInformation(message);
+                    // Trả về success = true để client reload trang
+                    return Json(new { success = true, count = successCount, message = message });
+                }
+                catch (Exception dbEx)
+                {
+                    _logger.LogError(dbEx, "Lỗi Database khi xóa hàng loạt media.");
+                    // Trả về success = true vì file vật lý đã xóa rồi, nhưng kèm cảnh báo lỗi DB
+                    return Json(new { success = true, message = $"Đã xóa {successCount} file trên ổ cứng, nhưng gặp lỗi khi cập nhật Database. Vui lòng refresh trang để kiểm tra lại." });
+                }
+            }
+            else if (failCount > 0 && successCount == 0)
+            {
+                // Trường hợp lỗi tất cả các file
+                return Json(new { success = false, message = "Lỗi nghiêm trọng! Không thể xóa bất kỳ file vật lý nào (có thể do lỗi quyền truy cập thư mục uploads)." });
+            }
+
+            return Json(new { success = false, message = "Không có hành động nào được thực hiện." });
+        }
+        // 🎯 THÊM ACTION LẤY THỐNG KÊ
+        [HttpGet]
+        public async Task<IActionResult>
+            GetStats()
+        {
+            var totalMedia = await _context.Media.CountAsync();
+            var usedMedia = await _context.Media.CountAsync(m => m.ArticleId != null);
+            var unusedMedia = await _context.Media.CountAsync(m => m.ArticleId == null);
+            var totalSize = await _context.Media.SumAsync(m => m.FileSizeKB) / 1024;
+
+            return Json(new
+            {
+                totalMedia,
+                usedMedia,
+                unusedMedia,
+                totalSize
+            });
         }
     }
 }

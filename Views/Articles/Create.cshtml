@@ -1,12 +1,6 @@
 ﻿@model Trang_tin_điện_tử_mvc.Models.ArticleCreateViewModel
 
 @{
-    bool isAdmin = User.Identity.IsAuthenticated && User.IsInRole("Admin") || User.IsInRole("Author");
-
-    // áp dụng layout dựa trên vai trò người dùng, mặc đinh là layout quản trị nếu là Admin hoặc Author
-    if (!isAdmin) { Layout = "_Layout"; }
-
-
     ViewData["Title"] = "Tạo bài viết mới";
 }
 
@@ -74,14 +68,38 @@
     </button>
     <a asp-action="Index" class="btn btn-secondary ms-2">Quay lại</a>
 </form>
+
+
 @section Scripts {
-  <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
-    
+
     <script>
-       $(document).ready(function () {
-            
-            // --- 1. KHỞI TẠO SUMMERNOTE ---
+        $(document).ready(function () {
+
+            // 🎯 FUNCTION UPLOAD ẢNH - LUÔN GỬI articleId = 0 (vì chưa có ID)
+            function uploadImage(file) {
+                var data = new FormData();
+                data.append("file", file);
+                data.append("articleId", 0); // 🎯 LUÔN LÀ 0 KHI TẠO MỚI
+
+                $.ajax({
+                    url: '/Media/Upload',
+                    type: 'POST',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $('#content-editor').summernote('insertImage', response.url);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error(textStatus + ": " + errorThrown);
+                        alert("Lỗi tải ảnh lên server. Vui lòng thử lại.");
+                    }
+                });
+            }
+
+            // --- KHỞI TẠO SUMMERNOTE ---
             $('#content-editor').summernote({
                 placeholder: 'Nhập nội dung bài viết...',
                 tabsize: 2,
@@ -94,17 +112,25 @@
                     ['table', ['table']],
                     ['insert', ['link', 'picture', 'video']],
                     ['view', ['fullscreen', 'codeview', 'help']]
-                ]
+                ],
+                // 🎯 CALLBACK KHI CHÈN ẢNH
+                callbacks: {
+                    onImageUpload: function (files) {
+                        for (var i = 0; i < files.length; i++) {
+                            uploadImage(files[i]);
+                        }
+                    }
+                }
             });
 
-            // --- 2. SCRIPT XEM TRƯỚC ẢNH ---
+            // --- SCRIPT XEM TRƯỚC ẢNH THUMBNAIL ---
             const thumbnailFileInput = document.getElementById('thumbnailFile');
             const previewContainer = document.getElementById('previewContainer');
             const imgPreview = document.getElementById('imgPreview');
             const fileInfo = document.getElementById('fileInfo');
             const defaultThumbnail = '/uploads/articles/default-thumbnail.jpg';
 
-            if (thumbnailFileInput) { // Kiểm tra input có tồn tại không
+            if (thumbnailFileInput) {
                 thumbnailFileInput.addEventListener('change', function () {
                     const file = this.files[0];
                     if (file) {
@@ -131,13 +157,12 @@
                 });
             }
 
-            if (imgPreview) { // Kiểm tra img có tồn tại không
-                 imgPreview.onerror = function () {
+            if (imgPreview) {
+                imgPreview.onerror = function () {
                     this.onerror = null;
                     this.src = defaultThumbnail;
                 };
             }
-
         });
     </script>
     @{

@@ -7,8 +7,30 @@
 @inject ApplicationDbContext DbContext
 
 @{
+    // --- GIỮ NGUYÊN PHẦN LOGIC C# ---
+    // Lấy 9 chuyên mục có nhiều bài viết nhất
+    var mainCategories = DbContext.Categories
+        .Select(c => new {
+            Category = c,
+            ArticleCount = c.Articles.Count
+        })
+        .OrderByDescending(x => x.ArticleCount)
+        .Take(7)
+        .Select(x => x.Category)
+        .ToList();
+
     var allCategories = DbContext.Categories.OrderBy(c => c.Name).ToList();
-    var allTags = DbContext.Tags.OrderBy(t => t.Name).ToList();
+
+    // Lấy trending tags để hiển thị
+    var trendingTags = DbContext.Tags
+        .OrderByDescending(t => t.ArticleTags.Count)
+        .Take(7)
+        .ToList();
+
+    // Xác định category hiện tại
+    var currentCategoryId = Context.Request.Query["categoryId"].ToString();
+    var currentUser = await UserManager.GetUserAsync(User);
+    var currentAvatar = currentUser?.AvatarUrl ?? "/uploads/avatars/default-images.png";
 }
 
 <!DOCTYPE html>
@@ -19,188 +41,364 @@
     <title>@ViewData["Title"] - AGU-News</title>
 
     @* --- CSS --- *@
+    @* Đảm bảo bạn đang dùng Bootstrap 5 *@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
     <style>
-        /* CSS cho Dropdown Gợi ý Tìm kiếm */
+
+        /* --- RESET KHOẢNG CÁCH --- */
+        body {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+
+        /* =========================================
+           CNN STYLE NAVBAR - BOOTSTRAP 5 OVERRIDES
+           ========================================= */
+
+        /* Tùy chỉnh container chính của navbar */
+        .cnn-navbar-custom {
+            border-bottom: 1px solid #333;
+            /* Padding 0 để các link bên trong chạm viền trên dưới */
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Tùy chỉnh Brand (Logo) */
+        .navbar-brand.cnn-brand-custom {
+            font-weight: 700;
+            font-size: 1.4rem;
+
+            /* Màu sắc đã được xử lý bởi class navbar-dark */
+        }
+
+        /* --- GHI ĐÈ STYLE CHO NAV-LINK CHUẨN CỦA BOOTSTRAP 5 --- */
+        /* Style mặc định cho các link trong navbar tối màu */
+        .navbar-dark .navbar-nav .nav-link {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            /* Padding lớn để tạo độ cao cho thanh menu */
+            padding: 1rem 0.8rem !important;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            /* Màu trắng mờ mặc định */
+            color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        /* Hiệu ứng Hover và Active */
+        .navbar-dark .navbar-nav .nav-link:hover,
+        .navbar-dark .navbar-nav .nav-link.active {
+            color: #cc0000 !important;
+            border-bottom: 3px solid #cc0000;
+            background-color: rgba(204, 0, 0, 0.1);
+        }
+        /* Kích thước icon toggler trên mobile */
+        .navbar-toggler {
+            font-size: 0.8rem;
+            border-color: rgba(255,255,255,0.3);
+        }
+
+
+        /* =========================================
+           CÁC THÀNH PHẦN KHÁC TRÊN HEADER
+           ========================================= */
+
+        /* Trending Bar (Thanh bên dưới navbar) */
+        .cnn-trending-bar {
+            background: #000;
+            color: #fff;
+            border-bottom: 1px solid #333;
+            font-size: 13px;
+        }
+        .trending-label {
+            color: #cc0000;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+        .trending-item {
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s ease;
+        }
+        .trending-item:hover {
+            color: #cc0000;
+            text-decoration: none;
+        }
+        .trending-separator { color: #666; }
+
+        /* Tìm kiếm trong navbar đen */
+        .cnn-search-input {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            font-size: 14px;
+            border-radius: 20px;
+        }
+        .cnn-search-input::placeholder {
+            color: #999;
+            font-size: 14px;
+        }
+        .cnn-search-btn {
+            background: transparent;
+            border: none;
+            color: #fff;
+            border-left: 1px solid #555;
+            padding-left: 15px;
+            padding-right: 15px;
+        }
+
+        /* User menu dropdown button */
+        .btn.cnn-user-menu-btn {
+             color: rgba(255, 255, 255, 0.85) !important;
+             font-weight: 700;
+             font-size: 14px;
+             padding: 0.5rem 1rem;
+             border: 1px solid #555;
+             border-radius: 20px;
+             transition: all 0.3s ease;
+        }
+        .btn.cnn-user-menu-btn:hover {
+            background: #333;
+            color: #fff !important;
+            border-color: #777;
+        }
+
+
+        /* Dropdown menu background đen */
+        .dropdown-menu-dark-custom {
+            background: #000;
+            border: 1px solid #333;
+        }
+        .dropdown-menu-dark-custom .dropdown-item {
+            color: #fff;
+            font-size: 14px;
+        }
+        .dropdown-menu-dark-custom .dropdown-item:hover,
+        .dropdown-menu-dark-custom .dropdown-item:focus {
+            background: #cc0000;
+            color: #fff;
+        }
+        .dropdown-menu-dark-custom .dropdown-divider {
+            border-top-color: #333;
+        }
+
+        /* Main content - KHÔNG CÓ KHOẢNG CÁCH TRÊN */
+        main {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* CSS Live Search giữ nguyên */
         .search-results-dropdown {
             position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background-color: #fff;
-            border: 1px solid rgba(0,0,0,.15);
-            border-radius: 0.25rem;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,.175);
+            top: 100%; left: 0; right: 0;
+            z-index: 1050;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             max-height: 400px;
             overflow-y: auto;
-            display: none; /* Ẩn mặc định */
+            display: none;
         }
-
         .search-result-item {
-            display: flex;
-            align-items: center;
-            padding: 10px;
-            text-decoration: none;
-            color: #212529;
-            border-bottom: 1px solid #e9ecef;
-            transition: background-color 0.2s;
+            display: flex; align-items: center;
+            padding: 12px; text-decoration: none;
+            color: #0c0c0c; border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s; font-size: 14px;
         }
-
-            .search-result-item:last-child {
-                border-bottom: none;
-            }
-
-            .search-result-item:hover {
-                background-color: #f8f9fa;
-                color: #dc3545; /* Màu đỏ khi hover */
-            }
-
-        .search-thumb {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 4px;
-            margin-right: 10px;
-            flex-shrink: 0;
-        }
-
-        .search-info {
-            flex-grow: 1;
-            min-width: 0; /* Để text-truncate hoạt động */
-        }
-
-        .search-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .search-date {
-            font-size: 0.75rem;
-            color: #6c757d;
-        }
+        .search-result-item:hover { background: #f8f8f8; color: #cc0000; }
     </style>
 </head>
 <body>
+    @* --- MAIN NAVBAR (Top Menu) - CẤU TRÚC BOOTSTRAP 5 CHUẨN --- *@
     <header>
-        <nav class="navbar navbar-expand-lg navbar-light shadow-sm fixed-top bg-white">
+        @* Sử dụng các class chuẩn: navbar-expand-lg, navbar-dark, bg-dark *@
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark cnn-navbar-custom">
             <div class="container">
-                <a class="navbar-brand fw-bold text-primary" asp-area="" asp-controller="Home" asp-action="Index">
-                    📰 AGU-News
+                @* Logo *@
+                <a class="navbar-brand cnn-brand-custom"  asp-area="" asp-controller="Home" asp-action="Index">
+                    AGU-NEWS
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+                @* Toggler cho mobile (Quan trọng) *@
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbarContent" aria-controls="mainNavbarContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                @* Main Navigation Content (Collapsible) *@
+                <div class="collapse navbar-collapse" id="mainNavbarContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">                        
+                        @* Các chuyên mục chính *@
+                        @foreach (var category in mainCategories.Take(7))
+                        {
+                            <li class="nav-item">
+                                @{ var isCategoryActive = currentCategoryId == category.Id.ToString(); }
+                                <a class="nav-link @(isCategoryActive ? "active" : "")"
+                                   href="@Url.Action("Index", "Home", new { categoryId = category.Id })">
+                                    @category.Name.ToUpper()
+                                </a>
+                            </li>
+                        }
 
-                        @* Dropdowns (Giữ nguyên code cũ của bạn) *@
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="catDrop" data-bs-toggle="dropdown">Chuyên mục</a>
-                            <ul class="dropdown-menu">
-                                @foreach (var c in allCategories)
-                                {
-                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Index" asp-route-categoryId="@c.Id">@c.Name</a></li>
-                                }
-                            </ul>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="tagDrop" data-bs-toggle="dropdown">Thẻ Tag</a>
-                            <ul class="dropdown-menu">
-                                @foreach (var t in allTags)
-                                {
-                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Index" asp-route-tag="@t.Name">@t.Name</a></li>
-                                }
-                            </ul>
-                        </li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">Liên hệ</a></li>
+                        @* Dropdown "Khác" *@
+                        @if (allCategories.Count > 7)
+                        {
+                            <li class="nav-item dropdown">
+                                @* Sử dụng nav-link và dropdown-toggle *@
+                                <a class="nav-link dropdown-toggle" href="#" id="moreDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    KHÁC
+                                </a>
+                                @* Sử dụng class custom cho dark dropdown *@
+                                <ul class="dropdown-menu dropdown-menu-dark-custom" aria-labelledby="moreDropdown">
+                                    @foreach (var cat in allCategories.Except(mainCategories))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item"
+                                               asp-controller="Home" asp-action="Index" asp-route-categoryId="@cat.Id">
+                                                @cat.Name.ToUpper()
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </li>
+                        }
                     </ul>
 
-                    <div class="d-flex align-items-center gap-3">
-
-                        @* --- KHU VỰC TÌM KIẾM (LIVE SEARCH) --- *@
-                        <div class="position-relative">
+                    @* Search và User Section (Đặt trong d-flex để căn chỉnh) *@
+                    <div class="d-flex align-items-center gap-3 py-2 py-lg-0">
+                        @* Search *@
+                        <div class="position-relative flex-grow-1 flex-lg-grow-0">
                             <form class="d-flex" asp-controller="Home" asp-action="Index" method="get">
                                 <div class="input-group">
-                                    @* ID để JS bắt sự kiện *@
-                                    <input class="form-control" type="search" name="searchString" id="layoutSearchInput"
-                                           placeholder="Tìm kiếm..." autocomplete="off" style="min-width: 200px;">
-                                    <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button>
+                                    <input class="form-control cnn-search-input" type="search"
+                                           name="searchString" id="layoutSearchInput"
+                                           placeholder="Tìm kiếm..." autocomplete="off">
+                                    <button class="btn cnn-search-input" type="submit">
+                                        <i class="bi bi-search"></i>
+                                    </button>
                                 </div>
                             </form>
-
-                            @* Div chứa kết quả gợi ý *@
                             <div id="layoutSearchResults" class="search-results-dropdown"></div>
                         </div>
 
-                        @* --- PHẦN USER (Giữ nguyên logic của bạn) --- *@
+                        @* User Section *@
                         @if (SignInManager.IsSignedIn(User))
                         {
-                            var currentUser = await UserManager.GetUserAsync(User);
-                            var avatar = currentUser.AvatarUrl ?? "/uploads/avatars/default-images.png";
                             <div class="dropdown">
-                                <a class="btn btn-outline-secondary border-0 dropdown-toggle d-flex align-items-center" href="#" data-bs-toggle="dropdown">
-                                    <img src="@avatar" class="rounded-circle me-2" width="30" height="30" style="object-fit:cover"> @currentUser.UserName
-                                </a>
-                                <ul class="dropdown-menu dropdown-menu-end">
+                                <button class="btn cnn-user-menu-btn dropdown-toggle d-flex align-items-center" type="button" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="@currentAvatar" alt="Avatar" class="rounded-circle me-2" width="24" height="24" style="object-fit: cover;"
+                                         onerror="this.onerror=null; this.src='/uploads/avatars/default-images.png';">
+                                    <span class="me-1 d-none d-md-inline">@User.Identity.Name</span>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end animate__animated animate__fadeIn" aria-labelledby="userMenuDropdown" style="border: none; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+
+                                    @* -------------------- ADMIN & AUTHOR LINKS -------------------- *@
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index">Trang quản trị</a></li>
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index">
+                                                <i class="bi bi-speedometer2 me-2 text-primary"></i>
+                                                <span>Trang quản trị (Admin)</span>
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
                                     }
-                                    else if (User.IsInRole("Author"))
+
+                                    @* SỬA ĐỔI Ở ĐÂY: Dùng if độc lập thay vì else if.
+                                Điều này cho phép người dùng vừa là Admin vừa là Author vẫn thấy cả 2 menu *@
+                                    @if (User.IsInRole("Author"))
                                     {
-                                        <li><a class="dropdown-item" asp-area="Admin" asp-controller="AuthorDashboard" asp-action="Index">Quản lý bài viết</a></li>
+                                        <li>
+                                            <a class="dropdown-item d-flex align-items-center" asp-area="Admin" asp-controller="AuthorDashboard" asp-action="Index">
+                                                <i class="bi bi-journal-text me-2 text-success"></i>
+                                                <span>Quản lý bài viết (Author)</span>
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
                                     }
-                                    <li><a class="dropdown-item" asp-controller="Users" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)">Thông tin cá nhân</a></li>
-                                    <li><hr class="dropdown-divider"></li>
+                                    
+                                    @* -------------------- USER LINKS -------------------- *@
                                     <li>
-                                        <form asp-area="Identity" asp-page="/Account/Logout" method="post">
-                                            <button type="submit" class="dropdown-item text-danger">Đăng xuất</button>
+                                        <a class="dropdown-item d-flex align-items-center" asp-area="Identity" asp-page="/Account/Manage/Index">
+                                            <i class="bi bi-person-badge me-2 text-info"></i>
+                                            <span>Hồ sơ của tôi</span>
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    @* Link đến trang Details của Users Controller (nếu cần xem public profile) *@
+                                    <li>
+                                <a class="dropdown-item d-flex align-items-center" asp-area="" asp-controller="Users" asp-action="Details" asp-route-id="@UserManager.GetUserId(User)">
+                                <i class="bi bi-eye me-2 text-secondary"></i>
+                                <span>Xem trang cá nhân công khai</span>
+                                </a>
+                                    <li><hr class="dropdown-divider"></li>                               
+                                    <li>
+                                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline">
+                                            <button type="submit" class="dropdown-item d-flex align-items-center text-danger w-100">
+                                                <i class="bi bi-box-arrow-right me-2"></i>
+                                                <span>Đăng xuất</span>
+                                            </button>
                                         </form>
                                     </li>
+
                                 </ul>
                             </div>
                         }
                         else
                         {
-                            <div class="d-flex gap-2">
-                                <a class="btn btn-sm btn-outline-primary" asp-area="Identity" asp-page="/Account/Login">Đăng nhập</a>
-                                <a class="btn btn-sm btn-primary" asp-area="Identity" asp-page="/Account/Register">Đăng ký</a>
-                            </div>
+                            <a class="btn cnn-user-menu-btn d-flex align-items-center" asp-area="Identity" asp-page="/Account/Login">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>
+                                <span>Đăng nhập</span>
+                            </a>
                         }
                     </div>
-                </div>
-            </div>
-        </nav>
+                </div> </div> </nav>
     </header>
 
-    <main class="container mt-5 pt-4 mb-5">
+    @* --- TRENDING BAR (Giữ nguyên, nằm ngoài navbar) --- *@
+    <div class="cnn-trending-bar">
+        <div class="container">
+            <div class="d-flex align-items-center py-2 text-nowrap overflow-auto" style="scrollbar-width: none;"> @* Thêm overflow-auto cho mobile *@
+                <span class="trending-label me-3 flex-shrink-0">MỚI NHẤT:</span>
+                <div class="d-flex align-items-center">
+                    @for (int i = 0; i < trendingTags.Count; i++)
+                    {
+                        var tag = trendingTags[i];
+                        <a href="@Url.Action("Index", "Home", new { tag = tag.Name })" class="trending-item">
+                            @tag.Name
+                        </a>
+                        @if (i < trendingTags.Count - 1)
+                        {
+                            <span class="trending-separator mx-3"> | </span>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main class="container-fluid px-0">
         @RenderBody()
     </main>
 
-    @* --- FOOTER HIỆN ĐẠI --- *@
+    @* --- FOOTER (Giữ nguyên phần footer cũ của bạn) --- *@
     <footer class="bg-dark text-light pt-5 pb-3 mt-auto">
+       @* ... (Phần code footer cũ của bạn giữ nguyên ở đây, không thay đổi gì) ... *@
         <div class="container">
             <div class="row g-4">
-
-                @* CỘT 1: GIỚI THIỆU & LOGO *@
                 <div class="col-lg-4 col-md-6">
-                    <h5 class="text-uppercase fw-bold mb-3 text-primary">
+                    <h5 class="cnn-brand-custom  navbar-brand">
                         <i class="bi bi-newspaper me-2"></i>AGU-News
                     </h5>
                     <p class="small text-secondary">
-                        Trang thông tin điện tử cung cấp tin tức nóng hổi, chính xác và cập nhật liên tục. Nơi hội tụ những góc nhìn đa chiều về kinh tế, công nghệ và đời sống.
+                        Trang thông tin điện tử cung cấp tin tức nóng hổi, chính xác và cập nhật liên tục.
                     </p>
-                    @* Social Media Icons *@
                     <div class="d-flex gap-3 mt-3">
                         <a href="#" class="text-light fs-5"><i class="bi bi-facebook"></i></a>
                         <a href="#" class="text-light fs-5"><i class="bi bi-youtube"></i></a>
@@ -209,13 +407,11 @@
                     </div>
                 </div>
 
-                @* CỘT 2: CHUYÊN MỤC (Lấy từ Database) *@
                 <div class="col-lg-2 col-md-6">
-                    <h5 class="fw-bold mb-3">Chuyên mục</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Chuyên mục</h5>
                     <ul class="list-unstyled small">
                         @if (DbContext.Categories.Any())
                         {
-                            @* Lấy 6 chuyên mục đầu tiên *@
                             @foreach (var cat in DbContext.Categories.OrderBy(c => c.Name).Take(6))
                             {
                                 <li class="mb-2">
@@ -229,13 +425,9 @@
                     </ul>
                 </div>
 
-                @* CỘT 3: LIÊN KẾT NHANH *@
                 <div class="col-lg-2 col-md-6">
-                    <h5 class="fw-bold mb-3">Thông tin</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Thông tin</h5>
                     <ul class="list-unstyled small">
-                        <li class="mb-2">
-                            <a asp-controller="Home" asp-action="Terms" class="text-decoration-none text-secondary footer-link">Giới thiệu</a>
-                        </li>
                         <li class="mb-2">
                             <a asp-controller="Home" asp-action="Contact" class="text-decoration-none text-secondary footer-link">Liên hệ</a>
                         </li>
@@ -248,20 +440,19 @@
                     </ul>
                 </div>
 
-                @* CỘT 4: LIÊN HỆ *@
                 <div class="col-lg-4 col-md-6">
-                    <h5 class="fw-bold mb-3">Liên hệ</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Liên hệ</h5>
                     <ul class="list-unstyled small text-secondary">
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-geo-alt-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>Phường Bình Đức, Thành phố Long Xuyên, Tỉnh An Giang</span>
                         </li>
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-envelope-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>nhan_dth225710@student.agu.edu.vn</span>
                         </li>
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-telephone-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>(+84) 866 710 544</span>
                         </li>
                     </ul>
@@ -270,7 +461,6 @@
 
             <hr class="border-secondary my-4">
 
-            @* PHẦN COPYRIGHT *@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start small text-secondary">
                     &copy; @DateTime.Now.Year <strong>AGU-News</strong>. Phát triển bởi Lê Trí Nhàn SV ĐH An Giang & Chat-GPT
@@ -283,10 +473,11 @@
     </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    @* Đảm bảo bạn dùng JS của Bootstrap 5 *@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
 
-    @* --- SCRIPT XỬ LÝ LIVE SEARCH (AUTOCOMPLETE) --- *@
+    @* --- SCRIPT XỬ LÝ LIVE SEARCH (Giữ nguyên) --- *@
     <script>
         $(document).ready(function() {
             let searchTimer;
@@ -297,35 +488,31 @@
                 clearTimeout(searchTimer);
                 const query = $(this).val().trim();
 
-                if (query.length < 2) { // Chỉ tìm khi gõ >= 2 ký tự
+                if (query.length < 2) {
                     $dropdown.hide().empty();
                     return;
                 }
 
-                // Hiện loading
                 $dropdown.html('<div class="p-3 text-center text-muted"><span class="spinner-border spinner-border-sm"></span> Đang tìm...</div>').show();
 
-                // Debounce 400ms
                 searchTimer = setTimeout(function() {
                     $.ajax({
-                        url: '@Url.Action("GetSearchSuggestions", "Home")', // Gọi API trong HomeController
+                        url: '@Url.Action("GetSearchSuggestions", "Home")',
                         data: { query: query },
                         success: function(data) {
                             if (data.length > 0) {
                                 let html = '';
                                 $.each(data, function(i, item) {
-                                    // Tạo link chi tiết
                                     let detailUrl = '/Articles/Details/' + item.id;
                                     html += `
-                                        <a href="${detailUrl}" class="search-result-item">
-                                            <img src="${item.image}" class="search-thumb" onerror="this.src='/uploads/articles/default-thumbnail.jpg'">
-                                            <div class="search-info">
-                                                <h6 class="search-title">${item.title}</h6>
-                                                <span class="search-date">${item.date}</span>
-                                            </div>
-                                        </a>`;
+                                            <a href="${detailUrl}" class="search-result-item">
+                                                <img src="${item.image}" class="search-thumb" onerror="this.src='/uploads/articles/default-thumbnail.jpg'">
+                                                <div class="search-info">
+                                                    <h6 class="search-title">${item.title}</h6>
+                                                    <span class="search-date">${item.date}</span>
+                                                </div>
+                                            </a>`;
                                 });
-                                // Link "Xem tất cả"
                                 let allUrl = '@Url.Action("Index", "Home")?searchString=' + encodeURIComponent(query);
                                 html += `<a href="${allUrl}" class="search-result-item justify-content-center text-primary fw-bold bg-light p-2">Xem tất cả kết quả</a>`;
 
@@ -341,14 +528,12 @@
                 }, 400);
             });
 
-            // Ẩn dropdown khi click ra ngoài
             $(document).on('click', function(e) {
                 if (!$(e.target).closest('.position-relative').length) {
                     $dropdown.hide();
                 }
             });
 
-             // Hiện lại khi focus
             $input.on('focus', function() {
                 if($(this).val().length >= 2 && $dropdown.children().length > 0) $dropdown.show();
             });

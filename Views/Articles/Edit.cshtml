@@ -35,9 +35,11 @@
                         <textarea asp-for="Summary" class="form-control" rows="3" placeholder="Tóm tắt ngắn gọn..."></textarea>
                         <span asp-validation-for="Summary" class="text-danger"></span>
                     </div>
-                     <div class="mb-3">
+                    <div class="mb-3">
                         <label asp-for="Content" class="form-label fw-bold"></label>       
-                        <textarea asp-for="Content" class="form-control" id="content-editor"></textarea>
+                        @* 🎯 SỬA QUAN TRỌNG: Thêm hidden field và textarea riêng cho Summernote *@
+                        <textarea asp-for="Content" class="form-control" id="content-original" style="display:none;">@Html.Raw(Model.Content)</textarea>
+                        <textarea class="form-control" id="content-editor">@Html.Raw(ViewBag.ContentWithImages ?? Model.Content)</textarea>
                         <span asp-validation-for="Content" class="text-danger"></span>
                     </div>
                 </div>
@@ -127,17 +129,59 @@
 </form>
 
 @section Scripts {
-  <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
-    
+
+    <style>
+        /* 🎯 STYLE CHO ẢNH TRONG SUMMERNOTE EDITOR */
+        .note-editable img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin: 1rem 0;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .note-editable img:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+        }
+    </style>
+
     <script>
-       $(document).ready(function () {
-            
-            // --- 1. KHỞI TẠO SUMMERNOTE ---
+        $(document).ready(function () {
+
+            // 🎯 FUNCTION UPLOAD ẢNH - GỬI articleId THẬT (vì đã có ID)
+            function uploadImage(file) {
+                var data = new FormData();
+                data.append("file", file);
+                data.append("articleId", @Model.Id); // 🎯 SỬ DỤNG ID THẬT CỦA BÀI VIẾT
+
+                $.ajax({
+                    url: '/Media/Upload',
+                    type: 'POST',
+                    data: data,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $('#content-editor').summernote('insertImage', response.url);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.error(textStatus + ": " + errorThrown);
+                        alert("Lỗi tải ảnh lên server. Vui lòng thử lại.");
+                    }
+                });
+            }
+
+            // --- KHỞI TẠO SUMMERNOTE ---
             $('#content-editor').summernote({
                 placeholder: 'Nhập nội dung bài viết...',
                 tabsize: 2,
-                height: 300,
+                height: 400, // 🎯 Tăng chiều cao để dễ làm việc
                 toolbar: [
                     ['style', ['style']],
                     ['font', ['bold', 'italic', 'underline', 'clear']],
@@ -146,50 +190,62 @@
                     ['table', ['table']],
                     ['insert', ['link', 'picture', 'video']],
                     ['view', ['fullscreen', 'codeview', 'help']]
-                ]
+                ],
+                // 🎯 CALLBACK KHI CHÈN ẢNH
+                callbacks: {
+                    onImageUpload: function (files) {
+                        for (var i = 0; i < files.length; i++) {
+                            uploadImage(files[i]);
+                        }
+                    },
+                    // 🎯 QUAN TRỌNG: Khi thay đổi nội dung, cập nhật vào hidden field
+                    onChange: function(contents) {
+                        $('#content-original').val(contents);
+                    },
+                    // 🎯 Khi khởi tạo xong, cập nhật nội dung ban đầu
+                    onInit: function() {
+                        $('#content-original').val($('#content-editor').summernote('code'));
+                    }
+                }
             });
 
-            // --- 2. SCRIPT XEM TRƯỚC ẢNH ---
+            // 🎯 XỬ LÝ FORM SUBMIT - ĐẢM BẢO LẤY NỘI DUNG TỪ SUMMERNOTE
+            $('form').on('submit', function() {
+                var summernoteContent = $('#content-editor').summernote('code');
+                $('#content-original').val(summernoteContent);
+                return true;
+            });
+
+            // --- SCRIPT XEM TRƯỚC ẢNH THUMBNAIL ---
             const thumbnailFileInput = document.getElementById('thumbnailFile');
-            const previewContainer = document.getElementById('previewContainer');
             const imgPreview = document.getElementById('imgPreview');
-            const fileInfo = document.getElementById('fileInfo');
             const defaultThumbnail = '/uploads/articles/default-thumbnail.jpg';
 
-            if (thumbnailFileInput) { // Kiểm tra input có tồn tại không
+            if (thumbnailFileInput) {
                 thumbnailFileInput.addEventListener('change', function () {
                     const file = this.files[0];
                     if (file) {
                         if (file.type.startsWith('image/')) {
                             const reader = new FileReader();
-                            previewContainer.style.display = 'block';
                             reader.onload = function (e) {
                                 imgPreview.src = e.target.result;
                             }
                             reader.readAsDataURL(file);
-                            fileInfo.textContent = `Tệp: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
                         } else {
                             this.value = '';
-                            previewContainer.style.display = 'none';
-                            imgPreview.src = '#';
-                            fileInfo.textContent = '';
+                            imgPreview.src = defaultThumbnail;
                             alert('Vui lòng chọn một file ảnh hợp lệ (.jpg, .png, .gif...).');
                         }
-                    } else {
-                        previewContainer.style.display = 'none';
-                        imgPreview.src = '#';
-                        fileInfo.textContent = '';
                     }
                 });
             }
 
-            if (imgPreview) { // Kiểm tra img có tồn tại không
-                 imgPreview.onerror = function () {
+            if (imgPreview) {
+                imgPreview.onerror = function () {
                     this.onerror = null;
                     this.src = defaultThumbnail;
                 };
             }
-
         });
     </script>
     @{

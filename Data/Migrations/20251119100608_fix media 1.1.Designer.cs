@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Trang_tin_điện_tử_mvc.Data;
 
@@ -11,9 +12,11 @@ using Trang_tin_điện_tử_mvc.Data;
 namespace Trang_tin_điện_tử_mvc.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251119100608_fix media 1.1")]
+    partial class fixmedia11
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,36 +285,6 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.ToTable("Articles", (string)null);
                 });
 
-            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleImagePosition", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ArticleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("MediaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Placeholder")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PositionIndex")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ArticleId");
-
-                    b.HasIndex("MediaId");
-
-                    b.ToTable("ArticleImagePositions");
-                });
-
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleTag", b =>
                 {
                     b.Property<int>("ArticleId")
@@ -516,25 +489,6 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleImagePosition", b =>
-                {
-                    b.HasOne("Trang_tin_điện_tử_mvc.Models.Article", "Article")
-                        .WithMany("ArticleImagePositions")
-                        .HasForeignKey("ArticleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Trang_tin_điện_tử_mvc.Models.Media", "Media")
-                        .WithMany("ArticleImagePositions")
-                        .HasForeignKey("MediaId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Article");
-
-                    b.Navigation("Media");
-                });
-
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleTag", b =>
                 {
                     b.HasOne("Trang_tin_điện_tử_mvc.Models.Article", "Article")
@@ -599,8 +553,6 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Article", b =>
                 {
-                    b.Navigation("ArticleImagePositions");
-
                     b.Navigation("ArticleTags");
 
                     b.Navigation("Comments");
@@ -616,11 +568,6 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Comment", b =>
                 {
                     b.Navigation("Replies");
-                });
-
-            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Media", b =>
-                {
-                    b.Navigation("ArticleImagePositions");
                 });
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Tag", b =>

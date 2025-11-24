@@ -17,6 +17,7 @@ namespace Trang_tin_điện_tử_mvc.Data
         public DbSet<ArticleTag> ArticleTags { get; set; }
         public DbSet<Comment> Comments { get; set; }
         public DbSet<Media> Media { get; set; }
+        public DbSet<ArticleImagePosition> ArticleImagePositions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -56,10 +57,10 @@ namespace Trang_tin_điện_tử_mvc.Data
 
             // Quan hệ 1-n: Comment - Reply (Nested Comments)
             modelBuilder.Entity<Comment>()
-            .HasMany(c => c.Replies) // Một comment có nhiều Replies (con)
-            .WithOne(c => c.ParentComment) // Mỗi Reply có một ParentComment (cha)
-            .HasForeignKey(c => c.ParentCommentId) // Khóa ngoại là ParentCommentId
-            .OnDelete(DeleteBehavior.NoAction);
+                .HasMany(c => c.Replies) // Một comment có nhiều Replies (con)
+                .WithOne(c => c.ParentComment) // Mỗi Reply có một ParentComment (cha)
+                .HasForeignKey(c => c.ParentCommentId) // Khóa ngoại là ParentCommentId
+                .OnDelete(DeleteBehavior.NoAction);
 
             //  Quan hệ n-n: Article - Tag qua ArticleTag
             modelBuilder.Entity<ArticleTag>()
@@ -78,6 +79,18 @@ namespace Trang_tin_điện_tử_mvc.Data
                 .WithMany(a => a.Media)
                 .HasForeignKey(m => m.ArticleId)
                 .OnDelete(DeleteBehavior.Cascade);
+           
+            modelBuilder.Entity<ArticleImagePosition>()
+              .HasOne(aip => aip.Article)
+              .WithMany(a => a.ArticleImagePositions)
+              .HasForeignKey(aip => aip.ArticleId)
+              .OnDelete(DeleteBehavior.Cascade); // Cho phép cascade từ Article
+
+            modelBuilder.Entity<ArticleImagePosition>()
+                .HasOne(aip => aip.Media)
+                .WithMany(m => m.ArticleImagePositions)
+                .HasForeignKey(aip => aip.MediaId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             //  Đặt tên bảng (tuỳ chọn, giúp CSDL gọn gàng)
             modelBuilder.Entity<Article>().ToTable("Articles");

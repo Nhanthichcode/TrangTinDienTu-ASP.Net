@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
     @* Link tới file CSS riêng cho trang quản trị *@
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
 </head>
 <body>
     @* SIDEBAR *@
@@ -47,7 +48,7 @@
                     <li class="admin-nav-custom-item">
                         @* Đổi class *@
                         <a class="admin-nav-custom-link @IsActive("AdminDashboard", area: "Admin")" asp-area="Admin" asp-controller="AdminDashboard" asp-action="Index">
-                            <span class="admin-nav-custom-text"><i class="bi bi-speedometer2 me-2"></i>Trang quản trị</span> @* Bọc text trong span *@
+                            <span class="admin-nav-custom-text"><i class="bi bi-graph-down me-2"></i>Trang quản trị</span> @* Bọc text trong span *@
                         </a>
                     </li>
                     <li class="admin-nav-custom-item">
@@ -58,6 +59,11 @@
                     <li class="admin-nav-custom-item">
                         <a class="admin-nav-custom-link @IsActive("Articles")" asp-controller="Articles" asp-area="" asp-action="Index">
                             <span class="admin-nav-custom-text"><i class="bi bi-newspaper me-2"></i>Bài viết</span>
+                        </a>
+                    </li>
+                    <li class="admin-nav-custom-item">
+                        <a class="admin-nav-custom-link @IsActive("Media")" asp-controller="Media" asp-area="" asp-action="Index">
+                            <span class="admin-nav-custom-text"><i class="bi bi-card-image me-2"></i>Thư viện ảnh</span>
                         </a>
                     </li>
                     <li class="admin-nav-custom-item">

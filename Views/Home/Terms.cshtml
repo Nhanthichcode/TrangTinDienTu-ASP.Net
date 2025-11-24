@@ -1,99 +1,131 @@
-﻿@{
-    ViewData["Title"] = "Điều Khoản Sử Dụng \"Luật Chơi\"";
-    // Tùy chọn: Chọn layout
-    Layout = "_Layout";
-}
+﻿@page
 
-<div class="container mt-4 mb-5">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-secondary text-white">
-            @* Màu khác cho phân biệt *@
-            <h1 class="h3 mb-0"><i class="bi bi-file-text-fill me-2"></i>@ViewData["Title"] Tại E-News 📜</h1>
-        </div>
-        <div class="card-body p-4 p-md-5">
 
-            <p class="lead">Chào mừng bạn đến với E-News! Trước khi hòa mình vào dòng chảy tin tức, hãy dành chút thời gian xem qua "luật chơi" của chúng tôi. Việc bạn lướt web, đọc tin, hay bình luận trên E-News đồng nghĩa với việc bạn đã "bắt tay" đồng ý với các điều khoản dưới đây. Nếu bạn thấy điều khoản nào không hợp lý, có lẽ E-News chưa phải là điểm dừng chân lý tưởng của bạn lúc này.</p>
+<style>
+    .cnn-article-container {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #111;
+        line-height: 1.6;
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-            <hr class="my-4">
+    .cnn-article-title {
+        font-size: 3rem;
+        font-weight: 900;
+        color: #000;
+        margin-bottom: 1rem;
+        border-bottom: 4px solid #cc0000;
+        padding-bottom: 20px;
+    }
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-sign-stop-lights-fill me-2"></i>1. "Sân Chơi" E-News: Bạn Được Làm Gì & Không Nên Làm Gì 🚦</h2>
+    .cnn-article-meta {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 40px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
 
-            <h5 class="text-success mt-3"><i class="bi bi-check-circle-fill me-1"></i> Đèn xanh (Được phép):</h5>
-            <ul>
-                <li><strong>Thưởng thức nội dung:</strong> Đọc tin tức, bài viết mà E-News cung cấp.</li>
-                <li><strong>Chia sẻ văn minh:</strong> Bình luận, bày tỏ ý kiến một cách tôn trọng, xây dựng. Chia sẻ liên kết đến E-News với bạn bè.</li>
-                <li><strong>Sử dụng cá nhân:</strong> Tận hưởng trang web cho mục đích cá nhân, phi thương mại.</li>
-            </ul>
+    .cnn-section-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 2.5rem;
+        margin-bottom: 1.2rem;
+        color: #222;
+        position: relative;
+    }
 
-            <h5 class="text-danger mt-3"><i class="bi bi-slash-circle-fill me-1"></i> Đèn đỏ (Không được phép):</h5>
-            <ul>
-                <li><strong>Spam & Quảng cáo:</strong> Gửi bình luận rác, quảng cáo trá hình, hoặc bất kỳ nội dung không liên quan nào.</li>
-                <li><strong>Nội dung "bẩn":</strong> Đăng tải nội dung bất hợp pháp, xúc phạm, phỉ báng, đe dọa, khiêu dâm, hoặc vi phạm thuần phong mỹ tục.</li>
-                <li><strong>Phá hoại:</strong> Cố gắng hack, tấn công, chèn mã độc, hoặc làm bất cứ điều gì gây hại đến hoạt động của E-News hay người dùng khác.</li>
-                <li><strong>Vi phạm bản quyền:</strong> Sao chép, sửa đổi, phân phối lại nội dung của E-News (bài viết, hình ảnh, logo...) mà không có sự cho phép rõ ràng. Tôn trọng chất xám của chúng tôi và của người khác nhé!</li>
-                <li><strong>Mạo danh:</strong> Giả mạo người khác khi bình luận hoặc tương tác.</li>
-            </ul>
+        .cnn-section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: #cc0000;
+            margin-top: 10px;
+        }
 
-            <hr class="my-4">
+    .cnn-article-body p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-chat-right-quote-fill me-2"></i>2. "Lời Hay Ý Đẹp" Của Bạn (Nội Dung Người Dùng) 🗣️</h2>
-            <ul>
-                <li><strong>Trách nhiệm của bạn:</strong> Bạn hoàn toàn chịu trách nhiệm về nội dung bình luận hoặc bất kỳ thông tin nào bạn đăng tải. Hãy đảm bảo nó không vi phạm "đèn đỏ" ở trên.</li>
-                <li><strong>Quyền của E-News:</strong> Chúng tôi có quyền (nhưng không có nghĩa vụ phải làm liên tục) xem xét, chỉnh sửa, hoặc xóa bỏ bất kỳ nội dung nào bạn đăng tải nếu chúng tôi thấy nó vi phạm điều khoản hoặc không phù hợp, mà không cần báo trước.</li>
-                <li><strong>Giấy phép "mượn tạm":</strong> Khi bạn đăng nội dung lên E-News, bạn cấp cho chúng tôi quyền sử dụng, hiển thị, sao chép (ở mức cần thiết để vận hành trang web) nội dung đó trên phạm vi toàn cầu, miễn phí bản quyền. Bạn vẫn là chủ sở hữu nội dung của mình.</li>
-            </ul>
+    .cnn-list {
+        padding-left: 1.5rem;
+        margin-bottom: 2rem;
+    }
 
-            <hr class="my-4">
+        .cnn-list li {
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-lightbulb-fill me-2"></i>3. "Tài Sản Trí Tuệ" Của E-News 🧠</h2>
-            <p>Toàn bộ nội dung trên E-News, bao gồm bài viết, hình ảnh (trừ khi có ghi chú nguồn khác), logo, thiết kế giao diện... là tài sản trí tuệ của E-News hoặc các bên cấp phép của chúng tôi. Bạn không được sử dụng chúng cho mục đích thương mại hoặc sao chép trái phép.</p>
+        .cnn-list ul {
+            list-style: none;
+            padding-left: 0;
+        }
 
-            <hr class="my-4">
+            .cnn-list ul li {
+                padding-left: 1.5em;
+                position: relative;
+            }
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-emoji-neutral-fill me-2"></i>4. Miễn Trừ Trách Nhiệm (Lời Thú Tội Chân Thành) 🙏</h2>
-            <ul>
-                <li><strong>Thông tin "As Is":</strong> E-News cố gắng hết sức để cung cấp thông tin chính xác và cập nhật. Tuy nhiên, chúng tôi không thể đảm bảo 100% mọi thông tin đều hoàn hảo, không có lỗi hay thiếu sót. Bạn nên tự kiểm chứng thông tin quan trọng trước khi đưa ra quyết định dựa trên đó. Nội dung được cung cấp "nguyên trạng" (as is).</li>
-                <li><strong>Không phải lời khuyên chuyên gia:</strong> Các bài viết trên E-News chỉ mang tính tham khảo, không thay thế cho lời khuyên từ các chuyên gia (y tế, tài chính, pháp lý...).</li>
-            </ul>
+                .cnn-list ul li::before {
+                    content: "\25A0";
+                    color: #cc0000;
+                    display: inline-block;
+                    width: 1em;
+                    margin-left: -1.5em;
+                    position: absolute;
+                    top: 4px; /* Căn chỉnh lại vị trí chấm vuông */
+                }
+</style>
 
-            <hr class="my-4">
+<div class="container py-5">
+    <div class="cnn-article-container">
+        <header>
+            <h1 class="cnn-article-title">Điều khoản sử dụng</h1>
+            <div class="cnn-article-meta">
+                Hiệu lực từ: <span class="text-danger">01/01/2024</span>
+            </div>
+        </header>
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-bricks me-2"></i>5. Giới Hạn Trách Nhiệm (Chúng Tôi Không Phải Siêu Nhân) 🦸‍♂️</h2>
-            <p>Trong phạm vi tối đa luật pháp cho phép, E-News (và đội ngũ của chúng tôi) sẽ không chịu trách nhiệm cho bất kỳ thiệt hại trực tiếp, gián tiếp, ngẫu nhiên, hay hậu quả nào phát sinh từ việc bạn sử dụng (hoặc không thể sử dụng) trang web này.</p>
+        <article class="cnn-article-body">
+            <p class="lead" style="font-weight:700;">Chào mừng bạn đến với AGU-News. Vui lòng đọc kỹ các Điều khoản sử dụng này trước khi sử dụng trang web của chúng tôi.</p>
+            <p>Bằng cách truy cập hoặc sử dụng trang web, bạn đồng ý tuân thủ và bị ràng buộc bởi các điều khoản này. Nếu bạn không đồng ý với bất kỳ phần nào của các điều khoản, bạn không được phép truy cập trang web.</p>
 
-            <hr class="my-4">
+            <h2 class="cnn-section-title">1. Quyền sở hữu trí tuệ</h2>
+            <p>Dịch vụ và nội dung gốc của nó, các tính năng và chức năng là và sẽ vẫn là tài sản độc quyền của AGU-News và các nhà cấp phép của nó. Dịch vụ được bảo vệ bởi bản quyền, thương hiệu và các luật khác của cả Việt Nam và nước ngoài.</p>
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-link-45deg me-2"></i>6. "Hàng Xóm" (Liên Kết Đến Trang Web Khác) 🔗</h2>
-            <p>E-News có thể chứa liên kết đến các trang web của bên thứ ba. Chúng tôi không kiểm soát và không chịu trách nhiệm về nội dung hay chính sách bảo mật của những trang đó. Việc bạn truy cập chúng là quyết định của riêng bạn.</p>
+            <h2 class="cnn-section-title">2. Sử dụng được phép</h2>
+            <p>Bạn chỉ được phép sử dụng trang web cho các mục đích hợp pháp và theo các Điều khoản này. Bạn đồng ý không sử dụng trang web:</p>
+            <div class="cnn-list">
+                <ul>
+                    <li>Theo bất kỳ cách nào vi phạm bất kỳ luật hoặc quy định hiện hành nào của liên bang, tiểu bang, địa phương hoặc quốc tế.</li>
+                    <li>Để gửi, nhận cố ý, tải lên, tải xuống, sử dụng hoặc tái sử dụng bất kỳ tài liệu nào không tuân thủ các tiêu chuẩn nội dung của chúng tôi.</li>
+                    <li>Để truyền, hoặc tìm cách gửi, bất kỳ tài liệu quảng cáo hoặc khuyến mại nào, bao gồm mọi "thư rác", "thư dây chuyền", "spam" hoặc bất kỳ lời mời chào tương tự nào khác.</li>
+                    <li>Để mạo danh hoặc cố gắng mạo danh AGU-News, nhân viên của AGU-News, người dùng khác hoặc bất kỳ cá nhân hoặc tổ chức nào khác.</li>
+                </ul>
+            </div>
 
-            <hr class="my-4">
+            <h2 class="cnn-section-title">3. Đóng góp của người dùng</h2>
+            <p>Trang web có thể chứa bảng tin, phòng trò chuyện, trang web cá nhân hoặc hồ sơ, diễn đàn, bảng thông báo và các tính năng tương tác khác cho phép người dùng đăng, gửi, xuất bản, hiển thị hoặc truyền tải cho người dùng khác hoặc những người khác nội dung hoặc tài liệu. Tất cả các đóng góp của người dùng phải tuân thủ các tiêu chuẩn nội dung được quy định trong các Điều khoản này.</p>
+            <p>Bất kỳ đóng góp nào bạn đăng lên trang web sẽ được coi là không bí mật và không độc quyền. Bằng cách cung cấp bất kỳ đóng góp nào trên trang web, bạn cấp cho chúng tôi và các chi nhánh và nhà cung cấp dịch vụ của chúng tôi quyền sử dụng, sao chép, sửa đổi, thực hiện, hiển thị, phân phối và tiết lộ cho bên thứ ba bất kỳ tài liệu nào như vậy cho bất kỳ mục đích nào.</p>
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-arrow-repeat me-2"></i>7. Cập Nhật "Luật Chơi" 🔄</h2>
-            <p>Chúng tôi có thể thay đổi các Điều khoản Sử dụng này bất cứ lúc nào. Phiên bản mới nhất sẽ luôn được đăng tải tại đây. Việc bạn tiếp tục sử dụng E-News sau khi có thay đổi đồng nghĩa với việc bạn chấp nhận các điều khoản mới.</p>
+            <h2 class="cnn-section-title">4. Liên kết đến các trang web khác</h2>
+            <p>Dịch vụ của chúng tôi có thể chứa các liên kết đến các trang web hoặc dịch vụ của bên thứ ba không thuộc sở hữu hoặc kiểm soát của AGU-News. AGU-News không kiểm soát và không chịu trách nhiệm về nội dung, chính sách bảo mật hoặc thông lệ của bất kỳ trang web hoặc dịch vụ của bên thứ ba nào.</p>
+            <p>Bạn thừa nhận và đồng ý rằng AGU-News sẽ không chịu trách nhiệm hoặc nghĩa vụ pháp lý, trực tiếp hoặc gián tiếp, đối với bất kỳ thiệt hại hoặc tổn thất nào gây ra hoặc được cho là gây ra bởi hoặc liên quan đến việc sử dụng hoặc dựa vào bất kỳ nội dung, hàng hóa hoặc dịch vụ nào có sẵn trên hoặc thông qua bất kỳ trang web hoặc dịch vụ nào như vậy.</p>
 
-            <hr class="my-4">
+            <h2 class="cnn-section-title">5. Chấm dứt</h2>
+            <p>Chúng tôi có thể chấm dứt hoặc đình chỉ quyền truy cập của bạn ngay lập tức, mà không cần thông báo trước hoặc chịu trách nhiệm pháp lý, vì bất kỳ lý do gì, bao gồm nhưng không giới hạn ở việc bạn vi phạm các Điều khoản.</p>
 
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-sign-no-entry-fill me-2"></i>8. "Thẻ Phạt" (Đình Chỉ Truy Cập) 🟥</h2>
-            <p>Chúng tôi có quyền tạm ngưng hoặc chấm dứt vĩnh viễn quyền truy cập của bạn vào E-News nếu bạn vi phạm nghiêm trọng các điều khoản này, mà không cần báo trước.</p>
+            <h2 class="cnn-section-title">6. Luật điều chỉnh</h2>
+            <p>Các Điều khoản này sẽ được điều chỉnh và giải thích theo luật pháp của Việt Nam, mà không liên quan đến các quy định về xung đột pháp luật.</p>
 
-            <hr class="my-4">
-
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-bank me-2"></i>9. Luật Áp Dụng ⚖️</h2>
-            <p>Các Điều khoản Sử dụng này được điều chỉnh và giải thích theo luật pháp của <strong>Việt Nam</strong>. Mọi tranh chấp phát sinh sẽ được giải quyết tại tòa án có thẩm quyền tại Việt Nam.</p>
-
-            <hr class="my-4">
-
-            <h2 class="h4 text-secondary fw-bold mb-3"><i class="bi bi-telephone-fill me-2"></i>10. Liên Hệ Khi Cần 📞</h2>
-            <p>Nếu có bất kỳ thắc mắc nào về "luật chơi" này, vui lòng liên hệ với chúng tôi:</p>
-            <ul>
-                <li><strong>Email:</strong> <a href="mailto:[ĐIỀN EMAIL HỖ TRỢ CỦA BẠN]" style="text-decoration: none">nhan_dth225710@student.agu.edu.vn</a></li>
-                <li><strong>Trang Liên hệ:</strong> <a asp-controller="Home" style="text-decoration: none" asp-action="Contact">Tại đây</a></li> @* Đảm bảo link đúng *@
-            </ul>
-
-            <p class="mt-4 text-muted"><small><strong>Cập nhật lần cuối:</strong> @DateTime.Now.ToString("dd/MM/yyyy")</small></p>
-
-            <p>Cảm ơn bạn đã dành thời gian đọc và tuân thủ các điều khoản của E-News! Chúc bạn có những trải nghiệm thú vị!</p>
-
-        </div>
+            <h2 class="cnn-section-title">7. Thay đổi</h2>
+            <p>Chúng tôi bảo lưu quyền, theo quyết định riêng của mình, sửa đổi hoặc thay thế các Điều khoản này bất cứ lúc nào. Nếu bản sửa đổi là quan trọng, chúng tôi sẽ cố gắng cung cấp thông báo trước ít nhất 30 ngày trước khi bất kỳ điều khoản mới nào có hiệu lực. Cấu thành một thay đổi quan trọng sẽ được xác định theo quyết định riêng của chúng tôi.</p>
+            <p>Bằng cách tiếp tục truy cập hoặc sử dụng Dịch vụ của chúng tôi sau khi các sửa đổi đó có hiệu lực, bạn đồng ý bị ràng buộc bởi các điều khoản sửa đổi. Nếu bạn không đồng ý với các điều khoản mới, vui lòng ngừng sử dụng Dịch vụ.</p>
+        </article>
     </div>
 </div>

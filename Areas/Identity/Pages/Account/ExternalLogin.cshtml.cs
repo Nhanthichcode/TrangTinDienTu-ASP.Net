@@ -21,6 +21,7 @@ using Trang_tin_điện_tử_mvc.Models;
 using System.Data;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.Blazor;
+using Microsoft.AspNetCore.Authentication;
 
 namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
 {
@@ -117,6 +118,35 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
                 ErrorMessage = "Error loading external login information.";
                 return RedirectToPage("./Login", new { ReturnUrl = returnUrl });
             }
+
+            // --- BẮT ĐẦU PHẦN THÊM MỚI ---
+
+            // 1. Tìm người dùng trong database dựa trên thông tin đăng nhập ngoài (ví dụ: email)
+            var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            // Nếu không tìm thấy bằng login provider, thử tìm bằng email (nếu có)
+            if (user == null && info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+            {
+                var email1 = info.Principal.FindFirstValue(ClaimTypes.Email);
+                user = await _userManager.FindByEmailAsync(email1);
+            }
+
+            // 2. Nếu tìm thấy người dùng, kiểm tra IsApproved
+            if (user != null)
+            {
+                if (user.IsApproved == false) // Giả sử bạn có thuộc tính này
+                {
+                    _logger.LogWarning($"Người dùng '{user.UserName}' cố gắng đăng nhập bằng {info.LoginProvider} nhưng tài khoản bị khóa (IsApproved = false).");
+
+                    // Đăng xuất khỏi Google (quan trọng để tránh trạng thái đăng nhập nửa vời)
+                    await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
+
+                    // Chuyển hướng về trang Login và hiển thị thông báo lỗi
+                    // Bạn có thể dùng TempData để truyền thông báo lỗi
+                    TempData["ErrorMessage"] = "Tài khoản của bạn chưa được kích hoạt hoặc đã bị khóa. Vui lòng liên hệ quản trị viên.";
+                    return RedirectToPage("./Login");
+                }
+            }
+
             var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false);
             if (signInResult.Succeeded)
             {
@@ -125,7 +155,7 @@ namespace Trang_tin_điện_tử_mvc.Areas.Identity.Pages.Account
             var email = info.Principal.FindFirstValue(ClaimTypes.Email);
             if (email != null)
             {
-                var user = new ApplicationUser
+                user = new ApplicationUser
                 {
                     UserName = email,
                     Email = email,

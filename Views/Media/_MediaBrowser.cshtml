@@ -1,0 +1,17 @@
+﻿@page
+@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Media>
+<div class="row">
+@foreach (var item in Model)
+{
+    <div class="col-md-3 mb-3">
+        <img src="@item.FileUrl" onclick="selectMedia('@item.FileUrl')" 
+             class="img-thumbnail" style="cursor:pointer; height:150px; object-fit:cover;" />
+    </div>
+}
+</div>
+
+<script>
+    function selectMedia(url) {
+        window.parent.postMessage({ selectedImage: url }, "*");
+    }
+</script>
