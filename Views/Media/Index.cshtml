@@ -1,9 +1,6 @@
-﻿@model IEnumerable<Trang_tin_điện_tử_mvc.Models.Media>
-
+﻿@model Trang_tin_điện_tử_mvc.Models.MediaIndexViewModel
 @{
     ViewData["Title"] = "Quản lý Media";
-    // Lấy số lượng ảnh chưa dùng để hiển thị trong confirm dialog
-    int unusedCount = Model.Count(m => m.ArticleId == null);
 }
 
 <div class="container-fluid">
@@ -13,8 +10,8 @@
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadModal">
                 <i class="bi bi-upload me-1"></i>Upload Ảnh
             </button>
-            <button type="button" class="btn btn-danger" id="btnDeleteAllUnused" @(unusedCount == 0 ? "disabled" : "")>
-                 <i class="bi bi-trash me-1"></i>Xóa tất cả ảnh chưa dùng
+            <button type="button" class="btn btn-danger" id="btnDeleteAllUnused" @(Model.UnusedMediaCount == 0 ? "disabled" : "")>
+                <i class="bi bi-trash me-1"></i>Xóa tất cả ảnh chưa dùng
             </button>
             <a href="@Url.Action("Index", "Articles")" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Về Quản lý Bài viết
@@ -26,17 +23,11 @@
         <div class="card-body">
             <form method="get" class="row g-3">
                 <div class="col-md-4">
-                    <input type="text" name="search" value="@ViewBag.Search" placeholder="Tìm theo tên file..." class="form-control" />
+                    <input type="text" name="search" value="@Model.CurrentSearch" placeholder="Tìm theo tên file..." class="form-control" />
                 </div>
                 <div class="col-md-4">
-                    <select name="articleId" class="form-select">
+                    <select name="articleId" class="form-select" asp-items="Model.ArticlesDropdown">
                         <option value="">-- Tất cả bài viết --</option>
-                        @foreach (var item in (SelectList)ViewBag.Articles)
-                        {
-                            <option value="@item.Value" selected="@(ViewBag.ArticleId?.ToString() == item.Value ? "selected" : null)">
-                                @item.Text
-                            </option>
-                        }
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -57,7 +48,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0">@Model.Count()</h4>
+                            <h4 class="mb-0">@Model.TotalMediaCount</h4>
                             <small>Tổng số ảnh</small>
                         </div>
                         <i class="bi bi-images fs-1 opacity-50"></i>
@@ -70,8 +61,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0">@Model.Count(m => m.ArticleId != null)</h4>
-                            <small>Đã sử dụng</small>
+                            <h4 class="mb-0">@Model.UsedMediaCount</h4>
+                            <small>Đã sử dụng </small>
                         </div>
                         <i class="bi bi-check-circle fs-1 opacity-50"></i>
                     </div>
@@ -83,7 +74,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4 class="mb-0" id="unusedCountTag">@unusedCount</h4>
+                            <h4 class="mb-0" id="unusedCountTag">@Model.UnusedMediaCount</h4>
                             <small>Chưa sử dụng</small>
                         </div>
                         <i class="bi bi-clock fs-1 opacity-50"></i>
@@ -96,11 +87,8 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            @{
-                                var totalSize = Model.Sum(m => m.FileSizeKB);
-                            }
-                            <h4 class="mb-0">@totalSize kB</h4>
-                            <small>Tổng dung lượng</small>
+                            <h4 class="mb-0">@Model.TotalSizeKB.ToString("N0") KB</h4>
+                            <small>Tổng dung lượng </small>
                         </div>
                         <i class="bi bi-hdd fs-1 opacity-50"></i>
                     </div>
@@ -111,7 +99,7 @@
 
     <div class="media-container">
         <div class="row">
-            @if (!Model.Any())
+            @if (!Model.PagedMediaList.Any())
             {
                 <div class="col-12">
                     <div class="text-center py-5">
@@ -122,7 +110,7 @@
                 </div>
             }
 
-            @foreach (var item in Model)
+            @foreach (var item in Model.PagedMediaList)
             {
                 <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
                     <div class="card media-card h-100">
@@ -197,13 +185,13 @@
             }
         </div>
     </div>
-    @if (ViewBag.TotalPages > 1)
+    @if (Model.TotalPages > 1)
     {
         <nav aria-label="Page navigation" class="mt-4">
             <ul class="pagination justify-content-center">
-                @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+                @for (int i = 1; i <= Model.TotalPages; i++)
                 {
-                    <li class="page-item @(ViewBag.Page == i ? "active" : "")">
+                    <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
                         <a class="page-link"
                            href="?page=@i&search=@ViewBag.Search&articleId=@ViewBag.ArticleId">@i</a>
                     </li>
@@ -348,11 +336,8 @@
 @section Scripts {
     <script>
         // Biến toàn cục lưu số lượng ảnh chưa dùng để script sử dụng
-       var unusedMediaCount = @(Model != null ? Model.Count(m => m.ArticleId == null) : 0);
+       var unusedMediaCount = @Model.UnusedMediaCount;
 
-        // ... (Giữ nguyên các script cũ của bạn: delete-btn, openImageModal, copyUrl, downloadImage, uploadFiles, toastr.options) ...
-
-        // Xóa ảnh lẻ (Giữ nguyên)
         $(document).on('click', '.delete-btn', function () {
 
             if (typeof toastr !== 'undefined') {
@@ -467,13 +452,14 @@
             }
 
             uploadNext();
-       
+        }
         // ============================================================
         // 🎯 SCRIPT MỚI (ĐÃ TỐI ƯU): XỬ LÝ NÚT XÓA TẤT CẢ ẢNH CHƯA DÙNG
         // ============================================================
         $('#btnDeleteAllUnused').click(function () {
             // Sử dụng biến toàn cục đã lấy từ C#           
-            if (confirm('CẢNH BÁO NGHIÊM TRỌNG:\n\nBạn có chắc chắn muốn xóa vĩnh viễn TẤT CẢ ' + unusedMediaCount + ' ảnh chưa được sử dụng?\n\nHành động này KHÔNG THỂ hoàn tác!')) {
+            if (confirm('CẢNH BÁO NGHIÊM TRỌNG:\n\nBạn có chắc chắn muốn xóa vĩnh viễn TẤT CẢ ' + unusedMediaCount + ' ảnh chưa được sử dụng?\n\nHành động này KHÔNG THỂ hoàn tác!'))
+            {
                 // Hiệu ứng loading trên nút
                 var $btn = $(this);
                 var originalText = $btn.html();

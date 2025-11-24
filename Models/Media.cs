@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Trang_tin_điện_tử_mvc.Models
 {
-    public class Media
+        public class Media
     {
         [DisplayName("Mã Media")]
         public int Id { get; set; }

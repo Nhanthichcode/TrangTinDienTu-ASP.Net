@@ -1,120 +1,152 @@
-﻿@{
-    ViewData["Title"] = "Chính Sách Bảo Mật Phiên Bản \"Không Buồn Ngủ\"";
-    // Tùy chọn: Chọn layout phù hợp (nếu cần khác layout mặc định)
-    // Layout = "_Layout";
-}
+﻿@page
 
-@* Sử dụng container thông thường để giữ nội dung trong trang *@
-<div class="container mt-4 mb-5">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-danger text-white">
-            @* Cho màu mè chút *@
-            <h1 class="h3 mb-0"><i class="bi bi-shield-lock-fill me-2"></i>@ViewData["Title"] Của E-News 🕶️</h1>
-        </div>
-        <div class="card-body p-4 p-md-5">
-            @* Thêm padding *@
+<style>
+    /* CNN Article Style */
+    .cnn-article-container {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #111;
+        line-height: 1.6;
+        max-width: 900px; /* Giới hạn chiều rộng để dễ đọc như bài báo */
+        margin: 0 auto;
+    }
 
-            <p class="lead">Chào bạn! Chúng tôi biết đọc chính sách bảo mật thường nhàm chán như xem sơn khô, nên E-News đã cố gắng viết phiên bản này dễ nuốt hơn. Chúng tôi tôn trọng sự riêng tư của bạn như cách chúng tôi tôn trọng một tin tức nóng hổi vậy – cực kỳ nghiêm túc!</p>
+    .cnn-article-title {
+        font-size: 3rem;
+        font-weight: 900;
+        color: #000;
+        margin-bottom: 1rem;
+        border-bottom: 4px solid #cc0000; /* CNN Accent */
+        padding-bottom: 20px;
+    }
 
-            <p>Chính sách này giải thích E-News thu thập thông tin gì, tại sao lại cần, và chúng tôi làm gì với "kho báu" đó. Ngồi xuống, thư giãn, và cùng lướt qua nhé!</p>
+    .cnn-article-meta {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 40px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
 
-            <hr class="my-4">
+    .cnn-section-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-top: 2.5rem;
+        margin-bottom: 1.2rem;
+        color: #222;
+        position: relative;
+    }
+    /* Tạo một đường gạch đỏ nhỏ dưới mỗi tiêu đề mục */
+    .cnn-section-title::after {
+        content: '';
+        display: block;
+        width: 50px;
+        height: 3px;
+        background: #cc0000;
+        margin-top: 10px;
+    }
 
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-magic me-2"></i>1. Thông Tin E-News "Nhặt Nhạnh" (Và Lý Do Chính Đáng) ✨</h2>
+    .cnn-article-body p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        color: #333;
+    }
 
-            <p>Để E-News hoạt động trơn tru và mang đến trải nghiệm xịn sò, chúng tôi cần một chút thông tin:</p>
+    /* Custom List Style */
+    .cnn-list {
+        padding-left: 1.5rem;
+        margin-bottom: 2rem;
+    }
 
-            <ul>
-                <li>
-                    <p><strong>Thông tin bạn tự nguyện cung cấp:</strong></p>
-                    <ul>
-                        <li><strong>Khi đăng ký/bình luận:</strong> Tên đăng nhập, email, mật khẩu (được mã hóa siêu cấp), đôi khi là họ tên, avatar... Chúng tôi cần những thứ này để bạn có thể đăng nhập, bình luận "cháy phố", và quản lý tài khoản của mình.</li>
-                        <li><strong>Khi liên hệ:</strong> Nếu bạn gửi email hoặc liên hệ qua form, chúng tôi sẽ giữ thông tin đó để hỗ trợ bạn tốt nhất.</li>
-                    </ul>
-                </li>
-                <li class="mt-2">
-                    <p><strong>Thông tin "tự động" thu thập (Không cần bạn nhúc nhích):</strong></p>
-                    <ul>
-                        <li><strong>Nhật ký máy chủ (Log data):</strong> Như mọi trang web khác, máy chủ của chúng tôi tự động ghi lại thông tin khi bạn ghé thăm, ví dụ: địa chỉ IP, loại trình duyệt, trang bạn truy cập, thời gian... Việc này giúp chúng tôi chẩn đoán lỗi và đảm bảo an ninh.</li>
-                        <li><strong>Cookies và "Đồng bọn":</strong> Chúng tôi dùng cookie (những file nhỏ xíu lưu trên trình duyệt) và các công nghệ tương tự để giúp bạn đăng nhập dễ hơn, nhớ tùy chọn của bạn, và hiểu cách bạn dùng trang web. Đừng lo, chúng không phải là virus đâu! (Bạn có thể xem thêm phần Cookie bên dưới).</li>
-                        <li><strong>Thông tin thiết bị:</strong> Đôi khi chúng tôi biết bạn đang dùng thiết bị gì (điện thoại, máy tính), hệ điều hành nào để tối ưu giao diện cho phù hợp.</li>
-                    </ul>
-                </li>
-            </ul>
+    .cnn-list li {
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+        position: relative;
+    }
+    /* Thay chấm tròn mặc định bằng chấm vuông đỏ */
+    .cnn-list ul {
+        list-style: none;
+        padding-left: 0;
+    }
+    .cnn-list ul li {
+         padding-left: 1.5em;
+    }
+    .cnn-list ul li::before {
+        content: "\25A0"; /* Square bullet */
+        color: #cc0000;
+        display: inline-block;
+        width: 1em;
+        margin-left: -1.5em;
+    }
 
-            <hr class="my-4">
+    .cnn-highlight {
+        font-weight: 700;
+        color: #000;
+    }
+</style>
 
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-egg-fried me-2"></i>2. E-News "Xào Nấu" Thông Tin Của Bạn Như Thế Nào? 🍳</h2>
+<div class="container py-5">
+    <div class="cnn-article-container">
+        <header>
+            <h1 class="cnn-article-title">Chính sách bảo mật</h1>
+            <div class="cnn-article-meta">
+                Cập nhật lần cuối: <span class="text-danger">Tháng 5, 2024</span> | Bởi: Ban Pháp chế AGU-News
+            </div>
+        </header>
 
-            <p>Chúng tôi dùng thông tin thu thập được cho các mục đích chính đáng sau:</p>
-            <ul>
-                <li><strong>Vận hành và Cung cấp Dịch vụ:</strong> Để bạn có thể đọc tin, bình luận, quản lý tài khoản, và sử dụng các tính năng của E-News.</li>
-                <li><strong>Cải thiện và Tùy chỉnh:</strong> Phân tích cách bạn sử dụng trang web để làm cho nó tốt hơn, nhanh hơn, và phù hợp hơn với sở thích của bạn (ví dụ: gợi ý tin tức liên quan).</li>
-                <li><strong>Giao tiếp:</strong> Gửi email thông báo quan trọng (ví dụ: đặt lại mật khẩu, thay đổi chính sách), hoặc trả lời khi bạn liên hệ. Chúng tôi hứa không spam!</li>
-                <li><strong>An ninh và Pháp lý:</strong> Bảo vệ trang web khỏi các "thế lực đen tối", chống gian lận, và tuân thủ các yêu cầu pháp lý.</li>
-            </ul>
+        <article class="cnn-article-body">
+            <p class="lead cnn-highlight">Tại AGU-News, chúng tôi cam kết bảo vệ quyền riêng tư của bạn. Chính sách này mô tả cách chúng tôi thu thập, sử dụng và bảo vệ thông tin cá nhân của bạn khi bạn sử dụng trang web của chúng tôi.</p>
 
-            <hr class="my-4">
+            <h2 class="cnn-section-title">1. Thông tin chúng tôi thu thập</h2>
+            <p>Chúng tôi có thể thu thập các loại thông tin sau:</p>
+            <div class="cnn-list">
+                <ul>
+                    <li><span class="cnn-highlight">Thông tin cá nhân:</span> Họ tên, địa chỉ email, số điện thoại khi bạn đăng ký tài khoản, đăng ký nhận bản tin hoặc liên hệ với chúng tôi.</li>
+                    <li><span class="cnn-highlight">Thông tin kỹ thuật:</span> Địa chỉ IP, loại trình duyệt, hệ điều hành, thời gian truy cập và các trang bạn đã xem trên website của chúng tôi.</li>
+                    <li><span class="cnn-highlight">Cookies và công nghệ theo dõi:</span> Chúng tôi sử dụng cookies để cải thiện trải nghiệm người dùng và phân tích lưu lượng truy cập.</li>
+                </ul>
+            </div>
 
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-incognito me-2"></i>3. Khi Nào E-News Chia Sẻ "Bí Mật"? (Spoiler: Rất Hạn Chế!) 🤫</h2>
+            <h2 class="cnn-section-title">2. Cách chúng tôi sử dụng thông tin</h2>
+            <p>Thông tin thu thập được sử dụng cho các mục đích sau:</p>
+            <div class="cnn-list">
+                <ul>
+                    <li>Cung cấp và duy trì dịch vụ của chúng tôi.</li>
+                    <li>Thông báo cho bạn về các thay đổi đối với dịch vụ của chúng tôi.</li>
+                    <li>Cho phép bạn tham gia vào các tính năng tương tác khi bạn chọn làm như vậy.</li>
+                    <li>Cung cấp hỗ trợ khách hàng.</li>
+                    <li>Thu thập thông tin phân tích hoặc thông tin có giá trị để chúng tôi có thể cải thiện dịch vụ của mình.</li>
+                    <li>Giám sát việc sử dụng dịch vụ của chúng tôi.</li>
+                    <li>Phát hiện, ngăn chặn và giải quyết các vấn đề kỹ thuật.</li>
+                </ul>
+            </div>
 
-            <p>Chúng tôi <strong>không bán</strong> thông tin cá nhân của bạn. Đó là lời hứa! Việc chia sẻ chỉ xảy ra trong các trường hợp rất cụ thể:</p>
-            <ul>
-                <li><strong>Nhà cung cấp Dịch vụ:</strong> Chúng tôi hợp tác với các bên thứ ba đáng tin cậy để giúp vận hành E-News (ví dụ: nhà cung cấp hosting, dịch vụ phân tích web như Google Analytics). Họ chỉ được phép sử dụng thông tin của bạn theo chỉ dẫn của chúng tôi và phải bảo mật nó.</li>
-                <li><strong>Yêu cầu Pháp lý:</strong> Nếu luật pháp yêu cầu hoặc có trát tòa/lệnh của chính phủ, chúng tôi có thể phải tiết lộ thông tin. Chúng tôi sẽ cố gắng thông báo cho bạn nếu được phép.</li>
-                <li><strong>Khi có Sự đồng ý của bạn:</strong> Nếu có trường hợp nào khác cần chia sẻ, chúng tôi sẽ hỏi ý kiến bạn trước.</li>
-                <li><strong>Thông tin Công khai:</strong> Những gì bạn tự đăng công khai (như bình luận, thông tin profile công khai) thì ai cũng thấy được nhé!</li>
-            </ul>
+            <h2 class="cnn-section-title">3. Bảo mật thông tin</h2>
+            <p>Chúng tôi coi trọng việc bảo mật thông tin của bạn. Chúng tôi áp dụng các biện pháp an ninh kỹ thuật và tổ chức phù hợp để bảo vệ thông tin cá nhân của bạn khỏi việc truy cập, sử dụng hoặc tiết lộ trái phép.</p>
+            <p>Tuy nhiên, xin lưu ý rằng không có phương thức truyền tải qua Internet hoặc phương thức lưu trữ điện tử nào là an toàn 100%. Mặc dù chúng tôi cố gắng sử dụng các phương tiện được thương mại chấp nhận để bảo vệ thông tin cá nhân của bạn, chúng tôi không thể đảm bảo tính bảo mật tuyệt đối của nó.</p>
 
-            <hr class="my-4">
+            <h2 class="cnn-section-title">4. Chia sẻ thông tin</h2>
+            <p>Chúng tôi không bán, trao đổi hoặc chuyển giao thông tin cá nhân của bạn cho bên thứ ba mà không có sự đồng ý của bạn, ngoại trừ các trường hợp sau:</p>
+            <div class="cnn-list">
+                <ul>
+                    <li>Các nhà cung cấp dịch vụ tin cậy hỗ trợ chúng tôi vận hành website và tiến hành công việc kinh doanh, miễn là các bên này đồng ý giữ bí mật thông tin này.</li>
+                    <li>Khi chúng tôi tin rằng việc tiết lộ là cần thiết để tuân thủ pháp luật, thực thi chính sách trang web của chúng tôi, hoặc bảo vệ quyền lợi, tài sản hoặc sự an toàn của chúng tôi hoặc của người khác.</li>
+                </ul>
+            </div>
 
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-shield-shaded me-2"></i>4. "Lá Chắn" Bảo Vệ Thông Tin Của Bạn 🛡️</h2>
+            <h2 class="cnn-section-title">5. Quyền của bạn</h2>
+            <p>Bạn có quyền truy cập, sửa đổi hoặc xóa thông tin cá nhân của mình bất cứ lúc nào. Vui lòng liên hệ với chúng tôi qua email <strong>privacy@agu-news.com</strong> để thực hiện các quyền này.</p>
 
-            <p>E-News áp dụng các biện pháp kỹ thuật và tổ chức hợp lý để bảo vệ thông tin của bạn khỏi mất mát, truy cập trái phép, hoặc lạm dụng. Chúng tôi sử dụng mã hóa (SSL/HTTPS), kiểm soát truy cập, và các phương pháp khác. Tuy nhiên, hãy nhớ rằng không có hệ thống nào là bất khả xâm phạm 100% trên Internet.</p>
+            <h2 class="cnn-section-title">6. Thay đổi chính sách này</h2>
+            <p>Chúng tôi có thể cập nhật Chính sách bảo mật này theo thời gian. Chúng tôi sẽ thông báo cho bạn về bất kỳ thay đổi nào bằng cách đăng Chính sách bảo mật mới trên trang này. Bạn nên xem lại Chính sách bảo mật này định kỳ để nắm bắt mọi thay đổi.</p>
 
-            <hr class="my-4">
-
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-cookie me-2"></i>5. Về "Lọ Bánh Quy" (Cookies) 🍪</h2>
-
-            <p>Cookie giúp trang web nhớ bạn là ai và bạn thích gì. Chúng tôi dùng cookie cho:</p>
-            <ul>
-                <li><strong>Đăng nhập:</strong> Giữ bạn đăng nhập mà không cần nhập lại mật khẩu liên tục.</li>
-                <li><strong>Tùy chọn:</strong> Lưu các cài đặt bạn chọn.</li>
-                <li><strong>Phân tích:</strong> Hiểu cách người dùng tương tác với trang web (ẩn danh).</li>
-            </ul>
-            <p>Bạn có thể kiểm soát cookie thông qua cài đặt trình duyệt của mình. Tuy nhiên, nếu tắt cookie, một số tính năng của E-News có thể không hoạt động đúng cách.</p>
-
-            <hr class="my-4">
-
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-joystick me-2"></i>6. Quyền Năng Của Bạn 💪</h2>
-
-            <p>Bạn có quyền kiểm soát thông tin cá nhân của mình:</p>
-            <ul>
-                <li><strong>Truy cập & Chỉnh sửa:</strong> Bạn có thể xem và sửa đổi thông tin trong trang quản lý tài khoản cá nhân (<a asp-area="Identity" asp-page="/Account/Manage">tại đây</a>).</li>
-                <li><strong>Xóa tài khoản:</strong> Nếu muốn "biến mất" khỏi E-News, hãy liên hệ với chúng tôi (xem phần Liên hệ). Xin lưu ý rằng một số thông tin (như log máy chủ) có thể vẫn được lưu trữ trong một thời gian nhất định vì lý do kỹ thuật hoặc pháp lý.</li>
-                <li><strong>Từ chối:</strong> Bạn có thể từ chối nhận các email không cần thiết (nếu có).</li>
-            </ul>
-
-            <hr class="my-4">
-
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-arrow-repeat me-2"></i>7. Thay Đổi Chính Sách (Vì Cuộc Sống Luôn Thay Đổi) 🔄</h2>
-
-            <p>Thỉnh thoảng, chúng tôi có thể cập nhật chính sách này. Nếu có thay đổi quan trọng, chúng tôi sẽ cố gắng thông báo cho bạn (qua email hoặc thông báo trên trang web). Việc bạn tiếp tục sử dụng E-News sau khi chính sách thay đổi có nghĩa là bạn đồng ý với phiên bản mới.</p>
-
-            <hr class="my-4">
-
-            <h2 class="h4 text-danger fw-bold mb-3"><i class="bi bi-telephone-fill me-2"></i>8. Cần "Tám" Thêm? Liên Hệ E-News! 📞</h2>
-
-            <p>Nếu bạn có bất kỳ câu hỏi nào về chính sách bảo mật "không buồn ngủ" này, đừng ngần ngại liên hệ với chúng tôi qua:</p>
-            <ul>
-                <li><strong>Email:</strong> <a href="mailto:support@enews.com">support@enews.com</a> @* <-- SỬA EMAIL CỦA BẠN VÀO ĐÂY *@</li>
-                <li><strong>Trang Liên hệ:</strong> <a asp-controller="Home" asp-action="Contact">Tại đây</a> @* <-- Đảm bảo link này đúng *@</li>
-            </ul>
-
-            <p class="mt-4"><strong>Cập nhật lần cuối:</strong> @DateTime.Now.ToString("dd/MM/yyyy")</p> @* Tự động lấy ngày hiện tại *@
-
-            <p>Cảm ơn bạn đã tin tưởng và sử dụng E-News!</p>
-
-        </div>
+            <h2 class="cnn-section-title">7. Liên hệ</h2>
+            <p>Nếu bạn có bất kỳ câu hỏi nào về Chính sách bảo mật này, vui lòng liên hệ với chúng tôi:</p>
+            <div class="cnn-list">
+                <ul>
+                    <li>Email: contact@agu-news.com</li>
+                    <li>Điện thoại: (0296) 3841 137</li>
+                </ul>
+            </div>
+        </article>
     </div>
 </div>

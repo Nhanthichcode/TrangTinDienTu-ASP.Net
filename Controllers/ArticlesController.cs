@@ -269,72 +269,111 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
             if (ModelState.IsValid)
             {
-                // 🎯 TRÍCH XUẤT ẢNH VÀ LƯU VỊ TRÍ
-                var (cleanContent, positions) = await ExtractImagesAndStorePositions(viewModel.Content, 0); // Tạm thời chưa có articleId
-
+                // 1. TẠO ĐỐI TƯỢNG ARTICLE (Chưa xử lý nội dung chi tiết)
                 var article = new Article
                 {
                     Title = viewModel.Title,
                     Summary = viewModel.Summary,
-                    Content = cleanContent, // 🎯 LƯU CONTENT KHÔNG CÓ ẢNH (CHỈ CÓ PLACEHOLDER)
+                    Content = viewModel.Content, // Tạm thời dùng nội dung gốc
                     CategoryId = viewModel.CategoryId,
                     AuthorId = userId,
                     CreatedAt = DateTime.Now,
                     IsApproved = false,
-                    ViewCount = 0
+                    ViewCount = 0,
+                    ArticleTags = new List<ArticleTag>(),
+                    ArticleImagePositions = new List<ArticleImagePosition>()
                 };
 
-                // Xử lý thumbnail (giữ nguyên)
+                // 2. XỬ LÝ ẢNH THUMBNAIL (Nếu có)
+                // Biến này để giữ tham chiếu đến Media thumbnail để cập nhật sau
+                Media? thumbnailMediaEntry = null;
+
                 if (thumbnailFile != null && thumbnailFile.Length > 0)
                 {
-                    _logger.LogInformation("Đang xử lý ảnh Thumbnail: {FileName} ({Size} bytes)", thumbnailFile.FileName, thumbnailFile.Length);
-                    string wwwRootPath = _webHostEnvironment.WebRootPath;
-                    string uploadsFolder = Path.Combine(wwwRootPath, "uploads/articles");
+                    _logger.LogInformation("Đang xử lý ảnh Thumbnail: {FileName}", thumbnailFile.FileName);
+                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/articles");
                     Directory.CreateDirectory(uploadsFolder);
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(thumbnailFile.FileName);
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(thumbnailFile.FileName);
                     string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                     using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
                         await thumbnailFile.CopyToAsync(fileStream);
                     }
-                    article.ThumbnailUrl = "/uploads/articles/" + uniqueFileName;
+
+                    string fileUrl = "/uploads/articles/" + uniqueFileName;
+                    article.ThumbnailUrl = fileUrl;
+
+                    // Tạo bản ghi Media cho thumbnail (Chưa có ArticleId)
+                    thumbnailMediaEntry = new Media
+                    {
+                        FileName = thumbnailFile.FileName,
+                        FileUrl = fileUrl,
+                        FileType = thumbnailFile.ContentType,
+                        FileSizeKB = thumbnailFile.Length / 1024,
+                        CreatedAt = DateTime.Now,
+                        ArticleId = null // Quan trọng: Để null vì bài viết chưa có ID
+                    };
+                    // Thêm vào context để chuẩn bị lưu
+                    _context.Media.Add(thumbnailMediaEntry);
                 }
                 else
                 {
                     article.ThumbnailUrl = "/uploads/articles/default-thumbnail.jpg";
                 }
 
+                // Xử lý Tags
                 if (SelectedTagIds != null && SelectedTagIds.Any())
                 {
-                    article.ArticleTags = SelectedTagIds.Select(tagId => new ArticleTag { TagId = tagId }).ToList();
-                }
-
-                _context.Add(article);
-                await _context.SaveChangesAsync(); // 🎯 Lưu để có ID
-
-                // 🎯 CẬP NHẬT LẠI ARTICLEID CHO CÁC MEDIA VÀ ARTICLEIMAGEPOSITION
-                foreach (var position in positions)
-                {
-                    position.ArticleId = article.Id;
-                    var media = await _context.Media.FindAsync(position.MediaId);
-                    if (media != null)
+                    foreach (var tagId in SelectedTagIds)
                     {
-                        media.ArticleId = article.Id;
+                        article.ArticleTags.Add(new ArticleTag { TagId = tagId });
                     }
                 }
-                _context.ArticleImagePositions.AddRange(positions);
+
+                // 3. LƯU LẦN 1: ĐỂ TẠO BÀI VIẾT VÀ LẤY ID
+                // Lúc này, thumbnailMediaEntry cũng được lưu với ArticleId = NULL
+                _context.Add(article);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Đã tạo bài viết ID: {ArticleId} và xử lý ảnh", article.Id);
+                // ---> TẠI ĐÂY: article.Id đã có giá trị thật từ DB <---
+
+                // 4. XỬ LÝ ẢNH TRONG NỘI DUNG (Bây giờ mới dùng ID thật)
+                // Truyền article.Id thật vào hàm xử lý
+                var (cleanContent, positions) = await ExtractImagesAndStorePositions(article.Content, article.Id);
+
+                // Cập nhật lại nội dung đã làm sạch (có placeholder)
+                article.Content = cleanContent;
+
+                // Thêm các vị trí ảnh vào context
+                if (positions.Any())
+                {
+                    _context.ArticleImagePositions.AddRange(positions);
+                }
+
+                // 5. CẬP NHẬT LIÊN KẾT CHO THUMBNAIL (Nếu có)
+                if (thumbnailMediaEntry != null)
+                {
+                    // Gán ID bài viết vừa tạo cho Media thumbnail
+                    thumbnailMediaEntry.ArticleId = article.Id;
+                    // Đánh dấu là đã sửa đổi để EF biết cần phải UPDATE
+                    _context.Entry(thumbnailMediaEntry).State = EntityState.Modified;
+                }
+
+                // 6. LƯU LẦN 2: CẬP NHẬT NỘI DUNG, VỊ TRÍ ẢNH, VÀ LIÊN KẾT THUMBNAIL
+                // Lần này sẽ không bị lỗi FK vì article.Id đã tồn tại
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Đã tạo bài viết thành công ID: {ArticleId}", article.Id);
+                TempData["SuccessMessage"] = "Tạo bài viết mới thành công!";
                 return RedirectToAction(nameof(Index));
             }
 
+            // Nếu Model không hợp lệ, load lại dữ liệu cho View
             ViewBag.CategoryId = new SelectList(_context.Categories, "Id", "Name", viewModel.CategoryId);
             ViewBag.Tags = await _context.Tags.ToListAsync();
             return View(viewModel);
         }
-
         private async Task LinkMediaToArticle(string content, int articleId)
         {
             _logger.LogInformation("vào hàm gán ảnh mồ côi");

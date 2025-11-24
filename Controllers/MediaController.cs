@@ -10,8 +10,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
-        private readonly ILogger<MediaController>
-    _logger; // 🎯 Sửa thành MediaController
+        private readonly ILogger<MediaController> _logger; 
+        int pageSize = 12;
 
         public MediaController(ApplicationDbContext context, IWebHostEnvironment env, ILogger<MediaController>
             logger)
@@ -27,32 +27,58 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         public async Task<IActionResult>
             Index(string? search, int? articleId, int page = 1)
         {
-            int pageSize = 12;
+
+            var articlesQuery = _context.Articles
+                            .OrderByDescending(a => a.CreatedAt)
+                            .Select(a => new {
+                                a.Id,
+                                a.Title
+                            });
 
             var query = _context.Media
-            .Include(m => m.Article)
-            .AsQueryable();
+        .Include(m => m.Article)
+        .AsNoTracking() // Tối ưu hiệu năng cho truy vấn chỉ đọc
+        .AsQueryable();
 
+            // 2. Áp dụng các bộ lọc
             if (!string.IsNullOrEmpty(search))
+            {
                 query = query.Where(m => m.FileName.Contains(search));
+            }
 
             if (articleId.HasValue)
+            {
                 query = query.Where(m => m.ArticleId == articleId.Value);
-
+            }
             int totalItems = await query.CountAsync();
-            var items = await query
-            .OrderByDescending(m => m.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+            var allMediaBaseQuery = _context.Media.AsNoTracking();
+            int statsTotalCount = await allMediaBaseQuery.CountAsync();
+            int statsUsedCount = await allMediaBaseQuery.CountAsync(m => m.ArticleId != null);
+            int statsUnusedCount = statsTotalCount - statsUsedCount;
+            long statsTotalSizeKB = await allMediaBaseQuery.SumAsync(m => (long?)m.FileSizeKB) ?? 0;
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+            page = Math.Max(1, Math.Min(page, totalPages == 0 ? 1 : totalPages));
 
-            ViewBag.Search = search;
-            ViewBag.ArticleId = articleId;
-            ViewBag.Articles = new SelectList(_context.Articles, "Id", "Title");
-            ViewBag.Page = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-
-            return View(items);
+            var pagedItems = await query
+                .OrderByDescending(m => m.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+            var viewModel = new MediaIndexViewModel
+            {
+                PagedMediaList = pagedItems,
+                TotalMediaCount = statsTotalCount,
+                UsedMediaCount = statsUsedCount,
+                UnusedMediaCount = statsUnusedCount,
+                TotalSizeKB = statsTotalSizeKB,
+                ArticlesDropdown = new SelectList(_context.Articles, "Id", "Title", articleId),
+                CurrentPage = page,
+                TotalPages = totalPages,
+                CurrentSearch = search,
+                CurrentArticleId = articleId
+            };
+            ViewBag.Articles = new SelectList(articlesQuery, "Id", "Title");
+            return View(viewModel);
         }
 
         // -----------------------------------------------

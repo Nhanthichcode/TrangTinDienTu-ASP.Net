@@ -15,7 +15,7 @@
             ArticleCount = c.Articles.Count
         })
         .OrderByDescending(x => x.ArticleCount)
-        .Take(9)
+        .Take(7)
         .Select(x => x.Category)
         .ToList();
 
@@ -69,7 +69,7 @@
         /* Tùy chỉnh Brand (Logo) */
         .navbar-brand.cnn-brand-custom {
             font-weight: 700;
-            font-size: 1.8rem;
+            font-size: 1.4rem;
 
             /* Màu sắc đã được xử lý bởi class navbar-dark */
         }
@@ -78,7 +78,7 @@
         /* Style mặc định cho các link trong navbar tối màu */
         .navbar-dark .navbar-nav .nav-link {
             font-weight: 700;
-            font-size: 14px;
+            font-size: 12px;
             text-transform: uppercase;
             /* Padding lớn để tạo độ cao cho thanh menu */
             padding: 1rem 0.8rem !important;
@@ -235,9 +235,9 @@
                 <div class="collapse navbar-collapse" id="mainNavbarContent">
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">                        
                         @* Các chuyên mục chính *@
-                        @foreach (var category in mainCategories)
+                        @foreach (var category in mainCategories.Take(7))
                         {
-                            <li class="nav-item" style="font-size: 12px">
+                            <li class="nav-item">
                                 @{ var isCategoryActive = currentCategoryId == category.Id.ToString(); }
                                 <a class="nav-link @(isCategoryActive ? "active" : "")"
                                    href="@Url.Action("Index", "Home", new { categoryId = category.Id })">
@@ -247,7 +247,7 @@
                         }
 
                         @* Dropdown "Khác" *@
-                        @if (allCategories.Count > 9)
+                        @if (allCategories.Count > 7)
                         {
                             <li class="nav-item dropdown">
                                 @* Sử dụng nav-link và dropdown-toggle *@
@@ -307,6 +307,7 @@
                                                 <span>Trang quản trị (Admin)</span>
                                             </a>
                                         </li>
+                                        <li><hr class="dropdown-divider"></li>
                                     }
 
                                     @* SỬA ĐỔI Ở ĐÂY: Dùng if độc lập thay vì else if.
@@ -336,11 +337,7 @@
                                 <i class="bi bi-eye me-2 text-secondary"></i>
                                 <span>Xem trang cá nhân công khai</span>
                                 </a>
-                                </li>
-
-
-                                    <li><hr class="dropdown-divider"></li>
-
+                                    <li><hr class="dropdown-divider"></li>                               
                                     <li>
                                         <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="d-inline">
                                             <button type="submit" class="dropdown-item d-flex align-items-center text-danger w-100">
@@ -378,7 +375,7 @@
                         </a>
                         @if (i < trendingTags.Count - 1)
                         {
-                            <span class="trending-separator mx-3">|</span>
+                            <span class="trending-separator mx-3"> | </span>
                         }
                     }
                 </div>
@@ -393,10 +390,10 @@
     @* --- FOOTER (Giữ nguyên phần footer cũ của bạn) --- *@
     <footer class="bg-dark text-light pt-5 pb-3 mt-auto">
        @* ... (Phần code footer cũ của bạn giữ nguyên ở đây, không thay đổi gì) ... *@
-       <div class="container">
+        <div class="container">
             <div class="row g-4">
                 <div class="col-lg-4 col-md-6">
-                    <h5 class="text-uppercase fw-bold mb-3 text-primary">
+                    <h5 class="cnn-brand-custom  navbar-brand">
                         <i class="bi bi-newspaper me-2"></i>AGU-News
                     </h5>
                     <p class="small text-secondary">
@@ -411,7 +408,7 @@
                 </div>
 
                 <div class="col-lg-2 col-md-6">
-                    <h5 class="fw-bold mb-3">Chuyên mục</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Chuyên mục</h5>
                     <ul class="list-unstyled small">
                         @if (DbContext.Categories.Any())
                         {
@@ -429,11 +426,8 @@
                 </div>
 
                 <div class="col-lg-2 col-md-6">
-                    <h5 class="fw-bold mb-3">Thông tin</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Thông tin</h5>
                     <ul class="list-unstyled small">
-                        <li class="mb-2">
-                            <a asp-controller="Home" asp-action="Terms" class="text-decoration-none text-secondary footer-link">Giới thiệu</a>
-                        </li>
                         <li class="mb-2">
                             <a asp-controller="Home" asp-action="Contact" class="text-decoration-none text-secondary footer-link">Liên hệ</a>
                         </li>
@@ -447,18 +441,18 @@
                 </div>
 
                 <div class="col-lg-4 col-md-6">
-                    <h5 class="fw-bold mb-3">Liên hệ</h5>
+                    <h5 class="fw-bold mb-3  navbar-brand">Liên hệ</h5>
                     <ul class="list-unstyled small text-secondary">
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-geo-alt-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>Phường Bình Đức, Thành phố Long Xuyên, Tỉnh An Giang</span>
                         </li>
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-envelope-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>nhan_dth225710@student.agu.edu.vn</span>
                         </li>
                         <li class="mb-3 d-flex">
-                            <i class="bi bi-telephone-fill text-primary me-2 flex-shrink-0"></i>
+                            <i class="text-primary me-2 flex-shrink-0"></i>
                             <span>(+84) 866 710 544</span>
                         </li>
                     </ul>

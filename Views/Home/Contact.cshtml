@@ -1,116 +1,178 @@
-﻿@{
-    ViewData["Title"] = "Liên hệ";
-    // Lấy thông tin từ ViewBag (nếu bạn truyền từ Controller)
-    var contactEmail = ViewBag.ContactEmail ?? "support@enews.com"; // Thay email mặc định
-    var contactPhone = ViewBag.ContactPhone ?? "0123 456 789"; // Thay SĐT mặc định
-    var contactAddress = ViewBag.ContactAddress ?? "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh"; // Thay địa chỉ mặc định
-}
+﻿@page
 
-<div class="container mt-4 mb-5">
-    <h1 class="text-center text-danger mb-4"><i class="bi bi-envelope-paper-heart-fill me-2"></i>@ViewData["Title"]</h1>
-    <p class="lead text-center mb-5">Chúng tôi luôn sẵn lòng lắng nghe ý kiến đóng góp hoặc giải đáp thắc mắc của bạn. Vui lòng liên hệ với E-News qua các thông tin dưới đây hoặc sử dụng form liên hệ.</p>
 
-    <div class="row g-5">
-        @* Tăng khoảng cách giữa các cột *@
+<style>
+    /* CNN Style Base */
+    .cnn-container {
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #222;
+    }
 
-        @* --- CỘT THÔNG TIN LIÊN HỆ --- *@
-        <div class="col-lg-5">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0"><i class="bi bi-geo-alt-fill me-2"></i>Thông tin liên hệ</h5>
+    .cnn-header {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #000;
+        border-bottom: 3px solid #cc0000; /* CNN Red underline */
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+    }
+
+    .cnn-sub-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    /* Form Styling */
+    .cnn-form-control {
+        border: 1px solid #ccc;
+        border-radius: 0; /* Flat style */
+        padding: 12px;
+        font-size: 1rem;
+    }
+
+        .cnn-form-control:focus {
+            border-color: #cc0000;
+            box-shadow: none;
+        }
+
+    .cnn-form-label {
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        color: #555;
+    }
+
+    .cnn-red-btn {
+        background-color: #cc0000;
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 0;
+        padding: 12px 25px;
+        transition: background-color 0.3s;
+    }
+
+        .cnn-red-btn:hover {
+            background-color: #990000;
+            color: #fff;
+        }
+
+    /* Sidebar Info Box */
+    .cnn-info-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid #cc0000;
+        padding: 25px;
+    }
+
+    .cnn-info-list li {
+        margin-bottom: 18px;
+        display: flex;
+        align-items: flex-start;
+    }
+
+    .cnn-info-icon {
+        color: #cc0000;
+        font-size: 1.3rem;
+        margin-right: 15px;
+        margin-top: 3px;
+    }
+
+    .cnn-info-label {
+        font-weight: 700;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .map-container iframe {
+        border: 1px solid #eee;
+        width: 100%;
+    }
+</style>
+
+<div class="container cnn-container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="cnn-header">Liên hệ & Hỗ trợ</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mb-5">
+            <h2 class="cnn-sub-header">Gửi phản hồi cho chúng tôi</h2>
+            <p class="lead mb-4">Chúng tôi luôn sẵn sàng lắng nghe ý kiến của bạn. Vui lòng điền vào biểu mẫu bên dưới.</p>
+
+            <form>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="name" class="form-label cnn-form-label">Họ và tên</label>
+                        <input type="text" class="form-control cnn-form-control" id="name" placeholder="Nhập họ tên của bạn" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label cnn-form-label">Email</label>
+                        <input type="email" class="form-control cnn-form-control" id="email" placeholder="name@example.com" required>
+                    </div>
+                    <div class="col-12">
+                        <label for="subject" class="form-label cnn-form-label">Chủ đề</label>
+                        <input type="text" class="form-control cnn-form-control" id="subject" placeholder="Bạn cần hỗ trợ vấn đề gì?">
+                    </div>
+                    <div class="col-12">
+                        <label for="message" class="form-label cnn-form-label">Nội dung tin nhắn</label>
+                        <textarea class="form-control cnn-form-control" id="message" rows="6" placeholder="Nhập nội dung chi tiết..." required></textarea>
+                    </div>
+                    <div class="col-12 mt-4">
+                        <button type="submit" class="btn cnn-red-btn btn-lg w-100 w-md-auto">
+                            Gửi tin nhắn <i class="bi bi-send-fill ms-2"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <ul class="list-unstyled mb-0">
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-building fs-4 text-primary me-3 mt-1"></i>
-                            <div>
-                                <strong>Địa chỉ:</strong><br>
-                                @contactAddress
-                            </div>
-                        </li>
-                        <li class="mb-3 d-flex align-items-start">
-                            <i class="bi bi-telephone-fill fs-4 text-success me-3 mt-1"></i>
-                            <div>
-                                <strong>Điện thoại:</strong><br>
-                                <a href="tel:@contactPhone.Replace(" ", "")" style="text-decoration: none">@contactPhone</a>
-                            </div>
-                        </li>
-                        <li class="d-flex align-items-start">
-                            <i class="bi bi-envelope-at-fill fs-4 text-danger me-3 mt-1"></i>
-                            <div>
-                                <strong>Email:</strong><br>
-                                <a href="mailto:@contactEmail" style="text-decoration: none">@contactEmail</a>
-                            </div>
-                        </li>
-                    </ul>
-                    <hr class="my-4">
-                    <p class="text-muted">Chúng tôi sẽ cố gắng phản hồi bạn trong thời gian sớm nhất.</p>
-                    @* (Tùy chọn) Thêm bản đồ nhỏ *@
-                    @* <div class="ratio ratio-16x9 mt-3">
-                    <iframe src="[LINK NHÚNG GOOGLE MAPS CỦA BẠN]" allowfullscreen="" loading="lazy"></iframe>
-                    </div> *@
-                </div>
-            </div>
+            </form>
         </div>
 
-        @* --- CỘT FORM LIÊN HỆ --- *@
-        <div class="col-lg-7">
-            <div class="card shadow-sm border-0 h-100">
-                <div class="card-header bg-light">
-                    <h5 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Gửi tin nhắn cho chúng tôi</h5>
-                </div>
-                <div class="card-body">
-                    @* LƯU Ý: Form này chỉ là giao diện, cần Controller Action để xử lý gửi email/lưu DB *@
-                    <form asp-action="SendContactMessage" asp-controller="Home" method="post">
-                        @* <-- Sửa Action/Controller xử lý *@
-                        @Html.AntiForgeryToken()
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <div class="col-lg-4">
+            <div class="cnn-info-box mb-4">
+                <h3 class="cnn-sub-header mb-4">Thông tin tòa soạn</h3>
+                <ul class="list-unstyled cnn-info-list">
+                    <li>
+                        <i class="bi bi-geo-alt-fill cnn-info-icon"></i>
+                        <div>
+                            <span class="cnn-info-label">Địa chỉ:</span>
+                            Số 18 Ung Văn Khiêm, Phường Đông Xuyên, TP Long Xuyên, An Giang
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-envelope-fill cnn-info-icon"></i>
+                        <div>
+                            <span class="cnn-info-label">Email:</span>
+                            contact@agu-news.com<br>
+                            support@agu-news.com
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-telephone-fill cnn-info-icon"></i>
+                        <div>
+                            <span class="cnn-info-label">Điện thoại:</span>
+                            (+86) 866 710 544<br>                            
+                        </div>
+                    </li>
+                    <li>
+                        <i class="bi bi-clock-fill cnn-info-icon"></i>
+                        <div>
+                            <span class="cnn-info-label">Giờ làm việc:</span>
+                            Thứ 2 - Thứ 6: 8:00 - 17:00<br>
+                            Thứ 7: 8:00 - 12:00
+                        </div>
+                    </li>
+                </ul>
+            </div>
 
-                        <div class="row g-3">
-                            <div class="col-md-6 mb-3">
-                                <label for="ContactName" class="form-label fw-bold">Họ và Tên <span class="text-danger">*</span></label>
-                                <input type="text" id="ContactName" name="ContactName" class="form-control" required placeholder="Nhập tên của bạn">
-                                @* <span asp-validation-for="ContactName" class="text-danger"></span> *@ @* Bỏ comment nếu dùng ViewModel *@
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="ContactEmail" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
-                                <input type="email" id="ContactEmail" name="ContactEmail" class="form-control" required placeholder="your.email@example.com">
-                                @* <span asp-validation-for="ContactEmail" class="text-danger"></span> *@
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="Subject" class="form-label fw-bold">Tiêu đề <span class="text-danger">*</span></label>
-                            <input type="text" id="Subject" name="Subject" class="form-control" required placeholder="Vấn đề bạn muốn trao đổi">
-                            @* <span asp-validation-for="Subject" class="text-danger"></span> *@
-                        </div>
-                        <div class="mb-3">
-                            <label for="Message" class="form-label fw-bold">Nội dung tin nhắn <span class="text-danger">*</span></label>
-                            <textarea id="Message" name="Message" class="form-control" rows="5" required placeholder="Viết nội dung chi tiết..."></textarea>
-                            @* <span asp-validation-for="Message" class="text-danger"></span> *@
-                        </div>
-                        <div class="d-grid">
-                            @* Nút full width *@
-                            <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-send-fill me-2"></i> Gửi liên hệ</button>
-                        </div>
-                    </form>
-                    @* Hiển thị thông báo thành công/lỗi sau khi gửi (nếu có) *@
-                    @if (TempData["ContactSuccess"] != null)
-                    {
-                        <div class="alert alert-success mt-3">@TempData["ContactSuccess"]</div>
-                    }
-                    @if (TempData["ContactError"] != null)
-                    {
-                        <div class="alert alert-danger mt-3">@TempData["ContactError"]</div>
-                    }
-                </div>
+            <div class="map-container">
+                <h3 class="cnn-sub-header h5 mb-3">Bản đồ vị trí</h3>
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3924.627295379874!2d105.43015031474868!3d10.371655792596985!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x310a731e7546e819%3A0x7234d0114da2a71e!2zVHLGsOG7nW5nIMSQ4bqhaSBo4buNYyBBbiBHaWFuZyAtIMSQSFFHIEhDTQ!5e0!3m2!1svi!2s!4v1679020000000!5m2!1svi!2s"
+                        width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
             </div>
         </div>
     </div>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-    @* Thêm validation script nếu bạn dùng ViewModel với DataAnnotations *@
-}

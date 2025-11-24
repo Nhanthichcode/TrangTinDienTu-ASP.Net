@@ -262,7 +262,7 @@
                                         </a>
                                     </h3>
                                     <div class="column-meta">
-                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm") • @article.Author?.FullName
+                                        @article.CreatedAt.ToString("dd/MM/yyyy") • @article.Author?.FullName
                                     </div>
                                 </div>
                             </div>
@@ -289,7 +289,7 @@
 
                     @if (Model.BusinessStories != null && Model.BusinessStories.Any())
                     {
-                        @foreach (var article in Model.BusinessStories.Take(4))
+                        @foreach (var article in Model.BusinessStories.Take(6))
                         {
                             <div class="related-article">
                                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
@@ -307,7 +307,7 @@
                                     </h3>
                                     <p class="related-article-summary">@article.Summary</p>
                                     <div class="related-article-meta">
-                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        @article.CreatedAt.ToString("dd/MM/yyyy")
                                     </div>
                                 </div>
                             </div>
@@ -326,7 +326,7 @@
                         <h3 class="sidebar-title">Tin Nổi Bật</h3>
                         @if (Model.SidebarArticles != null && Model.SidebarArticles.Any())
                         {
-                            @foreach (var article in Model.SidebarArticles.Take(5))
+                            @foreach (var article in Model.SidebarArticles.Take(6))
                             {
                                 <div class="sidebar-article">
                                     <h4 class="sidebar-article-title">
@@ -335,7 +335,7 @@
                                         </a>
                                     </h4>
                                     <div class="sidebar-article-meta">
-                                        @article.Category?.Name • @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        @article.Category?.Name • @article.CreatedAt.ToString("dd/MM/yyyy")
                                     </div>
                                 </div>
                             }
@@ -351,7 +351,7 @@
                         <h3 class="sidebar-title">Công Nghệ</h3>
                         @if (Model.TechStories != null && Model.TechStories.Any())
                         {
-                            @foreach (var article in Model.TechStories.Take(5))
+                            @foreach (var article in Model.TechStories.Take(6))
                             {
                                 <div class="sidebar-article">
                                     <h4 class="sidebar-article-title">
@@ -360,7 +360,7 @@
                                         </a>
                                     </h4>
                                     <div class="sidebar-article-meta">
-                                        @article.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                                        @article.CreatedAt.ToString("dd/MM/yyyy")
                                     </div>
                                 </div>
                             }

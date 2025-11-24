@@ -142,19 +142,19 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
                 // Tin thể thao (loại bỏ trùng lặp)
                 viewModel.BusinessStories = await _context.Articles.AsNoTracking()
-                    .Where(a => a.IsApproved && a.Category.Name == "Thể thao" && !featuredIds.Contains(a.Id))
+                    .Where(a => a.IsApproved && a.Category.Name.ToLower() == "Thể thao học đường" && !featuredIds.Contains(a.Id))
                     .OrderByDescending(a => a.CreatedAt)
-                    .Take(4).ToListAsync();
+                    .Take(8).ToListAsync();
 
                 // Tin công nghệ (loại bỏ trùng lặp)
                 viewModel.TechStories = await _context.Articles.AsNoTracking()
-                    .Where(a => a.IsApproved && a.Category.Name == "Công Nghệ" && !featuredIds.Contains(a.Id))
+                    .Where(a => a.IsApproved && a.Category.Name.ToLower() == "nghiên cứu khoa học" && !featuredIds.Contains(a.Id))
                     .OrderByDescending(a => a.CreatedAt)
-                    .Take(4).ToListAsync();
+                    .Take(5).ToListAsync();
 
                 // Tin thế giới (loại bỏ trùng lặp)
                 viewModel.WorldStories = await _context.Articles.AsNoTracking()
-                    .Where(a => a.IsApproved && a.Category.Name == "Thế Giới" && !featuredIds.Contains(a.Id))
+                    .Where(a => a.IsApproved && a.Category.Name.ToLower() == "tin tức chung" && !featuredIds.Contains(a.Id))
                     .OrderByDescending(a => a.CreatedAt)
                     .Take(6).ToListAsync();
 
