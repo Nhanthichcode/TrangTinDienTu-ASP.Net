@@ -7,7 +7,7 @@
     var currentSearch = ViewData["CurrentFilter"] as string;
     var currentTag = ViewData["CurrentTag"] as string;
     var currentCategoryId = ViewData["CurrentCategoryId"] as int?;
-    var defaultimg = "/uploads/articles/default-thumbnail.jpg";
+    var defaultimg = "/uploads/thumbnails/default-thumbnail.jpg";
     bool isFiltered = !string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentTag) || currentCategoryId.HasValue;
 }
 
@@ -250,7 +250,7 @@
                             <div class="column-card">
                                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
                                     <img src="@(article.ThumbnailUrl ?? defaultimg)"
-                                         onerror="this.onerror=null; this.src='@defaultimg';"
+                                         onerror="this.src='@defaultimg';"
                                          class="column-image"
                                          alt="@article.Title">
                                 </a>
@@ -294,7 +294,7 @@
                             <div class="related-article">
                                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
                                     <img src="@(article.ThumbnailUrl ?? defaultimg)"
-                                         onerror="this.onerror=null; this.src='@defaultimg';"
+                                         onerror="this.src='@defaultimg';"
                                          class="related-article-image"
                                          alt="@article.Title">
                                 </a>

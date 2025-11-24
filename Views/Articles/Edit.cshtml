@@ -85,13 +85,13 @@
                         @{
                             var imageUrl = !string.IsNullOrEmpty(Model.ThumbnailUrl)
                             ? Model.ThumbnailUrl
-                            : "/uploads/articles/default-thumbnail.jpg";
+                            : "/uploads/thumbnails/default-thumbnail.jpg";
                         }
                         <img id="imgPreview"
                              src="@imageUrl"
                              alt="Thumbnail hiện tại"
                              class="img-fluid rounded border"
-                             onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+                             onerror="this.onerror=null; this.src='/uploads/thumbnails/default-thumbnail.jpg';" />
                     </div>
                 </div>
 
@@ -219,7 +219,7 @@
             // --- SCRIPT XEM TRƯỚC ẢNH THUMBNAIL ---
             const thumbnailFileInput = document.getElementById('thumbnailFile');
             const imgPreview = document.getElementById('imgPreview');
-            const defaultThumbnail = '/uploads/articles/default-thumbnail.jpg';
+            const defaultThumbnail = '/uploads/thumbnails/default-thumbnail.jpg';
 
             if (thumbnailFileInput) {
                 thumbnailFileInput.addEventListener('change', function () {

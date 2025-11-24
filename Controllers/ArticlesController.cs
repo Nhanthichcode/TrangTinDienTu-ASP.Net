@@ -259,7 +259,6 @@ namespace Trang_tin_điện_tử_mvc.Controllers
 
         // POST: Articles/Create
         [HttpPost]
-        [Authorize(Policy = "ElevatedRights")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ArticleCreateViewModel viewModel, IFormFile? thumbnailFile, List<int>? SelectedTagIds)
         {
@@ -267,113 +266,94 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId)) return Challenge();
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                // 1. TẠO ĐỐI TƯỢNG ARTICLE (Chưa xử lý nội dung chi tiết)
-                var article = new Article
-                {
-                    Title = viewModel.Title,
-                    Summary = viewModel.Summary,
-                    Content = viewModel.Content, // Tạm thời dùng nội dung gốc
-                    CategoryId = viewModel.CategoryId,
-                    AuthorId = userId,
-                    CreatedAt = DateTime.Now,
-                    IsApproved = false,
-                    ViewCount = 0,
-                    ArticleTags = new List<ArticleTag>(),
-                    ArticleImagePositions = new List<ArticleImagePosition>()
-                };
-
-                // 2. XỬ LÝ ẢNH THUMBNAIL (Nếu có)
-                // Biến này để giữ tham chiếu đến Media thumbnail để cập nhật sau
-                Media? thumbnailMediaEntry = null;
-
-                if (thumbnailFile != null && thumbnailFile.Length > 0)
-                {
-                    _logger.LogInformation("Đang xử lý ảnh Thumbnail: {FileName}", thumbnailFile.FileName);
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/articles");
-                    Directory.CreateDirectory(uploadsFolder);
-                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(thumbnailFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await thumbnailFile.CopyToAsync(fileStream);
-                    }
-
-                    string fileUrl = "/uploads/articles/" + uniqueFileName;
-                    article.ThumbnailUrl = fileUrl;
-
-                    // Tạo bản ghi Media cho thumbnail (Chưa có ArticleId)
-                    thumbnailMediaEntry = new Media
-                    {
-                        FileName = thumbnailFile.FileName,
-                        FileUrl = fileUrl,
-                        FileType = thumbnailFile.ContentType,
-                        FileSizeKB = thumbnailFile.Length / 1024,
-                        CreatedAt = DateTime.Now,
-                        ArticleId = null // Quan trọng: Để null vì bài viết chưa có ID
-                    };
-                    // Thêm vào context để chuẩn bị lưu
-                    _context.Media.Add(thumbnailMediaEntry);
-                }
-                else
-                {
-                    article.ThumbnailUrl = "/uploads/articles/default-thumbnail.jpg";
-                }
-
-                // Xử lý Tags
-                if (SelectedTagIds != null && SelectedTagIds.Any())
-                {
-                    foreach (var tagId in SelectedTagIds)
-                    {
-                        article.ArticleTags.Add(new ArticleTag { TagId = tagId });
-                    }
-                }
-
-                // 3. LƯU LẦN 1: ĐỂ TẠO BÀI VIẾT VÀ LẤY ID
-                // Lúc này, thumbnailMediaEntry cũng được lưu với ArticleId = NULL
-                _context.Add(article);
-                await _context.SaveChangesAsync();
-
-                // ---> TẠI ĐÂY: article.Id đã có giá trị thật từ DB <---
-
-                // 4. XỬ LÝ ẢNH TRONG NỘI DUNG (Bây giờ mới dùng ID thật)
-                // Truyền article.Id thật vào hàm xử lý
-                var (cleanContent, positions) = await ExtractImagesAndStorePositions(article.Content, article.Id);
-
-                // Cập nhật lại nội dung đã làm sạch (có placeholder)
-                article.Content = cleanContent;
-
-                // Thêm các vị trí ảnh vào context
-                if (positions.Any())
-                {
-                    _context.ArticleImagePositions.AddRange(positions);
-                }
-
-                // 5. CẬP NHẬT LIÊN KẾT CHO THUMBNAIL (Nếu có)
-                if (thumbnailMediaEntry != null)
-                {
-                    // Gán ID bài viết vừa tạo cho Media thumbnail
-                    thumbnailMediaEntry.ArticleId = article.Id;
-                    // Đánh dấu là đã sửa đổi để EF biết cần phải UPDATE
-                    _context.Entry(thumbnailMediaEntry).State = EntityState.Modified;
-                }
-
-                // 6. LƯU LẦN 2: CẬP NHẬT NỘI DUNG, VỊ TRÍ ẢNH, VÀ LIÊN KẾT THUMBNAIL
-                // Lần này sẽ không bị lỗi FK vì article.Id đã tồn tại
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("Đã tạo bài viết thành công ID: {ArticleId}", article.Id);
-                TempData["SuccessMessage"] = "Tạo bài viết mới thành công!";
-                return RedirectToAction(nameof(Index));
+                // Load lại dữ liệu nếu lỗi validate
+                ViewBag.CategoryId = new SelectList(_context.Categories, "Id", "Name", viewModel.CategoryId);
+                ViewBag.Tags = await _context.Tags.ToListAsync();
+                return View(viewModel);
             }
 
-            // Nếu Model không hợp lệ, load lại dữ liệu cho View
-            ViewBag.CategoryId = new SelectList(_context.Categories, "Id", "Name", viewModel.CategoryId);
-            ViewBag.Tags = await _context.Tags.ToListAsync();
-            return View(viewModel);
+            // 1. KHỞI TẠO ARTICLE (Chưa lưu ngay)
+            var article = new Article
+            {
+                Title = viewModel.Title,
+                Summary = viewModel.Summary,
+                Content = viewModel.Content,
+                CategoryId = viewModel.CategoryId,
+                AuthorId = userId,
+                CreatedAt = DateTime.Now,
+                IsApproved = false,
+                ViewCount = 0,
+                ArticleTags = new List<ArticleTag>(),
+                Media = new List<Media>() // Khởi tạo list Media để EF tự mapping
+            };
+
+            // 2. XỬ LÝ TAGS
+            if (SelectedTagIds != null && SelectedTagIds.Any())
+            {
+                foreach (var tagId in SelectedTagIds)
+                {
+                    article.ArticleTags.Add(new ArticleTag { TagId = tagId });
+                }
+            }
+
+            // 3. XỬ LÝ ẢNH THUMBNAIL (Nếu có)
+            if (thumbnailFile != null && thumbnailFile.Length > 0)
+            {
+                // a. Lưu file vật lý
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/thumbnails");
+                if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(thumbnailFile.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await thumbnailFile.CopyToAsync(stream);
+                }
+
+                string fileUrl = $"/uploads/thumbnails/{uniqueFileName}";
+
+                // b. Tạo đối tượng Media
+                var thumbnailMedia = new Media
+                {
+                    FileName = uniqueFileName,
+                    FileUrl = fileUrl,
+                    Category = "ArticleThumbnail", // Đánh dấu là Thumbnail
+                    FileType = thumbnailFile.ContentType,
+                    FileSizeKB = thumbnailFile.Length / 1024,
+                    UploadedByUserId = userId,
+                    CreatedAt = DateTime.Now
+                };
+
+                article.Media.Add(thumbnailMedia);
+                article.ThumbnailUrl = fileUrl; // Lưu string để hiển thị nhanh
+            }
+            else
+            {
+                article.ThumbnailUrl = "/uploads/thumbnails/default-thumbnail.jpg";
+            }
+            _context.Add(article);
+            await _context.SaveChangesAsync();
+
+            var (cleanContent, positions) = await ExtractImagesAndStorePositions(article.Content, article.Id);
+
+            // Cập nhật lại nội dung
+            article.Content = cleanContent;
+
+            // Thêm các vị trí ảnh
+            if (positions != null && positions.Any())
+            {
+                _context.ArticleImagePositions.AddRange(positions);
+            }
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Đã tạo bài viết thành công ID: {ArticleId}", article.Id);
+            TempData["SuccessMessage"] = "Tạo bài viết mới thành công!";
+            return RedirectToAction(nameof(Index));
         }
+
         private async Task LinkMediaToArticle(string content, int articleId)
         {
             _logger.LogInformation("vào hàm gán ảnh mồ côi");
@@ -381,8 +361,8 @@ namespace Trang_tin_điện_tử_mvc.Controllers
             if (string.IsNullOrEmpty(content)) return;
 
             // 1. Dùng Regex để trích xuất tất cả các đường dẫn ảnh trong nội dung
-            // Tìm chuỗi: src="/uploads/medias/..."
-            var matches = Regex.Matches(content, @"src=""(/uploads/medias/[^""]+)""");
+            // Tìm chuỗi: src="/uploads/content/..."
+            var matches = Regex.Matches(content, @"src=""(/uploads/content/[^""]+)""");
 
             if (matches.Count > 0)
             {
@@ -420,12 +400,11 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 .Include(a => a.Author)
                 .Include(a => a.Category)
                 .Include(a => a.ArticleTags)
-                .Include(a => a.ArticleImagePositions) // 🎯 THÊM INCLUDE NÀY
-                    .ThenInclude(aip => aip.Media)
+                .Include(a => a.ArticleImagePositions)
+                .ThenInclude(aip => aip.Media)
                 .FirstOrDefaultAsync(a => a.Id == id);
             if (article == null) return NotFound();
 
-            // 🎯 TÁI TẠO CONTENT CÓ ẢNH ĐỂ HIỂN THỊ TRONG EDITOR
             ViewBag.ContentWithImages = await ReconstructContentWithImages(article.Content, article.Id);
 
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", article.CategoryId);
@@ -440,85 +419,129 @@ namespace Trang_tin_điện_tử_mvc.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, IFormFile? thumbnailFile, List<int>? SelectedTagIds)
         {
+            // 1. Lấy bài viết cùng các quan hệ
             var articleToUpdate = await _context.Articles
                 .Include(a => a.ArticleTags)
-                .Include(a => a.ArticleImagePositions) // 🎯 THÊM INCLUDE NÀY
+                .Include(a => a.ArticleImagePositions)
                     .ThenInclude(aip => aip.Media)
+                // Include thêm Media để tìm Thumbnail hiện tại dễ hơn (nếu bạn có link trực tiếp)
+                .Include(a => a.Media)
                 .FirstOrDefaultAsync(a => a.Id == id);
+
             if (articleToUpdate == null) return NotFound();
 
-            // 🎯 LƯU CONTENT HIỆN TẠI (CÓ ẢNH) ĐỂ SO SÁNH
+            // Lấy User hiện tại để gán quyền sở hữu file mới (nếu có upload)
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             string currentContentWithImages = await ReconstructContentWithImages(articleToUpdate.Content, articleToUpdate.Id);
 
+            // 2. Cập nhật các trường thông tin cơ bản
             if (await TryUpdateModelAsync<Article>(articleToUpdate, "",
-                a => a.Title, a => a.Summary, a => a.Content, a => a.CategoryId, a => a.IsApproved, a => a.ViewCount, a => a.AuthorId))
+                a => a.Title, a => a.Summary, a => a.Content, a => a.CategoryId,
+                a => a.IsApproved, a => a.ViewCount, a => a.AuthorId))
             {
-                // 🎯 KIỂM TRA XEM CONTENT CÓ THAY ĐỔI KHÔNG
-                bool contentChanged = articleToUpdate.Content != currentContentWithImages;
-
-                if (contentChanged)
-                {
-                    // 🎯 TRÍCH XUẤT ẢNH VÀ LƯU VỊ TRÍ TỪ CONTENT MỚI
-                    var (cleanContent, imagePositions) = await ExtractImagesAndStorePositions(articleToUpdate.Content, articleToUpdate.Id);
-
-                    // Cập nhật content với placeholder
-                    articleToUpdate.Content = cleanContent;
-
-                    // 🎯 XÓA VỊ TRÍ ẢNH CŨ VÀ THÊM MỚI
-                    var oldPositions = _context.ArticleImagePositions.Where(p => p.ArticleId == articleToUpdate.Id);
-                    _context.ArticleImagePositions.RemoveRange(oldPositions);
-
-                    if (imagePositions.Any())
-                    {
-                        _context.ArticleImagePositions.AddRange(imagePositions);
-                    }
-                }
-
-                articleToUpdate.UpdatedAt = DateTime.Now;
-
-                // Xử lý thumbnail (giữ nguyên)
-                if (thumbnailFile != null && thumbnailFile.Length > 0)
-                {
-                    if (!string.IsNullOrEmpty(articleToUpdate.ThumbnailUrl))
-                    {
-                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, articleToUpdate.ThumbnailUrl.TrimStart('/'));
-                        if (System.IO.File.Exists(oldImagePath)) System.IO.File.Delete(oldImagePath);
-                    }
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/articles");
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + Path.GetFileName(thumbnailFile.FileName);
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await thumbnailFile.CopyToAsync(fileStream);
-                    }
-                    articleToUpdate.ThumbnailUrl = "/uploads/articles/" + uniqueFileName;
-                }
-
-                UpdateArticleTags(SelectedTagIds, articleToUpdate);
-
                 try
                 {
+                    // 3. XỬ LÝ CONTENT (Nếu thay đổi)
+                    bool contentChanged = articleToUpdate.Content != currentContentWithImages;
+
+                    if (contentChanged)
+                    {
+                        var (cleanContent, imagePositions) = await ExtractImagesAndStorePositions(articleToUpdate.Content, articleToUpdate.Id);
+
+                        articleToUpdate.Content = cleanContent;
+
+                        // Xóa vị trí ảnh cũ
+                        var oldPositions = _context.ArticleImagePositions.Where(p => p.ArticleId == articleToUpdate.Id);
+                        _context.ArticleImagePositions.RemoveRange(oldPositions);
+
+                        // Thêm vị trí ảnh mới
+                        if (imagePositions.Any())
+                        {
+                            _context.ArticleImagePositions.AddRange(imagePositions);
+                        }
+                    }
+
+                    articleToUpdate.UpdatedAt = DateTime.Now;
+
+                    if (thumbnailFile != null && thumbnailFile.Length > 0)
+                    {
+
+                        var oldThumbnailMedia = _context.Media
+                            .FirstOrDefault(m => m.ArticleId == id && m.Category == "ArticleThumbnail");
+
+                        if (oldThumbnailMedia != null)
+                        {
+                            // Xóa file vật lý cũ
+                            var oldPath = Path.Combine(_webHostEnvironment.WebRootPath, oldThumbnailMedia.FileUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPath)) System.IO.File.Delete(oldPath);
+
+                            // Xóa record trong DB
+                            _context.Media.Remove(oldThumbnailMedia);
+                        }
+                        // (Backup) Nếu không tìm thấy trong bảng Media nhưng Article vẫn có Url cũ
+                        else if (!string.IsNullOrEmpty(articleToUpdate.ThumbnailUrl))
+                        {
+                            var oldPathLegacy = Path.Combine(_webHostEnvironment.WebRootPath, articleToUpdate.ThumbnailUrl.TrimStart('/'));
+                            if (System.IO.File.Exists(oldPathLegacy)) System.IO.File.Delete(oldPathLegacy);
+                        }
+
+                        // B. Tạo Thumbnail mới
+                        string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads/thumbnails");
+                        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+                        string uniqueFileName = $"{Guid.NewGuid()}_{thumbnailFile.FileName}";
+                        string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                        using (var fileStream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await thumbnailFile.CopyToAsync(fileStream);
+                        }
+
+                        string newFileUrl = $"/uploads/thumbnails/{uniqueFileName}";
+
+                        // Tạo record Media mới
+                        var newMedia = new Media
+                        {
+                            FileName = uniqueFileName,
+                            FileUrl = newFileUrl,
+                            Category = "ArticleContent", // Đánh dấu loại
+                            FileType = thumbnailFile.ContentType,
+                            FileSizeKB = thumbnailFile.Length / 1024,
+                            UploadedByUserId = userId,
+                            CreatedAt = DateTime.Now,
+                            ArticleId = articleToUpdate.Id // Link với bài viết
+                        };
+
+                        _context.Add(newMedia); // Thêm vào DB
+                        articleToUpdate.ThumbnailUrl = newFileUrl; // Cập nhật Url hiển thị nhanh
+                    }
+
+                    // 5. Cập nhật Tags
+                    UpdateArticleTags(SelectedTagIds, articleToUpdate);
+
+                    // 6. Lưu tất cả thay đổi
                     await _context.SaveChangesAsync();
+
                     TempData["SuccessMessage"] = "Cập nhật bài viết thành công!";
+                    return RedirectToAction(nameof(Index));
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!ArticleExists(articleToUpdate.Id)) return NotFound();
                     else throw;
                 }
-                return RedirectToAction(nameof(Index));
             }
 
-            // 🎯 NẾU MODEL STATE INVALID, TÁI TẠO LẠI CONTENT CÓ ẢNH ĐỂ HIỂN THỊ
+            // Nếu Invalid, restore lại content để hiển thị
             ViewBag.ContentWithImages = await ReconstructContentWithImages(articleToUpdate.Content, articleToUpdate.Id);
-
             ViewData["CategoryId"] = new SelectList(_context.Categories, "Id", "Name", articleToUpdate.CategoryId);
             ViewData["AuthorId"] = new SelectList(_context.Users, "Id", "UserName", articleToUpdate.AuthorId);
             ViewBag.Tags = await _context.Tags.ToListAsync();
+
             return View(articleToUpdate);
         }
-        // cập nhật danh sách thẻ tag
-       
+        // cập nhật danh sách thẻ tag     
         private void UpdateArticleTags(List<int>? selectedTagIds, Article articleToUpdate)
         {
             if (selectedTagIds == null) { articleToUpdate.ArticleTags = new List<ArticleTag>(); return; }
@@ -699,6 +722,7 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 _context.Comments.Remove(commentToDelete);
             }
         }
+
         // 🎯 PHƯƠNG THỨC TÁCH URL ẢNH TỪ CONTENT
         private List<string> ExtractImageUrls(string htmlContent)
         {
@@ -763,12 +787,12 @@ namespace Trang_tin_điện_tử_mvc.Controllers
                 byte[] imageBytes = Convert.FromBase64String(base64Data);
 
                 string fileName = Guid.NewGuid().ToString() + "." + imageType;
-                string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "medias");
+                string uploadPath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "content");
                 if (!Directory.Exists(uploadPath))
                     Directory.CreateDirectory(uploadPath);
 
                 string filePath = Path.Combine(uploadPath, fileName);
-                string fileUrl = "/uploads/medias/" + fileName;
+                string fileUrl = "/uploads/content/" + fileName;
 
                 await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
 

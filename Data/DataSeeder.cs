@@ -322,7 +322,7 @@ namespace Trang_tin_điện_tử_mvc.Data
                         Summary = summary,
                         Content = fullContent.ToString(),
                         // Ảnh thumbnail ngẫu nhiên (bạn cần có các ảnh này trong wwwroot/uploads/articles)
-                        ThumbnailUrl = $"/uploads/articles/default-thumbnail.jpg",
+                        ThumbnailUrl = $"/uploads/thumbnails/default-thumbnail.jpg",
                         // Ngày tạo ngẫu nhiên trong khoảng 2022-2025
                         CreatedAt = GetRandomDate(new DateTime(2022, 1, 1), new DateTime(2025, 12, 31)),
                         IsApproved = true, // Duyệt sẵn để hiện lên trang chủ

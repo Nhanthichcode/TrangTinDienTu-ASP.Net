@@ -9,18 +9,18 @@ using Trang_tin_điện_tử_mvc.Data;
 
 #nullable disable
 
-namespace Trang_tin_điện_tử_mvc.Data.Migrations
+namespace Trang_tin_điện_tử_mvc.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251009024607_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20251124114758_thêm dữ liệu trong media")]
+    partial class thêmdữliệutrongmedia
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.11")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -105,12 +105,10 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ProviderDisplayName")
                         .HasColumnType("nvarchar(max)");
@@ -147,12 +145,10 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Value")
                         .HasColumnType("nvarchar(max)");
@@ -188,8 +184,10 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsApproved")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -287,6 +285,36 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.ToTable("Articles", (string)null);
                 });
 
+            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleImagePosition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ArticleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MediaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Placeholder")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PositionIndex")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ArticleId");
+
+                    b.HasIndex("MediaId");
+
+                    b.ToTable("ArticleImagePositions");
+                });
+
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleTag", b =>
                 {
                     b.Property<int>("ArticleId")
@@ -338,13 +366,17 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsApproved")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -353,6 +385,8 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleId");
+
+                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("UserId");
 
@@ -367,22 +401,39 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ArticleId")
+                    b.Property<int?>("ArticleId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Caption")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FilePath")
+                    b.Property<string>("Category")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("UploadedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long>("FileSizeKB")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UploadedByUserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleId");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.ToTable("Media", (string)null);
                 });
@@ -477,6 +528,25 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleImagePosition", b =>
+                {
+                    b.HasOne("Trang_tin_điện_tử_mvc.Models.Article", "Article")
+                        .WithMany("ArticleImagePositions")
+                        .HasForeignKey("ArticleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Trang_tin_điện_tử_mvc.Models.Media", "Media")
+                        .WithMany("ArticleImagePositions")
+                        .HasForeignKey("MediaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Article");
+
+                    b.Navigation("Media");
+                });
+
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ArticleTag", b =>
                 {
                     b.HasOne("Trang_tin_điện_tử_mvc.Models.Article", "Article")
@@ -504,6 +574,11 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Trang_tin_điện_tử_mvc.Models.Comment", "ParentComment")
+                        .WithMany("Replies")
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("Trang_tin_điện_tử_mvc.Models.ApplicationUser", "User")
                         .WithMany("Comments")
                         .HasForeignKey("UserId")
@@ -511,6 +586,8 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Article");
+
+                    b.Navigation("ParentComment");
 
                     b.Navigation("User");
                 });
@@ -520,10 +597,15 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
                     b.HasOne("Trang_tin_điện_tử_mvc.Models.Article", "Article")
                         .WithMany("Media")
                         .HasForeignKey("ArticleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Trang_tin_điện_tử_mvc.Models.ApplicationUser", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId");
 
                     b.Navigation("Article");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ApplicationUser", b =>
@@ -535,6 +617,8 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Article", b =>
                 {
+                    b.Navigation("ArticleImagePositions");
+
                     b.Navigation("ArticleTags");
 
                     b.Navigation("Comments");
@@ -545,6 +629,16 @@ namespace Trang_tin_điện_tử_mvc.Data.Migrations
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Category", b =>
                 {
                     b.Navigation("Articles");
+                });
+
+            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Comment", b =>
+                {
+                    b.Navigation("Replies");
+                });
+
+            modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Media", b =>
+                {
+                    b.Navigation("ArticleImagePositions");
                 });
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.Tag", b =>

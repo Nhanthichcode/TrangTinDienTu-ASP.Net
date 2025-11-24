@@ -4,7 +4,8 @@
 @foreach (var item in Model)
 {
     <div class="col-md-3 mb-3">
-        <img src="@item.FileUrl" onclick="selectMedia('@item.FileUrl')" 
+        <img src="@item.FileUrl" onclick="selectMedia('@item.FileUrl')"
+                 onerror="this.src='/uploads/content/default-thumbnail.jpg'"
              class="img-thumbnail" style="cursor:pointer; height:150px; object-fit:cover;" />
     </div>
 }
