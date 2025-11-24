@@ -37,12 +37,12 @@
             {
                 foreach (var item in Model)
                 {
-                    var imageUrl = !string.IsNullOrEmpty(item.ThumbnailUrl) ? item.ThumbnailUrl : "/uploads/articles/default-thumbnail.jpg";
+                    var imageUrl = !string.IsNullOrEmpty(item.ThumbnailUrl) ? item.ThumbnailUrl : "/uploads/thumbnails/default-thumbnail.jpg";
                     bool canEditDelete = isAdmin || (isAuth && item.AuthorId == User.FindFirstValue(ClaimTypes.NameIdentifier));
 
                     <tr>
                         <td class="text-center py-3">
-                            <img src="@imageUrl" class="rounded shadow-sm" style="width: 60px; height: 45px; object-fit: cover;" onerror="this.src='/uploads/articles/default-thumbnail.jpg';" />
+                            <img src="@imageUrl" class="rounded shadow-sm" style="width: 60px; height: 45px; object-fit: cover;" onerror="this.src='/uploads/thumbnails/default-thumbnail.jpg';" />
                         </td>
                         <td>
                             <a asp-action="Details" asp-route-id="@item.Id" class="fw-bold text-decoration-none text-dark d-block mb-1 text-truncate" style="max-width: 350px;">@item.Title</a>

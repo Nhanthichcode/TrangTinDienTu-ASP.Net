@@ -10,47 +10,70 @@
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadModal">
                 <i class="bi bi-upload me-1"></i>Upload Ảnh
             </button>
+
+            @* Nút xóa tất cả *@
             <button type="button" class="btn btn-danger" id="btnDeleteAllUnused" @(Model.UnusedMediaCount == 0 ? "disabled" : "")>
-                <i class="bi bi-trash me-1"></i>Xóa tất cả ảnh chưa dùng
+                <i class="bi bi-trash me-1"></i>Dọn dẹp ảnh rác
             </button>
+
             <a href="@Url.Action("Index", "Articles")" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i>Về Quản lý Bài viết
+                <i class="bi bi-arrow-left me-1"></i>Về Bài viết
             </a>
         </div>
     </div>
 
+    @* --- THANH BỘ LỌC (FILTER) --- *@
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-3">
-                <div class="col-md-4">
+                @* 1. Tìm kiếm *@
+                <div class="col-md-3">
                     <input type="text" name="search" value="@Model.CurrentSearch" placeholder="Tìm theo tên file..." class="form-control" />
                 </div>
-                <div class="col-md-4">
+
+                @* 2. Loại ảnh (Đã Việt hóa từ Controller) *@
+                <div class="col-md-2">
+                    <select name="category" class="form-select" asp-items="Model.CategoriesDropdown">
+                        <option value="">-- Tất cả loại ảnh --</option>
+                    </select>
+                </div>
+
+                @* 3. Trạng thái (MỚI THÊM) *@
+                <div class="col-md-2">
+                    <select name="status" class="form-select" asp-items="Model.StatusDropdown">
+                        <option value="">-- Tất cả trạng thái --</option>
+                    </select>
+                </div>
+
+                @* 4. Bài viết *@
+                <div class="col-md-3">
                     <select name="articleId" class="form-select" asp-items="Model.ArticlesDropdown">
                         <option value="">-- Tất cả bài viết --</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+
+                @* 5. Nút Lọc *@
+                <div class="col-md-2">
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-funnel me-1"></i>Lọc
                         </button>
-                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">Reset</a>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
+    @* --- THỐNG KÊ (STATS) --- *@
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card bg-primary text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0">@Model.TotalMediaCount</h4>
-                            <small>Tổng số ảnh</small>
-                        </div>
+                        <div><h4 class="mb-0">@Model.TotalMediaCount</h4><small>Tổng số ảnh</small></div>
                         <i class="bi bi-images fs-1 opacity-50"></i>
                     </div>
                 </div>
@@ -60,10 +83,7 @@
             <div class="card bg-success text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0">@Model.UsedMediaCount</h4>
-                            <small>Đã sử dụng </small>
-                        </div>
+                        <div><h4 class="mb-0">@Model.UsedMediaCount</h4><small>Đang sử dụng</small></div>
                         <i class="bi bi-check-circle fs-1 opacity-50"></i>
                     </div>
                 </div>
@@ -73,11 +93,8 @@
             <div class="card bg-warning text-dark">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0" id="unusedCountTag">@Model.UnusedMediaCount</h4>
-                            <small>Chưa sử dụng</small>
-                        </div>
-                        <i class="bi bi-clock fs-1 opacity-50"></i>
+                        <div><h4 class="mb-0" id="unusedCountTag">@Model.UnusedMediaCount</h4><small>Chưa sử dụng</small></div>
+                        <i class="bi bi-exclamation-triangle fs-1 opacity-50"></i>
                     </div>
                 </div>
             </div>
@@ -86,10 +103,7 @@
             <div class="card bg-info text-white">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
-                        <div>
-                            <h4 class="mb-0">@Model.TotalSizeKB.ToString("N0") KB</h4>
-                            <small>Tổng dung lượng </small>
-                        </div>
+                        <div><h4 class="mb-0">@Model.TotalSizeKB.ToString("N0") KB</h4><small>Dung lượng</small></div>
                         <i class="bi bi-hdd fs-1 opacity-50"></i>
                     </div>
                 </div>
@@ -97,94 +111,110 @@
         </div>
     </div>
 
+    @* --- DANH SÁCH ẢNH (GALLERY) --- *@
     <div class="media-container">
         <div class="row">
             @if (!Model.PagedMediaList.Any())
             {
-                <div class="col-12">
-                    <div class="text-center py-5">
-                        <i class="bi bi-inbox display-1 text-muted"></i>
-                        <h4 class="text-muted mt-3">Không có ảnh nào</h4>
-                        <p class="text-muted">Hãy upload ảnh đầu tiên của bạn</p>
-                    </div>
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted"></i>
+                    <h4 class="text-muted mt-3">Không tìm thấy ảnh nào</h4>
                 </div>
             }
 
             @foreach (var item in Model.PagedMediaList)
             {
                 <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6 mb-4">
-                    <div class="card media-card h-100">
+                    <div class="card media-card h-100 shadow-sm" id="media-card-@item.Id">
                         <div class="position-relative">
                             <img src="@item.FileUrl" class="card-img-top"
                                  style="height: 150px; object-fit: cover; cursor: pointer;"
                                  onclick="openImageModal('@item.FileUrl')"
                                  alt="@item.FileName"
-                                 onerror="this.src='/images/placeholder.jpg'" />
+                                 onerror="this.src='/uploads/content/default-thumbnail.jpg'" />
 
+                            @* Badge Trạng thái *@
                             <div class="position-absolute top-0 start-0 m-2">
-                                @if (item.ArticleId == null)
+                                @if (item.ArticleId == null && item.Category != "UserAvatar")
                                 {
-                                    <span class="badge bg-warning">Chưa dùng</span>
+                                    <span class="badge bg-warning shadow-sm" title="Chưa gắn vào bài viết nào">Rác?</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-success">Đã dùng</span>
+                                    <span class="badge bg-success shadow-sm">Used</span>
                                 }
                             </div>
 
+                            @* Badge Loại ảnh *@
+                            <div class="position-absolute bottom-0 start-0 m-2">
+                                @if (item.Category == "UserAvatar")
+                                {
+                                    <span class="badge bg-info text-dark shadow-sm"><i class="bi bi-person me-1"></i>Avatar</span>
+                                }
+                                else if (item.Category == "ArticleThumbnail")
+                                {
+                                    <span class="badge bg-primary shadow-sm"><i class="bi bi-image me-1"></i>Thumb</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary shadow-sm">Content</span>
+                                }
+                            </div>
+
+                            @* Dropdown Action *@
                             <div class="position-absolute top-0 end-0 m-2">
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-light dropdown-toggle" type="button"
-                                            data-bs-toggle="dropdown" aria-expanded="false">
+                                    @* data-bs-display="static" giúp menu không bị cắt bởi overflow *@
+                                    <button class="btn btn-sm btn-light dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                                         <i class="bi bi-three-dots-vertical"></i>
                                     </button>
-                                    <ul class="dropdown-menu">
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item" onclick="copyUrl('@item.FileUrl')"><i class="bi bi-link-45deg me-2"></i>Copy URL</button></li>
+                                        <li><button class="dropdown-item" onclick="downloadImage('@item.FileUrl')"><i class="bi bi-download me-2"></i>Tải xuống</button></li>
+
+                                        @* NÚT MỚI: GÁN BÀI VIẾT *@
                                         <li>
-                                            <button class="dropdown-item" onclick="copyUrl('@item.FileUrl')">
-                                                <i class="bi bi-link-45deg me-2"></i>Copy URL
+                                            <button class="dropdown-item text-primary" onclick="openAttachModal(@item.Id, '@(item.ArticleId ?? 0)')">
+                                                <i class="bi bi-paperclip me-2"></i>Gán bài viết
                                             </button>
                                         </li>
-                                        <li>
-                                            <button class="dropdown-item" onclick="downloadImage('@item.FileUrl')">
-                                                <i class="bi bi-download me-2"></i>Tải xuống
-                                            </button>
-                                        </li>
+
                                         <li><hr class="dropdown-divider"></li>
-                                        <li>
-                                            <button class="dropdown-item text-danger delete-btn" data-id="@item.Id">
-                                                <i class="bi bi-trash me-2"></i>Xóa
-                                            </button>
-                                        </li>
+                                        <li><button class="dropdown-item text-danger delete-btn" data-id="@item.Id"><i class="bi bi-trash me-2"></i>Xóa</button></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="card-body">
-                            <h6 class="card-title text-truncate" title="@item.FileName">
-                                @item.FileName
-                            </h6>
-                            <div class="small text-muted">
-                                <div><i class="bi bi-file-earmark me-1"></i>@item.FileType</div>
-                                <div><i class="bi bi-hdd me-1"></i>@item.FileSizeKB KB</div>
-                                <div><i class="bi bi-calendar me-1"></i>@item.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
-                                @if (item.Article != null)
-                                {
-                                    <div>
-                                        <i class="bi bi-file-text me-1"></i>
-                                        <a href="@Url.Action("Details", "Articles", new { id = item.ArticleId })"
-                                           class="text-decoration-none" target="_blank">
-                                            @item.Article.Title
-                                        </a>
-                                    </div>
-                                }
+                        <div class="card-body p-2">
+                            <h6 class="card-title text-truncate small mb-1" title="@item.FileName">@item.FileName</h6>
+                            <div class="d-flex justify-content-between text-muted small" style="font-size: 0.75rem;">
+                                <span>@item.FileSizeKB KB</span>
+                                <span>@item.CreatedAt.ToString("dd/MM")</span>
                             </div>
+
+                            @if (item.Article != null)
+                            {
+                                <div class="mt-1 small text-truncate">
+                                    <a href="@Url.Action("Details", "Articles", new { id = item.ArticleId })" class="text-decoration-none" target="_blank" title="@item.Article.Title">
+                                        <i class="bi bi-link me-1"></i>@item.Article.Title
+                                    </a>
+                                </div>
+                            }
+                            @if (item.UploadedByUser != null)
+                            {
+                                <div class="mt-1 small text-muted text-truncate" title="Người đăng: @item.UploadedByUser.UserName">
+                                    <i class="bi bi-person-circle me-1"></i>@item.UploadedByUser.UserName
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
             }
         </div>
     </div>
+
+    @* Phân trang *@
     @if (Model.TotalPages > 1)
     {
         <nav aria-label="Page navigation" class="mt-4">
@@ -192,8 +222,7 @@
                 @for (int i = 1; i <= Model.TotalPages; i++)
                 {
                     <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
-                        <a class="page-link"
-                           href="?page=@i&search=@ViewBag.Search&articleId=@ViewBag.ArticleId">@i</a>
+                        <a class="page-link" href="?page=@i&search=@Model.CurrentSearch&articleId=@Model.CurrentArticleId&category=@Model.CurrentCategory">@i</a>
                     </li>
                 }
             </ul>
@@ -201,55 +230,112 @@
     }
 </div>
 
+@* --- MODAL UPLOAD --- *@
 <div class="modal fade" id="uploadModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Upload Ảnh</h5>
+                <h5 class="modal-title">Upload Ảnh Mới</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="uploadForm" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label">Chọn ảnh</label>
+                        <label class="form-label fw-bold">1. Chọn file ảnh</label>
                         <input type="file" class="form-control" id="fileInput" accept="image/*" multiple>
-                        <div class="form-text">Chọn một hoặc nhiều ảnh để upload</div>
+                        <div class="form-text">Hỗ trợ: .jpg, .png, .webp (Max 5MB)</div>
                     </div>
+
+                    @* SỬA: BỎ AVATAR KHỎI LIST *@
                     <div class="mb-3">
-                        <label class="form-label">Bài viết (tùy chọn)</label>
+                        <label class="form-label fw-bold">2. Loại ảnh</label>
+                        <select class="form-select" id="categorySelect">
+                            <option value="ArticleContent">Nội dung bài viết (Content)</option>
+                            <option value="ArticleThumbnail">Ảnh bìa bài viết (Thumbnail)</option>
+                            @* Đã xóa option UserAvatar *@
+                        </select>
+                        <div class="form-text">Chọn đúng loại để hệ thống lưu vào thư mục gọn gàng.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">3. Gắn vào bài viết (Tùy chọn)</label>
                         <select class="form-select" id="articleSelect">
-                            <option value="">-- Không gán bài viết --</option>
-                            @foreach (var item in (SelectList)ViewBag.Articles)
+                            <option value="">-- Không gán --</option>
+                            @foreach (var item in Model.ArticlesDropdown)
                             {
                                 <option value="@item.Value">@item.Text</option>
                             }
                         </select>
                     </div>
                 </form>
+
                 <div id="uploadProgress" class="mt-3" style="display:none;">
                     <div class="progress">
-                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
                     </div>
-                    <div class="mt-2 text-center" id="uploadStatus"></div>
+                    <div class="mt-2 text-center small" id="uploadStatus">Đang chuẩn bị...</div>
                 </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                <button type="button" class="btn btn-primary" onclick="uploadFiles()">Upload</button>
+                <button type="button" class="btn btn-primary" onclick="uploadFiles()">
+                    <i class="bi bi-cloud-upload me-1"></i>Bắt đầu Upload
+                </button>
             </div>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="imageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
+@* --- MODAL ATTACH (GÁN BÀI VIẾT) --- *@
+<div class="modal fade" id="attachModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Xem ảnh</h5>
+                <h5 class="modal-title">Gắn ảnh vào bài viết</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center">
-                <img id="modalImage" src="" alt="" class="img-fluid" style="max-height: 70vh;">
+            <div class="modal-body">
+                <input type="hidden" id="attachMediaId" />
+
+                @* 1. Chọn bài viết *@
+                <div class="mb-3">
+                    <label class="form-label fw-bold">1. Chọn bài viết:</label>
+                    <select class="form-select" id="attachArticleSelect">
+                        <option value="">-- Chọn bài viết --</option>
+                        @foreach (var item in Model.ArticlesDropdown)
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    </select>
+                </div>
+
+                @* 2. Chọn vai trò của ảnh (THÊM MỚI) *@
+                <div class="mb-3">
+                    <label class="form-label fw-bold">2. Vai trò của ảnh:</label>
+                    <select class="form-select" id="attachTypeSelect">
+                        <option value="ArticleContent">Ảnh nội dung (Content)</option>
+                        <option value="ArticleThumbnail">Ảnh đại diện (Thumbnail)</option>
+                    </select>
+                    <div class="form-text text-muted">
+                        Nếu chọn "Ảnh đại diện", ảnh bìa hiện tại của bài viết sẽ bị thay thế bởi ảnh này.
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" onclick="submitAttach()">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+</div>
+@* Modal Xem Ảnh *@
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-transparent border-0">
+            <div class="modal-body text-center position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3" data-bs-dismiss="modal"></button>
+                <img id="modalImage" src="" alt="" class="img-fluid rounded shadow-lg" style="max-height: 85vh;">
             </div>
         </div>
     </div>
@@ -257,172 +343,79 @@
 
 @section Styles {
     <style>
-        /* ... (Giữ nguyên các styles cũ của bạn) ... */
+        .media-container {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            min-height: 500px;
+        }
+
+        /* CSS XỬ LÝ Z-INDEX VÀ HOVER */
         .media-card {
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 1px solid #dee2e6;
+            border: none;
+            /* Quan trọng: cho phép dropdown hiển thị ra ngoài */
+            overflow: visible;
             position: relative;
             z-index: 1;
         }
 
-        .media-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10;
-        }
+            .media-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+                z-index: 10; /* Nổi lên khi hover */
+            }
+
+            /* Class này sẽ được JS thêm vào khi dropdown mở */
+            .media-card.active-dropdown {
+                z-index: 1000 !important; /* Đảm bảo nổi lên trên tất cả */
+                transform: none !important; /* Tắt hiệu ứng di chuyển để dễ bấm menu */
+            }
 
         .card-img-top {
-            transition: transform 0.3s ease;
-        }
-
-        .card-img-top:hover {
-            transform: scale(1.05);
-        }
-
-        .dropdown-toggle::after {
-            display: none;
-        }
-
-        .media-card .dropdown {
-            position: relative;
-            z-index: 100;
-        }
-
-        .media-card .dropdown-menu {
-            z-index: 1050;
-            position: absolute;
-            right: 0;
-            left: auto;
-        }
-
-        .media-card .position-relative {
-            z-index: 5;
-        }
-
-        .media-container {
-            max-height: 70vh;
-            overflow-y: auto;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
-            background-color: #f8f9fa;
-        }
-
-        .media-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .media-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .media-container::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-
-        .media-container::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-        .media-card.show-dropdown {
-            z-index: 100;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            border-top-left-radius: 0.25rem;
+            border-top-right-radius: 0.25rem;
         }
     </style>
 }
 
 @section Scripts {
     <script>
-        // Biến toàn cục lưu số lượng ảnh chưa dùng để script sử dụng
-       var unusedMediaCount = @Model.UnusedMediaCount;
+        var unusedMediaCount = @Model.UnusedMediaCount;
 
-        $(document).on('click', '.delete-btn', function () {
-
-            if (typeof toastr !== 'undefined') {
-                toastr.options = {
-                    "closeButton": true,
-                    "debug": false,
-                    "newestOnTop": false,
-                    "progressBar": true,
-                    "positionClass": "toast-top-right",
-                    "preventDuplicates": false,
-                    "onclick": null,
-                    "showDuration": "300",
-                    "hideDuration": "1000",
-                    "timeOut": "3000",
-                    "extendedTimeOut": "1000",
-                    "showEasing": "swing",
-                    "hideEasing": "linear",
-                    "showMethod": "fadeIn",
-                    "hideMethod": "fadeOut"
-                };
-            } else {
-                console.error("Thư viện Toastr chưa được tải!");
-            }
-
-            var id = $(this).data('id');
-            if (confirm('Bạn có chắc chắn muốn xóa ảnh này?')) {
-                $.post('@Url.Action("DeleteFile", "Media")', { id: id })
-                    .done(function () {
-                        location.reload();
-                    })
-                    .fail(function () {
-                        alert('Có lỗi xảy ra khi xóa ảnh');
-                    });
-            }
+        // --- XỬ LÝ Z-INDEX KHI MỞ DROPDOWN ---
+        // Khi dropdown mở, thêm class active-dropdown vào card cha
+        $(document).on('show.bs.dropdown', '.media-card .dropdown', function () {
+            $(this).closest('.media-card').addClass('active-dropdown');
+        });
+        // Khi dropdown đóng, xóa class
+        $(document).on('hide.bs.dropdown', '.media-card .dropdown', function () {
+            $(this).closest('.media-card').removeClass('active-dropdown');
         });
 
-        // Mở modal xem ảnh lớn (Giữ nguyên)
-        function openImageModal(imageUrl) {
-            $('#modalImage').attr('src', imageUrl);
-            new bootstrap.Modal('#imageModal').show();
-        }
 
-        // Copy URL ảnh (Giữ nguyên)
-        function copyUrl(url) {
-            navigator.clipboard.writeText(url).then(function () {
-                toastr.success('Đã copy URL vào clipboard');
-            }).catch(function () {
-                alert('Không thể copy URL');
-            });
-        }
-
-        // Tải ảnh xuống (Giữ nguyên)
-        function downloadImage(imageUrl) {
-            var fileName = imageUrl.split('/').pop() || 'image.jpg';
-            var a = document.createElement('a');
-            a.href = imageUrl;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }
-
-        // Upload nhiều ảnh (Giữ nguyên)
+        // --- XỬ LÝ UPLOAD NHIỀU FILE ---
         function uploadFiles() {
             var files = $('#fileInput')[0].files;
             var articleId = $('#articleSelect').val();
+            var category = $('#categorySelect').val();
 
             if (files.length === 0) {
-                alert('Vui lòng chọn ít nhất một ảnh');
+                alert('Vui lòng chọn ảnh!');
                 return;
             }
 
             $('#uploadProgress').show();
             var progressBar = $('.progress-bar');
             var uploadStatus = $('#uploadStatus');
-
             var uploaded = 0;
             var total = files.length;
 
             function uploadNext() {
                 if (uploaded >= total) {
-                    uploadStatus.html('<div class="text-success"><i class="bi bi-check-circle"></i> Upload hoàn tất!</div>');
-                    setTimeout(function () {
-                        location.reload();
-                    }, 1000);
+                    uploadStatus.html('<span class="text-success fw-bold">Hoàn tất! Đang tải lại...</span>');
+                    setTimeout(() => location.reload(), 1000);
                     return;
                 }
 
@@ -430,8 +423,9 @@
                 var formData = new FormData();
                 formData.append('file', file);
                 formData.append('articleId', articleId || 0);
+                formData.append('category', category);
 
-                uploadStatus.html(`Đang upload ${uploaded + 1}/${total}: ${file.name}`);
+                uploadStatus.text(`Đang upload ${uploaded + 1}/${total}: ${file.name}`);
 
                 $.ajax({
                     url: '@Url.Action("Upload", "Media")',
@@ -441,53 +435,147 @@
                     processData: false,
                     success: function () {
                         uploaded++;
-                        var progress = (uploaded / total) * 100;
-                        progressBar.css('width', progress + '%');
+                        progressBar.css('width', (uploaded / total) * 100 + '%');
                         uploadNext();
                     },
                     error: function () {
-                        uploadStatus.html(`<div class="text-danger">Lỗi khi upload: ${file.name}</div>`);
+                        uploadStatus.html(`<span class="text-danger">Lỗi file: ${file.name}</span>`);
+                        uploaded++;
+                        uploadNext();
                     }
                 });
             }
-
             uploadNext();
         }
-        // ============================================================
-        // 🎯 SCRIPT MỚI (ĐÃ TỐI ƯU): XỬ LÝ NÚT XÓA TẤT CẢ ẢNH CHƯA DÙNG
-        // ============================================================
+
+        // --- XỬ LÝ GÁN BÀI VIẾT (ATTACH) ---
+        var attachModal = new bootstrap.Modal(document.getElementById('attachModal'));
+
+        function openAttachModal(mediaId, currentArticleId) {
+            $('#attachMediaId').val(mediaId);
+            // Nếu media đã có articleId, set chọn sẵn trong dropdown
+            if (currentArticleId && currentArticleId != '0') {
+                $('#attachArticleSelect').val(currentArticleId);
+            } else {
+                $('#attachArticleSelect').val("");
+            }
+            attachModal.show();
+        }
+
+        function submitAttach() {
+            var mediaId = $('#attachMediaId').val();
+            var articleId = $('#attachArticleSelect').val();
+            var type = $('#attachTypeSelect').val();
+
+            if (!articleId) {
+                alert("Vui lòng chọn bài viết!");
+                return;
+            }
+
+            // Hiệu ứng nút đang xử lý (UX)
+            var $btn = $('#attachModal .btn-primary'); // Nút Lưu
+            var originalText = $btn.text();
+            $btn.prop('disabled', true).text('Đang lưu...');
+
+            $.post('@Url.Action("AttachToArticle", "Media")',
+                {
+                    mediaId: mediaId,
+                    articleId: articleId,
+                    attachmentType: type
+                })
+                .done(function (res) {
+                    // Đóng modal
+                    var modalEl = document.getElementById('attachModal');
+                    var modal = bootstrap.Modal.getInstance(modalEl);
+                    modal.hide();
+
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success("Gắn bài viết thành công!");
+                    } else {
+                        alert("Gắn bài viết thành công!");
+                    }
+                    
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 500);
+                })
+                .fail(function (xhr) {
+                    // Khôi phục nút bấm nếu lỗi
+                    $btn.prop('disabled', false).text(originalText);
+
+                    var errorMsg = xhr.responseText || "Lỗi không xác định";
+                    toastr.error("Lỗi: " + errorMsg);
+                });
+        }
+        // --- XỬ LÝ XÓA FILE ---
+        $(document).on('click', '.delete-btn', function (e) {
+            e.preventDefault(); // Ngăn chặn hành vi mặc định
+            var id = $(this).data('id');
+            var $btn = $(this);
+            if (confirm('Bạn có chắc chắn muốn xóa ảnh này vĩnh viễn?')) {
+
+                // Hiệu ứng loading nút bấm
+                var originalIcon = $btn.html();
+                $btn.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("DeleteFile", "Media")',
+                    type: 'POST',
+                    data: { id: id },
+                    success: function (res) {
+                        console.log("Server phản hồi:", res);
+
+                        if (res.success) {
+                            // Nếu dùng toastr
+                            if (typeof toastr !== 'undefined') toastr.success(res.message);
+                            else alert(res.message);
+
+                            // Reload trang sau 1 giây
+                            setTimeout(function () {
+                                location.reload();
+                            }, 500);
+                        } else {
+                            alert("Lỗi: " + res.message);
+                            $btn.html(originalIcon).prop('disabled', false);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert("Lỗi hệ thống: " + error);
+                        $btn.html(originalIcon).prop('disabled', false);
+                    }
+                });
+            }
+        });
+
+        // --- XỬ LÝ XÓA TẤT CẢ ---
         $('#btnDeleteAllUnused').click(function () {
-            // Sử dụng biến toàn cục đã lấy từ C#           
-            if (confirm('CẢNH BÁO NGHIÊM TRỌNG:\n\nBạn có chắc chắn muốn xóa vĩnh viễn TẤT CẢ ' + unusedMediaCount + ' ảnh chưa được sử dụng?\n\nHành động này KHÔNG THỂ hoàn tác!'))
-            {
-                // Hiệu ứng loading trên nút
+            if (confirm(`CẢNH BÁO: Bạn sắp xóa ${unusedMediaCount} file ảnh rác.\nBạn có muốn tiếp tục?`)) {
                 var $btn = $(this);
-                var originalText = $btn.html();
-                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Đang xóa...');
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang xóa...');
 
                 $.post('@Url.Action("DeleteAllUnused", "Media")')
-                    .done(function (response) {
-                        if (response.success) {
-                            // Sử dụng alert để thông báo rõ ràng vì đây là hành động lớn
-                            alert(response.message);
-                            location.reload(); // Reload trang để cập nhật danh sách
+                    .done(function (res) {
+                        if (res.success) {
+                            alert(res.message);
+                            location.reload();
                         } else {
-                            // Nếu controller trả về success: false (ví dụ lỗi không xóa được file)
-                            toastr.error(response.message || "Có lỗi xảy ra khi xóa ảnh.");
-                            // Mở khóa nút để thử lại
-                            $btn.prop('disabled', false).html(originalText);
+                            toastr.warning(res.message);
+                            $btn.prop('disabled', false).html('<i class="bi bi-trash me-1"></i>Dọn dẹp ảnh rác');
                         }
                     })
-                    .fail(function (xhr, status, error) {
-                        // Lỗi kết nối hoặc lỗi server 500
-                        console.error("Lỗi khi gọi DeleteAllUnused:", error);
-                        toastr.error('Có lỗi xảy ra khi kết nối tới máy chủ. Vui lòng thử lại sau.');
-                        // Mở khóa nút để thử lại
-                        $btn.prop('disabled', false).html(originalText);
+                    .fail(function () {
+                        toastr.error('Lỗi kết nối server');
+                        $btn.prop('disabled', false).html('<i class="bi bi-trash me-1"></i>Dọn dẹp ảnh rác');
                     });
             }
         });
-        // ============================================================
 
+        // Helper functions
+        function openImageModal(url) { $('#modalImage').attr('src', url); new bootstrap.Modal('#imageModal').show(); }
+        function copyUrl(url) { navigator.clipboard.writeText(url).then(() => toastr.success('Đã copy URL')); }
+        function downloadImage(url) {
+            var a = document.createElement('a'); a.href = url; a.download = url.split('/').pop();
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        }
     </script>
 }

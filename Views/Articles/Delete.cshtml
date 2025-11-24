@@ -33,13 +33,13 @@
                     @{
                         var imageUrl = !string.IsNullOrEmpty(Model.ThumbnailUrl)
                         ? Model.ThumbnailUrl
-                        : "/uploads/articles/default-thumbnail.jpg";
+                        : "/uploads/thumbnails/default-thumbnail.jpg";
                     }
                     <img src="@imageUrl"
                          class="me-3 rounded"
                          style="width: 100px; height: 75px; object-fit: cover;"
                          alt="Thumbnail"
-                         onerror="this.onerror=null; this.src='/uploads/articles/default-thumbnail.jpg';" />
+                         onerror="this.onerror=null; this.src='/uploads/thumbnails/default-thumbnail.jpg';" />
 
                     <div>
                         <h5 class="mb-1">@Model.Title</h5>
