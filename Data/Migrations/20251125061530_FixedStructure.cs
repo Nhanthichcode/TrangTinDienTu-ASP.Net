@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Trang_tin_điện_tử_mvc.Migrations
+namespace Trang_tin_điện_tử_mvc.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class NewdataBase : Migration
+    public partial class FixedStructure : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -289,6 +289,8 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ArticleId = table.Column<int>(type: "int", nullable: true),
+                    Category = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UploadedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -304,6 +306,11 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                         principalTable: "Articles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Media_AspNetUsers_UploadedByUserId",
+                        column: x => x.UploadedByUserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -417,6 +424,11 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                 name: "IX_Media_ArticleId",
                 table: "Media",
                 column: "ArticleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Media_UploadedByUserId",
+                table: "Media",
+                column: "UploadedByUserId");
         }
 
         /// <inheritdoc />
