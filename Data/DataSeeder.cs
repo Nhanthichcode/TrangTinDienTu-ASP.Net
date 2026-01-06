@@ -25,12 +25,10 @@ namespace Trang_tin_điện_tử_mvc.Data
                 var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
                 var logger = services.GetRequiredService<ILogger<DataSeeder>>(); try
                 {
-                    await context.Database.MigrateAsync();
-                    logger.LogInformation("<>==========đã tạo thành công DB");
                     // Kiểm tra nếu đã có dữ liệu thì không seed lại
                     if (context.Articles.Any())
                         {
-                        logger.LogInformation("<>==========đã có dữ liệu trong DB");
+                        logger.LogInformation("==========đã có dữ liệu trong DB===========");
                         return; // DB has been seeded
                         }
 

@@ -8,7 +8,7 @@ using Trang_tin_điện_tử_mvc.Data;
 
 #nullable disable
 
-namespace Trang_tin_điện_tử_mvc.Migrations
+namespace Trang_tin_điện_tử_mvc.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     partial class ApplicationDbContextModelSnapshot : ModelSnapshot

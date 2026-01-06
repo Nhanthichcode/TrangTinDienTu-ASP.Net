@@ -384,18 +384,28 @@
     <script>
         var unusedMediaCount = @Model.UnusedMediaCount;
 
-        // --- XỬ LÝ Z-INDEX KHI MỞ DROPDOWN ---
-        // Khi dropdown mở, thêm class active-dropdown vào card cha
+        // --- 1. XỬ LÝ Z-INDEX KHI MỞ DROPDOWN ---
         $(document).on('show.bs.dropdown', '.media-card .dropdown', function () {
             $(this).closest('.media-card').addClass('active-dropdown');
         });
-        // Khi dropdown đóng, xóa class
         $(document).on('hide.bs.dropdown', '.media-card .dropdown', function () {
             $(this).closest('.media-card').removeClass('active-dropdown');
         });
 
+        // --- 2. HÀM HIỂN THỊ THÔNG BÁO (Tránh lỗi toastr is not defined) ---
+        function showNotify(type, message) {
+            if (typeof toastr !== 'undefined') {
+                if (type === 'success') toastr.success(message);
+                else if (type === 'error') toastr.error(message);
+                else if (type === 'warning') toastr.warning(message);
+            } else {
+                // Fallback nếu chưa nhúng thư viện
+                if (type === 'error') alert("Lỗi: " + message);
+                else alert(message);
+            }
+        }
 
-        // --- XỬ LÝ UPLOAD NHIỀU FILE ---
+        // --- 3. XỬ LÝ UPLOAD NHIỀU FILE ---
         function uploadFiles() {
             var files = $('#fileInput')[0].files;
             var articleId = $('#articleSelect').val();
@@ -415,7 +425,7 @@
             function uploadNext() {
                 if (uploaded >= total) {
                     uploadStatus.html('<span class="text-success fw-bold">Hoàn tất! Đang tải lại...</span>');
-                    setTimeout(() => location.reload(), 1000);
+                    setTimeout(() => location.reload(), 500);
                     return;
                 }
 
@@ -440,7 +450,7 @@
                     },
                     error: function () {
                         uploadStatus.html(`<span class="text-danger">Lỗi file: ${file.name}</span>`);
-                        uploaded++;
+                        uploaded++; // Vẫn tiếp tục file sau dù lỗi
                         uploadNext();
                     }
                 });
@@ -448,12 +458,11 @@
             uploadNext();
         }
 
-        // --- XỬ LÝ GÁN BÀI VIẾT (ATTACH) ---
+        // --- 4. XỬ LÝ GÁN BÀI VIẾT (ATTACH) ---
         var attachModal = new bootstrap.Modal(document.getElementById('attachModal'));
 
         function openAttachModal(mediaId, currentArticleId) {
             $('#attachMediaId').val(mediaId);
-            // Nếu media đã có articleId, set chọn sẵn trong dropdown
             if (currentArticleId && currentArticleId != '0') {
                 $('#attachArticleSelect').val(currentArticleId);
             } else {
@@ -472,8 +481,7 @@
                 return;
             }
 
-            // Hiệu ứng nút đang xử lý (UX)
-            var $btn = $('#attachModal .btn-primary'); // Nút Lưu
+            var $btn = $('#attachModal .btn-primary');
             var originalText = $btn.text();
             $btn.prop('disabled', true).text('Đang lưu...');
 
@@ -484,70 +492,48 @@
                     attachmentType: type
                 })
                 .done(function (res) {
-                    // Đóng modal
-                    var modalEl = document.getElementById('attachModal');
-                    var modal = bootstrap.Modal.getInstance(modalEl);
-                    modal.hide();
-
-                    if (typeof toastr !== 'undefined') {
-                        toastr.success("Gắn bài viết thành công!");
-                    } else {
-                        alert("Gắn bài viết thành công!");
-                    }
-                    
-                    setTimeout(function () {
-                        window.location.reload();
-                    }, 500);
+                    attachModal.hide();
+                    showNotify('success', "Gắn bài viết thành công!");
+                    setTimeout(() => location.reload(), 500);
                 })
                 .fail(function (xhr) {
-                    // Khôi phục nút bấm nếu lỗi
                     $btn.prop('disabled', false).text(originalText);
-
-                    var errorMsg = xhr.responseText || "Lỗi không xác định";
-                    toastr.error("Lỗi: " + errorMsg);
+                    var errorMsg = xhr.responseText || "Không thể gắn bài viết.";
+                    showNotify('error', errorMsg);
                 });
         }
-        // --- XỬ LÝ XÓA FILE ---
+
+        // --- 5. XỬ LÝ XÓA FILE (DELETE) ---
         $(document).on('click', '.delete-btn', function (e) {
-            e.preventDefault(); // Ngăn chặn hành vi mặc định
+            e.preventDefault();
             var id = $(this).data('id');
             var $btn = $(this);
-            if (confirm('Bạn có chắc chắn muốn xóa ảnh này vĩnh viễn?')) {
 
-                // Hiệu ứng loading nút bấm
+            if (confirm('Bạn có chắc chắn muốn xóa ảnh này vĩnh viễn?')) {
                 var originalIcon = $btn.html();
                 $btn.html('<span class="spinner-border spinner-border-sm"></span>').prop('disabled', true);
 
-                $.ajax({
-                    url: '@Url.Action("DeleteFile", "Media")',
-                    type: 'POST',
-                    data: { id: id },
-                    success: function (res) {
-                        console.log("Server phản hồi:", res);
-
+                $.post('@Url.Action("DeleteFile", "Media")', { id: id })
+                    .done(function (res) {
                         if (res.success) {
-                            // Nếu dùng toastr
-                            if (typeof toastr !== 'undefined') toastr.success(res.message);
-                            else alert(res.message);
-
-                            // Reload trang sau 1 giây
-                            setTimeout(function () {
-                                location.reload();
-                            }, 500);
+                            showNotify('success', res.message || "Xóa thành công!");
+                            setTimeout(() => location.reload(), 500);
                         } else {
-                            alert("Lỗi: " + res.message);
+                            showNotify('warning', res.message);
                             $btn.html(originalIcon).prop('disabled', false);
                         }
-                    },
-                    error: function (xhr, status, error) {
-                        alert("Lỗi hệ thống: " + error);
+                    })
+                    .fail(function (xhr) {
+                        var errorMsg = xhr.responseText || "Lỗi kết nối server";
+                        if (xhr.responseJSON && xhr.responseJSON.message) errorMsg = xhr.responseJSON.message;
+
+                        showNotify('error', errorMsg);
                         $btn.html(originalIcon).prop('disabled', false);
-                    }
-                });
+                    });
             }
         });
 
-        // --- XỬ LÝ XÓA TẤT CẢ ---
+        // --- 6. XỬ LÝ XÓA TẤT CẢ ---
         $('#btnDeleteAllUnused').click(function () {
             if (confirm(`CẢNH BÁO: Bạn sắp xóa ${unusedMediaCount} file ảnh rác.\nBạn có muốn tiếp tục?`)) {
                 var $btn = $(this);
@@ -556,15 +542,15 @@
                 $.post('@Url.Action("DeleteAllUnused", "Media")')
                     .done(function (res) {
                         if (res.success) {
-                            alert(res.message);
+                            alert(res.message); // Dùng alert vì thông báo dài
                             location.reload();
                         } else {
-                            toastr.warning(res.message);
+                            showNotify('warning', res.message);
                             $btn.prop('disabled', false).html('<i class="bi bi-trash me-1"></i>Dọn dẹp ảnh rác');
                         }
                     })
                     .fail(function () {
-                        toastr.error('Lỗi kết nối server');
+                        showNotify('error', 'Lỗi kết nối server');
                         $btn.prop('disabled', false).html('<i class="bi bi-trash me-1"></i>Dọn dẹp ảnh rác');
                     });
             }
@@ -572,7 +558,9 @@
 
         // Helper functions
         function openImageModal(url) { $('#modalImage').attr('src', url); new bootstrap.Modal('#imageModal').show(); }
-        function copyUrl(url) { navigator.clipboard.writeText(url).then(() => toastr.success('Đã copy URL')); }
+        function copyUrl(url) {
+            navigator.clipboard.writeText(url).then(() => showNotify('success', 'Đã copy URL'));
+        }
         function downloadImage(url) {
             var a = document.createElement('a'); a.href = url; a.download = url.split('/').pop();
             document.body.appendChild(a); a.click(); document.body.removeChild(a);

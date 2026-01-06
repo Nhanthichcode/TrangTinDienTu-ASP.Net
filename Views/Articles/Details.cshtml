@@ -148,7 +148,7 @@
                          class="w-100"
                          alt="@Model.Title"
                          style="height: auto; object-fit: cover; max-height: 500px;"
-                         onerror="this.src='@defaultImageUrl';" />
+                         onerror="this.onerror=null;this.src='@defaultImageUrl';" />
                     <figcaption class="figure-caption mt-2 p-2 bg-light border-start border-3 border-danger">
                         Ảnh minh họa: @Model.Title
                     </figcaption>
@@ -181,7 +181,7 @@
                                     var media = ViewBag.ArticleImages[i];
                                     <div class="carousel-item @(i == 0 ? "active" : "")">
                                         <img src="@media.FileUrl" class="d-block w-100 carousel-image" alt="@media.FileName"
-                                             onerror="this.src='@defaultImageUrl';">
+                                             onerror="this.onerror=null;this.src='@defaultImageUrl';">
                                         <div class="carousel-caption carousel-caption-custom">
                                             <h6>@media.FileName</h6>
                                             <p class="mb-1">
@@ -251,7 +251,7 @@
                             <div class="related-article-card">
                                 <a asp-action="Details" asp-route-id="@relatedArticle.Id" class="text-decoration-none text-dark">
                                     <img src="@img" class="related-article-img"
-                                         onerror="this.src='@defaultImageUrl';" />
+                                         onerror="this.onerror=null;this.src='@defaultImageUrl';" />
                                     <div class="related-article-body">
                                         <h6 class="related-article-title">@relatedArticle.Title</h6>
                                     </div>
@@ -293,7 +293,7 @@
                         <input type="hidden" name="ArticleId" value="@Model.Id" />
                         <div class="d-flex gap-3">
                             <img src="@userAvatarUrl" class="rounded-circle" width="50" height="50" style="object-fit: cover;"
-                                 onerror="this.src='@defaultImageUrl';" />
+                                 onerror="this.onerror=null;this.src='@defaultImageUrl';" />
                             <div class="flex-grow-1">
                                 <textarea name="Content" class="form-control" rows="3" placeholder="Ý kiến của bạn..." required></textarea>
                                 <button type="submit" class="btn btn-dark mt-2">Gửi bình luận</button>

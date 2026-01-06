@@ -90,16 +90,31 @@ namespace Trang_tin_điện_tử_mvc
 
             app.MapControllerRoute(
                 name: "areas",
-                pattern: "{area:exists}/{controller=AdminDashboard}/{action=Index}/{id?}");
-            app.MapControllerRoute(
-                name: "areas",
-                pattern: "{area:exists}/{controller=AuthorDashboard}/{action=Index}/{id?}");
+                pattern: "{area:exists}/{controller=AdminDashboard}/{action=Index}/{id?}");            
 
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}");            
-            // Gọi hàm seed dữ liệu
-           await DataSeeder.Initialize(app.Services);            
+                pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+
+                try
+                {
+                    logger.LogInformation("Applying pending migrations...");
+                    await context.Database.MigrateAsync(); // LUÔN chạy migration
+                    logger.LogInformation("Migrations applied successfully");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "An error occurred while applying migrations");
+                    throw;
+                }
+            }
+
+            await DataSeeder.Initialize(app.Services);            
             app.MapRazorPages();
             app.MapDefaultControllerRoute();
             app.Run();

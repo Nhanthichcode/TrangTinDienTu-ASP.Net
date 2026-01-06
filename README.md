@@ -5,8 +5,8 @@
 **E-News** là một ứng dụng web tin tức được xây dựng bằng ASP.NET Core MVC, cung cấp nền tảng để xuất bản, quản lý và đọc các bài viết một cách hiệu quả và thân thiện. Dự án này là [Mục đích dự án, ví dụ: "báo cáo môn học", "dự án cá nhân để học hỏi"...].
 
 **Trang web demo:**
-[https://e-news-asp-net-eye4bcg0befvejgc.southeastasia-01.azurewebsites.net/](https://e-news-asp-net-eye4bcg0befvejgc.southeastasia-01.azurewebsites.net/)
-
+[đi đến trang demo](https://e-news-asp-net-eye4bcg0befvejgc.southeastasia-01.azurewebsites.net/)
+**(đã dừng do hết gói miễn phí của Microsoft_Azure)**
 > ⚠️ **LƯU Ý KHI TRUY CẬP DEMO:**
 >
 > Do đây là dự án môn học chạy trên gói **Azure App Service Miễn phí (Free Tier)**, ứng dụng sẽ tự động **Dừng (Stopped)** nếu không có ai truy cập.

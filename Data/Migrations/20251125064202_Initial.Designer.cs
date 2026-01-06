@@ -9,11 +9,11 @@ using Trang_tin_điện_tử_mvc.Data;
 
 #nullable disable
 
-namespace Trang_tin_điện_tử_mvc.Migrations
+namespace Trang_tin_điện_tử_mvc.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251124022957_New dataBase")]
-    partial class NewdataBase
+    [Migration("20251125064202_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -404,6 +404,10 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                     b.Property<int?>("ArticleId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -422,9 +426,14 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("UploadedByUserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleId");
+
+                    b.HasIndex("UploadedByUserId");
 
                     b.ToTable("Media", (string)null);
                 });
@@ -590,7 +599,13 @@ namespace Trang_tin_điện_tử_mvc.Migrations
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade);
 
+                    b.HasOne("Trang_tin_điện_tử_mvc.Models.ApplicationUser", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId");
+
                     b.Navigation("Article");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("Trang_tin_điện_tử_mvc.Models.ApplicationUser", b =>

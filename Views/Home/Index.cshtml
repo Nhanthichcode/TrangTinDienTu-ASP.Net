@@ -250,7 +250,7 @@
                             <div class="column-card">
                                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
                                     <img src="@(article.ThumbnailUrl ?? defaultimg)"
-                                         onerror="this.src='@defaultimg';"
+                                         onerror="this.onerror=null;this.src='@defaultimg';"
                                          class="column-image"
                                          alt="@article.Title">
                                 </a>
@@ -294,7 +294,7 @@
                             <div class="related-article">
                                 <a asp-controller="Articles" asp-action="Details" asp-route-id="@article.Id">
                                     <img src="@(article.ThumbnailUrl ?? defaultimg)"
-                                         onerror="this.src='@defaultimg';"
+                                         onerror="this.onerror=null;this.src='@defaultimg';"
                                          class="related-article-image"
                                          alt="@article.Title">
                                 </a>
