@@ -182,5 +182,5 @@ Dự án này được cấp phép theo **Giấy phép MIT**. Xem file `LICENSE`
 
 * Cảm ơn cô Vy đã hỗ trợ.
 * Nếu bạn có câu hỏi hoặc góp ý, vui lòng liên hệ: nhan_dth225710@student.agu.edu.vn hoặc tạo Issue trên GitHub.
-
+* Nguồn: Lê Trí Nhàn - Trust Me Bro?
 ---
