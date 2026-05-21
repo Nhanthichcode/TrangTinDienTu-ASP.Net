@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Trang tin điện tử mvc.props" />
-</Project>
